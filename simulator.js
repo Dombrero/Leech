@@ -32,6 +32,26 @@ const TRANSLATIONS = {
         stacks: "Stacks",
         all: "Alle",
         mutation: "MUTATION",
+        mainMenu: "Hauptmenü",
+        startGame: "Spiel starten",
+        viewHighscore: "Highscore",
+        backToMenu: "Hauptmenü",
+        login: "Anmelden",
+        register: "Registrieren",
+        loginTitle: "Anmelden",
+        registerTitle: "Account erstellen",
+        name: "Name",
+        hashtag: "Hashtag",
+        noAccount: "Noch kein Account?",
+        hasAccount: "Bereits ein Account?",
+        welcome: "Willkommen, ",
+        logout: "(Abmelden)",
+        random: "Random",
+        accountCreated: "Account erfolgreich erstellt!",
+        loginSuccess: "Erfolgreich angemeldet!",
+        loginError: "Name oder Hashtag falsch!",
+        nameRequired: "Bitte gib einen Namen ein!",
+        hashtagRequired: "Bitte gib einen Hashtag ein!",
         // Upgrade-Namen und Beschreibungen werden dynamisch übersetzt
     },
     en: {
@@ -65,6 +85,36 @@ const TRANSLATIONS = {
         stacks: "Stacks",
         all: "All",
         mutation: "MUTATION",
+        mainMenu: "Main Menu",
+        startGame: "Start Game",
+        viewHighscore: "Highscore",
+        backToMenu: "Main Menu",
+        login: "Login",
+        register: "Register",
+        loginTitle: "Login",
+        registerTitle: "Create Account",
+        name: "Name",
+        hashtag: "Hashtag",
+        noAccount: "No account yet?",
+        hasAccount: "Already have an account?",
+        welcome: "Welcome, ",
+        logout: "(Logout)",
+        random: "Random",
+        accountCreated: "Account created successfully!",
+        loginSuccess: "Successfully logged in!",
+        loginError: "Name or hashtag incorrect!",
+        nameRequired: "Please enter a name!",
+        hashtagRequired: "Please enter a hashtag!",
+        highscore: "Highscore",
+        top100: "Top 100",
+        rank: "Rang",
+        name: "Nom",
+        score: "Score",
+        enterName: "Entrez votre nom:",
+        congratsTop100: "🎉 Vous êtes dans le Top 100!",
+        save: "Enregistrer",
+        skip: "Passer",
+        noHighscores: "Aucun meilleur score",
     },
     fr: {
         score: "Score",
@@ -97,6 +147,36 @@ const TRANSLATIONS = {
         stacks: "Empilements",
         all: "Toutes les",
         mutation: "MUTATION",
+        mainMenu: "Menu Principal",
+        startGame: "Démarrer le Jeu",
+        viewHighscore: "Meilleurs Scores",
+        backToMenu: "Menu Principal",
+        login: "Connexion",
+        register: "S'inscrire",
+        loginTitle: "Connexion",
+        registerTitle: "Créer un compte",
+        name: "Nom",
+        hashtag: "Hashtag",
+        noAccount: "Pas encore de compte?",
+        hasAccount: "Déjà un compte?",
+        welcome: "Bienvenue, ",
+        logout: "(Déconnexion)",
+        random: "Aléatoire",
+        accountCreated: "Compte créé avec succès!",
+        loginSuccess: "Connexion réussie!",
+        loginError: "Nom ou hashtag incorrect!",
+        nameRequired: "Veuillez entrer un nom!",
+        hashtagRequired: "Veuillez entrer un hashtag!",
+        highscore: "Meilleurs Scores",
+        top100: "Top 100",
+        rank: "Posición",
+        name: "Nombre",
+        score: "Puntuación",
+        enterName: "Ingresa tu nombre:",
+        congratsTop100: "🎉 ¡Estás en el Top 100!",
+        save: "Guardar",
+        skip: "Omitir",
+        noHighscores: "Sin puntuaciones aún",
     },
     es: {
         score: "Puntuación",
@@ -129,6 +209,36 @@ const TRANSLATIONS = {
         stacks: "Pilas",
         all: "Todas las",
         mutation: "MUTACIÓN",
+        mainMenu: "メインメニュー",
+        startGame: "ゲーム開始",
+        viewHighscore: "ハイスコア",
+        backToMenu: "メインメニュー",
+        login: "ログイン",
+        register: "登録",
+        loginTitle: "ログイン",
+        registerTitle: "アカウント作成",
+        name: "名前",
+        hashtag: "ハッシュタグ",
+        noAccount: "アカウントをお持ちでないですか？",
+        hasAccount: "既にアカウントをお持ちですか？",
+        welcome: "ようこそ、",
+        logout: "（ログアウト）",
+        random: "ランダム",
+        accountCreated: "アカウントが正常に作成されました！",
+        loginSuccess: "ログインに成功しました！",
+        loginError: "名前またはハッシュタグが正しくありません！",
+        nameRequired: "名前を入力してください！",
+        hashtagRequired: "ハッシュタグを入力してください！",
+        highscore: "ハイスコア",
+        top100: "トップ100",
+        rank: "ランク",
+        name: "名前",
+        score: "スコア",
+        enterName: "名前を入力してください:",
+        congratsTop100: "🎉 トップ100に入りました！",
+        save: "保存",
+        skip: "スキップ",
+        noHighscores: "ハイスコアなし",
     },
     ja: {
         score: "スコア",
@@ -352,16 +462,45 @@ function t(key) {
 }
 
 // Canvas Setup mit Pixel-Art Rendering
-const canvas = document.getElementById('simulatorCanvas');
-const ctx = canvas.getContext('2d');
+let canvas, ctx;
 
 // Pixel-Art Einstellungen
 const PIXEL_SCALE = 2; // Niedrigere Auflösung für Pixel-Look
 let displayWidth, displayHeight;
 let renderWidth, renderHeight;
 
+function initCanvas() {
+    canvas = document.getElementById('simulatorCanvas');
+    if (!canvas) {
+        console.error('Canvas element not found!');
+        return false;
+    }
+    ctx = canvas.getContext('2d');
+    if (!ctx) {
+        console.error('Could not get 2D context!');
+        return false;
+    }
+    return true;
+}
+
 function resizeCanvas() {
+    if (!canvas) {
+        if (!initCanvas()) return;
+    }
+    
+    const gameContainer = document.getElementById('gameContainer');
+    // Prüfe ob Container sichtbar ist
+    if (gameContainer && (gameContainer.style.display === 'none' || gameContainer.offsetWidth === 0)) {
+        // Container ist versteckt, warte bis es sichtbar ist
+        return;
+    }
+    
     const rect = canvas.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) {
+        // Canvas hat noch keine Größe, warte
+        return;
+    }
+    
     displayWidth = rect.width;
     displayHeight = rect.height;
     renderWidth = Math.floor(displayWidth / PIXEL_SCALE);
@@ -375,16 +514,27 @@ function resizeCanvas() {
     canvas.style.imageRendering = 'crisp-edges';
     ctx.imageSmoothingEnabled = false;
 }
-resizeCanvas();
+
+// Initialisiere Canvas beim Laden (aber resize erst wenn sichtbar)
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        initCanvas();
+    });
+} else {
+    initCanvas();
+}
+
 window.addEventListener('resize', resizeCanvas);
 
 // Pixel-Art Zeichenfunktion
 function drawPixelRect(x, y, w, h, color) {
+    if (!ctx) return; // Sicherheitsprüfung: ctx muss initialisiert sein
     ctx.fillStyle = color;
     ctx.fillRect(Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h));
 }
 
 function drawPixelCircle(x, y, r, color) {
+    if (!ctx) return; // Sicherheitsprüfung: ctx muss initialisiert sein
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(Math.floor(x), Math.floor(y), Math.floor(r), 0, Math.PI * 2);
@@ -1286,37 +1436,38 @@ class RainWorldTier {
         this.headY += Math.sin(this.angle) * moveSpeed + waveOffset * 0.2;
         
         // Bewegungsradius-Begrenzung basierend auf Speed-Upgrades
-        if (window.simulator && window.simulator.activeUpgrades) {
-            // Zähle alle Speed-Upgrades
-            let speedUpgradeCount = 0;
-            Object.keys(window.simulator.activeUpgrades).forEach(upgradeId => {
-                if (upgradeId.includes('speed_boost') || upgradeId.includes('power_legs')) {
-                    speedUpgradeCount += window.simulator.activeUpgrades[upgradeId];
-                }
-            });
-            
-            // Berechne maximalen Bewegungsradius (kleiner mit mehr Speed-Upgrades)
-            // Jedes Speed-Upgrade reduziert den Radius um 15%
-            const radiusReduction = Math.pow(0.85, speedUpgradeCount); // Exponentiell kleiner
-            this.maxMovementRadius = this.baseMovementRadius * radiusReduction;
-            
-            // Prüfe ob Spieler zu weit vom Anker entfernt ist
-            const dx = this.headX - this.anchorX;
-            const dy = this.headY - this.anchorY;
-            const distanceFromAnchor = Math.sqrt(dx * dx + dy * dy);
-            
-            if (distanceFromAnchor > this.maxMovementRadius) {
-                // Ziehe Spieler zurück zum Anker (wie eine unsichtbare Leine)
-                const pullBackRatio = this.maxMovementRadius / distanceFromAnchor;
-                this.headX = this.anchorX + dx * pullBackRatio;
-                this.headY = this.anchorY + dy * pullBackRatio;
-                
-                // Ändere Richtung leicht (als ob man gegen eine unsichtbare Wand stößt)
-                this.targetAngle = Math.atan2(dy, dx) + Math.PI; // In Richtung Anker
-            }
-        }
+        // DEAKTIVIERT: Verursacht unsichtbare Wände - Spieler kann sich frei bewegen
+        // if (window.simulator && window.simulator.activeUpgrades) {
+        //     // Zähle alle Speed-Upgrades
+        //     let speedUpgradeCount = 0;
+        //     Object.keys(window.simulator.activeUpgrades).forEach(upgradeId => {
+        //         if (upgradeId.includes('speed_boost') || upgradeId.includes('power_legs')) {
+        //             speedUpgradeCount += window.simulator.activeUpgrades[upgradeId];
+        //         }
+        //     });
+        //     
+        //     // Berechne maximalen Bewegungsradius (kleiner mit mehr Speed-Upgrades)
+        //     // Jedes Speed-Upgrade reduziert den Radius um 15%
+        //     const radiusReduction = Math.pow(0.85, speedUpgradeCount); // Exponentiell kleiner
+        //     this.maxMovementRadius = this.baseMovementRadius * radiusReduction;
+        //     
+        //     // Prüfe ob Spieler zu weit vom Anker entfernt ist
+        //     const dx = this.headX - this.anchorX;
+        //     const dy = this.headY - this.anchorY;
+        //     const distanceFromAnchor = Math.sqrt(dx * dx + dy * dy);
+        //     
+        //     if (distanceFromAnchor > this.maxMovementRadius) {
+        //         // Ziehe Spieler zurück zum Anker (wie eine unsichtbare Leine)
+        //         const pullBackRatio = this.maxMovementRadius / distanceFromAnchor;
+        //         this.headX = this.anchorX + dx * pullBackRatio;
+        //         this.headY = this.anchorY + dy * pullBackRatio;
+        //         
+        //         // Ändere Richtung leicht (als ob man gegen eine unsichtbare Wand stößt)
+        //         this.targetAngle = Math.atan2(dy, dx) + Math.PI; // In Richtung Anker
+        //     }
+        // }
         
-        // Welt-Grenzen prüfen (Kollision mit Wänden)
+        // Welt-Grenzen prüfen (Kollision mit Wänden) - VERBESSERTE LOGIK
         const margin = 10; // Sicherheitsabstand zu den Wänden
         if (window.simulator) {
             const worldWidth = window.simulator.worldWidth;
@@ -1325,22 +1476,38 @@ class RainWorldTier {
             // Linke Wand
             if (this.headX < margin) {
                 this.headX = margin;
+                // Korrekte Reflexion: Spiegeln des Winkels an der vertikalen Wand
                 this.targetAngle = Math.PI - this.targetAngle;
+                // Normalisiere Winkel
+                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
+                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
             }
             // Rechte Wand
             if (this.headX > worldWidth - margin) {
                 this.headX = worldWidth - margin;
+                // Korrekte Reflexion: Spiegeln des Winkels an der vertikalen Wand
                 this.targetAngle = Math.PI - this.targetAngle;
+                // Normalisiere Winkel
+                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
+                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
             }
             // Obere Wand
             if (this.headY < margin) {
                 this.headY = margin;
+                // Korrekte Reflexion: Spiegeln des Winkels an der horizontalen Wand
                 this.targetAngle = -this.targetAngle;
+                // Normalisiere Winkel
+                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
+                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
             }
             // Untere Wand
             if (this.headY > worldHeight - margin) {
                 this.headY = worldHeight - margin;
+                // Korrekte Reflexion: Spiegeln des Winkels an der horizontalen Wand
                 this.targetAngle = -this.targetAngle;
+                // Normalisiere Winkel
+                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
+                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
             }
         }
         
@@ -2054,7 +2221,7 @@ class HunterCreature {
         this.headX += Math.cos(this.angle) * moveSpeed;
         this.headY += Math.sin(this.angle) * moveSpeed + waveOffset * 0.2;
         
-        // Welt-Grenzen prüfen (Kollision mit Wänden)
+        // Welt-Grenzen prüfen (Kollision mit Wänden) - VERBESSERTE LOGIK
         const margin = 10; // Sicherheitsabstand zu den Wänden
         if (window.simulator) {
             const worldWidth = window.simulator.worldWidth;
@@ -2063,22 +2230,38 @@ class HunterCreature {
             // Linke Wand
             if (this.headX < margin) {
                 this.headX = margin;
+                // Korrekte Reflexion: Spiegeln des Winkels an der vertikalen Wand
                 this.targetAngle = Math.PI - this.targetAngle;
+                // Normalisiere Winkel
+                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
+                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
             }
             // Rechte Wand
             if (this.headX > worldWidth - margin) {
                 this.headX = worldWidth - margin;
+                // Korrekte Reflexion: Spiegeln des Winkels an der vertikalen Wand
                 this.targetAngle = Math.PI - this.targetAngle;
+                // Normalisiere Winkel
+                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
+                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
             }
             // Obere Wand
             if (this.headY < margin) {
                 this.headY = margin;
+                // Korrekte Reflexion: Spiegeln des Winkels an der horizontalen Wand
                 this.targetAngle = -this.targetAngle;
+                // Normalisiere Winkel
+                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
+                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
             }
             // Untere Wand
             if (this.headY > worldHeight - margin) {
                 this.headY = worldHeight - margin;
+                // Korrekte Reflexion: Spiegeln des Winkels an der horizontalen Wand
                 this.targetAngle = -this.targetAngle;
+                // Normalisiere Winkel
+                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
+                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
             }
         }
         
@@ -2885,7 +3068,7 @@ class FatHunterCreature {
         this.headX += Math.cos(this.angle) * moveSpeed;
         this.headY += Math.sin(this.angle) * moveSpeed + waveOffset * 0.2;
         
-        // Welt-Grenzen prüfen (Kollision mit Wänden)
+        // Welt-Grenzen prüfen (Kollision mit Wänden) - VERBESSERTE LOGIK
         const margin = 10; // Sicherheitsabstand zu den Wänden
         if (window.simulator) {
             const worldWidth = window.simulator.worldWidth;
@@ -2894,22 +3077,38 @@ class FatHunterCreature {
             // Linke Wand
             if (this.headX < margin) {
                 this.headX = margin;
+                // Korrekte Reflexion: Spiegeln des Winkels an der vertikalen Wand
                 this.targetAngle = Math.PI - this.targetAngle;
+                // Normalisiere Winkel
+                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
+                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
             }
             // Rechte Wand
             if (this.headX > worldWidth - margin) {
                 this.headX = worldWidth - margin;
+                // Korrekte Reflexion: Spiegeln des Winkels an der vertikalen Wand
                 this.targetAngle = Math.PI - this.targetAngle;
+                // Normalisiere Winkel
+                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
+                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
             }
             // Obere Wand
             if (this.headY < margin) {
                 this.headY = margin;
+                // Korrekte Reflexion: Spiegeln des Winkels an der horizontalen Wand
                 this.targetAngle = -this.targetAngle;
+                // Normalisiere Winkel
+                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
+                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
             }
             // Untere Wand
             if (this.headY > worldHeight - margin) {
                 this.headY = worldHeight - margin;
+                // Korrekte Reflexion: Spiegeln des Winkels an der horizontalen Wand
                 this.targetAngle = -this.targetAngle;
+                // Normalisiere Winkel
+                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
+                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
             }
         }
         
@@ -3139,6 +3338,275 @@ class Simulator {
         
         this.setupControls();
         this.setupDebugLog();
+        this.setupAccountSystem();
+        
+        // Highscore-Display initialisieren
+        this.updateHighscoreDisplay();
+    }
+    
+    setupAccountSystem() {
+        // Prüfe ob bereits eingeloggt
+        const currentUser = this.getCurrentUser();
+        if (currentUser) {
+            this.showGameSection(currentUser);
+        } else {
+            this.showLoginSection();
+        }
+        
+        // Login-Button
+        const loginBtn = document.getElementById('loginBtn');
+        if (loginBtn) {
+            loginBtn.addEventListener('click', () => {
+                this.handleLogin();
+            });
+        }
+        
+        // Register-Button
+        const registerBtn = document.getElementById('registerBtn');
+        if (registerBtn) {
+            registerBtn.addEventListener('click', () => {
+                this.handleRegister();
+            });
+        }
+        
+        // Show Register Form
+        const showRegisterBtn = document.getElementById('showRegisterBtn');
+        if (showRegisterBtn) {
+            showRegisterBtn.addEventListener('click', () => {
+                this.showRegisterForm();
+            });
+        }
+        
+        // Show Login Form
+        const showLoginBtn = document.getElementById('showLoginBtn');
+        if (showLoginBtn) {
+            showLoginBtn.addEventListener('click', () => {
+                this.showLoginForm();
+            });
+        }
+        
+        // Generate Hashtag Button
+        const generateHashtagBtn = document.getElementById('generateHashtagBtn');
+        if (generateHashtagBtn) {
+            generateHashtagBtn.addEventListener('click', () => {
+                this.generateRandomHashtag();
+            });
+        }
+        
+        // Logout Button
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', () => {
+                this.handleLogout();
+            });
+        }
+        
+        // Enter-Taste für Login/Register
+        const loginNameInput = document.getElementById('loginNameInput');
+        const loginHashtagInput = document.getElementById('loginHashtagInput');
+        const registerNameInput = document.getElementById('registerNameInput');
+        const registerHashtagInput = document.getElementById('registerHashtagInput');
+        
+        if (loginNameInput) {
+            loginNameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    loginHashtagInput?.focus();
+                }
+            });
+        }
+        if (loginHashtagInput) {
+            loginHashtagInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.handleLogin();
+                }
+            });
+        }
+        if (registerNameInput) {
+            registerNameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    registerHashtagInput?.focus();
+                }
+            });
+        }
+        if (registerHashtagInput) {
+            registerHashtagInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    this.handleRegister();
+                }
+            });
+        }
+    }
+    
+    generateRandomHashtag() {
+        const hashtagInput = document.getElementById('registerHashtagInput');
+        if (hashtagInput) {
+            // Generiere 4-stellige Nummer (1000-9999)
+            const randomNum = Math.floor(1000 + Math.random() * 9000);
+            hashtagInput.value = '#' + randomNum;
+        }
+    }
+    
+    showLoginForm() {
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        if (loginForm) loginForm.style.display = 'block';
+        if (registerForm) registerForm.style.display = 'none';
+    }
+    
+    showRegisterForm() {
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        if (loginForm) loginForm.style.display = 'none';
+        if (registerForm) registerForm.style.display = 'block';
+        // Generiere automatisch einen Hashtag
+        this.generateRandomHashtag();
+    }
+    
+    showLoginSection() {
+        const loginSection = document.getElementById('loginSection');
+        const gameSection = document.getElementById('gameSection');
+        if (loginSection) loginSection.style.display = 'block';
+        if (gameSection) gameSection.style.display = 'none';
+        this.showLoginForm();
+    }
+    
+    showGameSection(user) {
+        const loginSection = document.getElementById('loginSection');
+        const gameSection = document.getElementById('gameSection');
+        const currentUserName = document.getElementById('currentUserName');
+        const currentUserHashtag = document.getElementById('currentUserHashtag');
+        
+        if (loginSection) loginSection.style.display = 'none';
+        if (gameSection) gameSection.style.display = 'block';
+        if (currentUserName) currentUserName.textContent = user.name;
+        if (currentUserHashtag) currentUserHashtag.textContent = user.hashtag;
+    }
+    
+    handleLogin() {
+        const nameInput = document.getElementById('loginNameInput');
+        const hashtagInput = document.getElementById('loginHashtagInput');
+        
+        if (!nameInput || !hashtagInput) return;
+        
+        const name = nameInput.value.trim();
+        const hashtag = hashtagInput.value.trim();
+        
+        if (!name) {
+            alert(t('nameRequired'));
+            return;
+        }
+        if (!hashtag) {
+            alert(t('hashtagRequired'));
+            return;
+        }
+        
+        // Normalisiere Hashtag (entferne # falls vorhanden, füge es wieder hinzu)
+        const normalizedHashtag = hashtag.startsWith('#') ? hashtag : '#' + hashtag;
+        
+        // Prüfe ob Account existiert
+        const accounts = this.getAllAccounts();
+        const account = accounts.find(acc => acc.name === name && acc.hashtag === normalizedHashtag);
+        
+        if (account) {
+            // Login erfolgreich
+            this.setCurrentUser(account);
+            this.showGameSection(account);
+            this.log(t('loginSuccess'), 'success');
+        } else {
+            // Login fehlgeschlagen
+            alert(t('loginError'));
+            this.log(t('loginError'), 'error');
+        }
+    }
+    
+    handleRegister() {
+        const nameInput = document.getElementById('registerNameInput');
+        const hashtagInput = document.getElementById('registerHashtagInput');
+        
+        if (!nameInput || !hashtagInput) return;
+        
+        const name = nameInput.value.trim();
+        let hashtag = hashtagInput.value.trim();
+        
+        if (!name) {
+            alert(t('nameRequired'));
+            return;
+        }
+        if (!hashtag) {
+            alert(t('hashtagRequired'));
+            return;
+        }
+        
+        // Normalisiere Hashtag (entferne # falls vorhanden, füge es wieder hinzu)
+        hashtag = hashtag.startsWith('#') ? hashtag : '#' + hashtag;
+        
+        // Prüfe ob Account bereits existiert
+        const accounts = this.getAllAccounts();
+        const existingAccount = accounts.find(acc => acc.name === name && acc.hashtag === hashtag);
+        
+        if (existingAccount) {
+            alert(t('loginError')); // Account existiert bereits
+            return;
+        }
+        
+        // Erstelle neuen Account
+        const newAccount = {
+            name: name,
+            hashtag: hashtag,
+            createdAt: new Date().toISOString()
+        };
+        
+        accounts.push(newAccount);
+        this.saveAllAccounts(accounts);
+        this.setCurrentUser(newAccount);
+        this.showGameSection(newAccount);
+        this.log(t('accountCreated'), 'success');
+    }
+    
+    handleLogout() {
+        this.clearCurrentUser();
+        this.showLoginSection();
+        // Leere Input-Felder
+        const loginNameInput = document.getElementById('loginNameInput');
+        const loginHashtagInput = document.getElementById('loginHashtagInput');
+        if (loginNameInput) loginNameInput.value = '';
+        if (loginHashtagInput) loginHashtagInput.value = '';
+    }
+    
+    getCurrentUser() {
+        const stored = localStorage.getItem('leechCurrentUser');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                return null;
+            }
+        }
+        return null;
+    }
+    
+    setCurrentUser(user) {
+        localStorage.setItem('leechCurrentUser', JSON.stringify(user));
+    }
+    
+    clearCurrentUser() {
+        localStorage.removeItem('leechCurrentUser');
+    }
+    
+    getAllAccounts() {
+        const stored = localStorage.getItem('leechAccounts');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                return [];
+            }
+        }
+        return [];
+    }
+    
+    saveAllAccounts(accounts) {
+        localStorage.setItem('leechAccounts', JSON.stringify(accounts));
     }
     
     updateWorldSize() {
@@ -3416,17 +3884,33 @@ class Simulator {
     }
     
     setupControls() {
-        document.getElementById('startBtn').addEventListener('click', () => this.start());
-        document.getElementById('stopBtn').addEventListener('click', () => this.stop());
-        document.getElementById('resetBtn').addEventListener('click', () => this.reset());
+        const startBtn = document.getElementById('startBtn');
+        const stopBtn = document.getElementById('stopBtn');
+        const resetBtn = document.getElementById('resetBtn');
         
-        const speedSlider = document.getElementById('speedSlider');
-        const speedValue = document.getElementById('speedValue');
+        if (startBtn) {
+            startBtn.addEventListener('click', () => this.start());
+        }
+        if (stopBtn) {
+            stopBtn.addEventListener('click', () => this.stop());
+        }
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => this.reset());
+        }
         
-        speedSlider.addEventListener('input', (e) => {
-            this.speed = parseFloat(e.target.value);
-            speedValue.textContent = this.speed.toFixed(1) + 'x';
-        });
+        // Geschwindigkeits-Slider im Dev Mode
+        const devModeSpeedSlider = document.getElementById('devModeSpeedSlider');
+        const devModeSpeedValue = document.getElementById('devModeSpeedValue');
+        
+        if (devModeSpeedSlider && devModeSpeedValue) {
+            devModeSpeedSlider.value = this.speed;
+            devModeSpeedValue.textContent = this.speed.toFixed(1) + 'x';
+            
+            devModeSpeedSlider.addEventListener('input', (e) => {
+                this.speed = parseFloat(e.target.value);
+                devModeSpeedValue.textContent = this.speed.toFixed(1) + 'x';
+            });
+        }
         
         // Klick auf Canvas startet/restartet Spiel
         canvas.addEventListener('click', (e) => {
@@ -3443,11 +3927,124 @@ class Simulator {
         });
         
         // Restart-Button für Game Over
-        document.getElementById('restartBtn').addEventListener('click', () => {
-            document.getElementById('gameOverOverlay').style.display = 'none';
-            this.reset();
-            this.start();
-        });
+        const restartBtn = document.getElementById('restartBtn');
+        if (restartBtn) {
+            restartBtn.addEventListener('click', () => {
+                document.getElementById('gameOverOverlay').style.display = 'none';
+                this.reset();
+                this.start();
+            });
+        }
+        
+        // Zurück zum Menü Button
+        const backToMenuBtn = document.getElementById('backToMenuBtn');
+        if (backToMenuBtn) {
+            backToMenuBtn.addEventListener('click', () => {
+                document.getElementById('gameOverOverlay').style.display = 'none';
+                this.showMainMenu();
+            });
+        }
+        
+        // Hauptmenü Buttons
+        const startGameBtn = document.getElementById('startGameBtn');
+        const viewHighscoreBtn = document.getElementById('viewHighscoreBtn');
+        
+        if (startGameBtn) {
+            startGameBtn.addEventListener('click', () => {
+                this.hideMainMenu();
+                // Warte bis Container sichtbar ist und Canvas richtig initialisiert wurde
+                // Verwende requestAnimationFrame für bessere Synchronisation
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        // Prüfe ob Canvas jetzt eine gültige Größe hat
+                        if (canvas && canvas.getBoundingClientRect().width > 0) {
+                            this.reset();
+                            this.start();
+                        } else {
+                            // Noch nicht bereit, warte etwas länger
+                            setTimeout(() => {
+                                this.reset();
+                                this.start();
+                            }, 50);
+                        }
+                    });
+                });
+            });
+        }
+        
+        if (viewHighscoreBtn) {
+            viewHighscoreBtn.addEventListener('click', () => {
+                this.hideMainMenu();
+                // Zeige Highscore-Tab im rechten Panel
+                const upgradesTabBtn = document.getElementById('upgradesTabBtn');
+                const highscoreTabBtn = document.getElementById('highscoreTabBtn');
+                const upgradesTabContent = document.getElementById('upgradesTabContent');
+                const highscoreTabContent = document.getElementById('highscoreTabContent');
+                
+                if (upgradesTabBtn && highscoreTabBtn && upgradesTabContent && highscoreTabContent) {
+                    highscoreTabBtn.classList.add('active');
+                    upgradesTabBtn.classList.remove('active');
+                    upgradesTabContent.style.display = 'none';
+                    highscoreTabContent.style.display = 'block';
+                    this.updateHighscoreDisplay();
+                }
+            });
+        }
+        
+        // Highscore-Buttons
+        const submitHighscoreBtn = document.getElementById('submitHighscoreBtn');
+        const skipHighscoreBtn = document.getElementById('skipHighscoreBtn');
+        const playerNameInput = document.getElementById('playerNameInput');
+        
+        if (submitHighscoreBtn) {
+            submitHighscoreBtn.addEventListener('click', () => {
+                const name = playerNameInput ? playerNameInput.value.trim() : '';
+                this.saveHighscore(name, this.score, this.tier ? this.tier.numSegments : 0);
+                document.getElementById('highscoreNameInput').style.display = 'none';
+                document.getElementById('gameOverButtons').style.display = 'block';
+            });
+        }
+        
+        if (skipHighscoreBtn) {
+            skipHighscoreBtn.addEventListener('click', () => {
+                document.getElementById('highscoreNameInput').style.display = 'none';
+                document.getElementById('gameOverButtons').style.display = 'block';
+            });
+        }
+        
+        if (playerNameInput) {
+            playerNameInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    const name = playerNameInput.value.trim();
+                    this.saveHighscore(name, this.score, this.tier ? this.tier.numSegments : 0);
+                    document.getElementById('highscoreNameInput').style.display = 'none';
+                    document.getElementById('gameOverButtons').style.display = 'block';
+                }
+            });
+        }
+        
+        // Highscore/Upgrades Tab-Wechsel
+        const upgradesTabBtn = document.getElementById('upgradesTabBtn');
+        const highscoreTabBtn = document.getElementById('highscoreTabBtn');
+        const upgradesTabContent = document.getElementById('upgradesTabContent');
+        const highscoreTabContent = document.getElementById('highscoreTabContent');
+        
+        if (upgradesTabBtn && highscoreTabBtn && upgradesTabContent && highscoreTabContent) {
+            upgradesTabBtn.addEventListener('click', () => {
+                upgradesTabBtn.classList.add('active');
+                highscoreTabBtn.classList.remove('active');
+                upgradesTabContent.style.display = 'block';
+                highscoreTabContent.style.display = 'none';
+            });
+            
+            highscoreTabBtn.addEventListener('click', () => {
+                highscoreTabBtn.classList.add('active');
+                upgradesTabBtn.classList.remove('active');
+                upgradesTabContent.style.display = 'none';
+                highscoreTabContent.style.display = 'block';
+                this.updateHighscoreDisplay();
+            });
+        }
         
         // Mausposition-Tracking für Mausfolge (speichere nur Canvas-Koordinaten)
         canvas.addEventListener('mousemove', (e) => {
@@ -4093,7 +4690,151 @@ class Simulator {
         const overlay = document.getElementById('gameOverOverlay');
         document.getElementById('finalScore').textContent = this.score;
         document.getElementById('finalLength').textContent = this.tier ? this.tier.numSegments : 0;
+        
+        // Prüfe ob Score in Top 100 kommt
+        const highscores = this.getHighscores();
+        const minScore = highscores.length < 100 ? 0 : highscores[highscores.length - 1].score;
+        
+        if (this.score > minScore) {
+            // Zeige Namenseingabe
+            document.getElementById('highscoreNameInput').style.display = 'block';
+            document.getElementById('gameOverButtons').style.display = 'none';
+            document.getElementById('playerNameInput').value = '';
+            document.getElementById('playerNameInput').focus();
+        } else {
+            // Verstecke Namenseingabe
+            document.getElementById('highscoreNameInput').style.display = 'none';
+            document.getElementById('gameOverButtons').style.display = 'block';
+        }
+        
         overlay.style.display = 'flex';
+    }
+    
+    showMainMenu() {
+        // Stoppe das Spiel
+        this.stop();
+        
+        // Verstecke Game Container
+        const gameContainer = document.getElementById('gameContainer');
+        if (gameContainer) {
+            gameContainer.style.display = 'none';
+        }
+        
+        // Verstecke Game Over Overlay
+        const gameOverOverlay = document.getElementById('gameOverOverlay');
+        if (gameOverOverlay) {
+            gameOverOverlay.style.display = 'none';
+        }
+        
+        // Zeige Hauptmenü
+        const mainMenuOverlay = document.getElementById('mainMenuOverlay');
+        if (mainMenuOverlay) {
+            mainMenuOverlay.style.display = 'flex';
+        }
+    }
+    
+    hideMainMenu() {
+        // Verstecke Hauptmenü
+        const mainMenuOverlay = document.getElementById('mainMenuOverlay');
+        if (mainMenuOverlay) {
+            mainMenuOverlay.style.display = 'none';
+        }
+        
+        // Zeige Game Container
+        const gameContainer = document.getElementById('gameContainer');
+        if (gameContainer) {
+            gameContainer.style.display = 'flex';
+            
+            // Stelle sicher, dass Canvas initialisiert ist
+            if (!canvas || !ctx) {
+                initCanvas();
+            }
+            
+            // Stelle sicher, dass Canvas sichtbar ist
+            if (canvas) {
+                canvas.style.display = 'block';
+            }
+            
+            // Warte bis Browser das Layout aktualisiert hat, dann resize Canvas
+            // Mehrfaches requestAnimationFrame stellt sicher, dass das Layout vollständig aktualisiert wurde
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        resizeCanvas();
+                        // Stelle sicher, dass Canvas eine gültige Größe hat
+                        if (canvas && (canvas.width === 0 || canvas.height === 0)) {
+                            // Fallback: Verwende CSS-Größe
+                            const rect = canvas.getBoundingClientRect();
+                            if (rect.width > 0 && rect.height > 0) {
+                                resizeCanvas();
+                            }
+                        }
+                    });
+                });
+            });
+        }
+    }
+    
+    getHighscores() {
+        const stored = localStorage.getItem('leechHighscores');
+        if (stored) {
+            try {
+                return JSON.parse(stored);
+            } catch (e) {
+                return [];
+            }
+        }
+        return [];
+    }
+    
+    saveHighscore(name, score, length) {
+        const highscores = this.getHighscores();
+        highscores.push({
+            name: name || 'Anonymous',
+            score: score,
+            length: length,
+            date: new Date().toISOString()
+        });
+        
+        // Sortiere nach Score (höchster zuerst)
+        highscores.sort((a, b) => b.score - a.score);
+        
+        // Behalte nur Top 100
+        if (highscores.length > 100) {
+            highscores.splice(100);
+        }
+        
+        localStorage.setItem('leechHighscores', JSON.stringify(highscores));
+        this.updateHighscoreDisplay();
+    }
+    
+    updateHighscoreDisplay() {
+        const highscoreList = document.getElementById('highscoreList');
+        if (!highscoreList) return;
+        
+        const highscores = this.getHighscores();
+        
+        if (highscores.length === 0) {
+            highscoreList.innerHTML = `<div class="no-upgrades">${t('noHighscores')}</div>`;
+            return;
+        }
+        
+        highscoreList.innerHTML = highscores.map((entry, index) => {
+            const rank = index + 1;
+            let rankClass = '';
+            if (rank === 1) rankClass = 'rank-1';
+            else if (rank === 2) rankClass = 'rank-2';
+            else if (rank === 3) rankClass = 'rank-3';
+            
+            return `
+                <div class="highscore-entry ${rankClass}">
+                    <span class="highscore-rank">#${rank}</span>
+                    <span class="highscore-name">${entry.name}</span>
+                    <span class="highscore-score">${entry.score}</span>
+                    <span class="highscore-length">${entry.length}</span>
+                </div>
+            `;
+        }).join('');
     }
     
     stop() {
@@ -4158,8 +4899,29 @@ class Simulator {
     
     start() {
         if (!this.isRunning) {
-            // Weltgröße aktualisieren (falls Canvas-Größe sich geändert hat)
-            this.updateWorldSize();
+            // Stelle sicher, dass Canvas initialisiert ist
+            if (!canvas || !ctx) {
+                initCanvas();
+            }
+            
+            // Stelle sicher, dass Canvas sichtbar ist
+            if (canvas) {
+                canvas.style.display = 'block';
+            }
+            
+            const gameContainer = document.getElementById('gameContainer');
+            // Prüfe ob Container sichtbar ist, bevor wir resizeCanvas aufrufen
+            if (gameContainer && gameContainer.style.display !== 'none' && gameContainer.offsetWidth > 0) {
+                // Warte kurz, dann resize
+                requestAnimationFrame(() => {
+                    resizeCanvas();
+                    // Weltgröße aktualisieren (falls Canvas-Größe sich geändert hat)
+                    this.updateWorldSize();
+                });
+            } else {
+                // Weltgröße aktualisieren (falls Canvas-Größe sich geändert hat)
+                this.updateWorldSize();
+            }
             
             // Alle Foods und Stamina-Token entfernen
             this.foods = [];
@@ -5404,61 +6166,107 @@ class Simulator {
     }
     
     drawBackground() {
-        // Rain World Stil Hintergrund - dunkel und düster (für die ganze Welt)
+        // Berechne sichtbaren Bereich basierend auf Kamera-Position
+        const viewLeft = this.cameraX - renderWidth / 2;
+        const viewRight = this.cameraX + renderWidth / 2;
+        const viewTop = this.cameraY - renderHeight / 2;
+        const viewBottom = this.cameraY + renderHeight / 2;
+        
+        // Erweitere den sichtbaren Bereich um einen Puffer (für glatte Übergänge)
+        const padding = 200;
+        const drawLeft = Math.floor(viewLeft - padding);
+        const drawRight = Math.ceil(viewRight + padding);
+        const drawTop = Math.floor(viewTop - padding);
+        const drawBottom = Math.ceil(viewBottom + padding);
+        
+        // Rain World Stil Hintergrund - zeichne für den gesamten sichtbaren Bereich
         const bgColor = '#1a1a1a';
         ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, this.worldWidth, this.worldHeight);
+        ctx.fillRect(drawLeft, drawTop, drawRight - drawLeft, drawBottom - drawTop);
         
-        // Visuelle Wände/Begrenzungen kennzeichnen (dunkle Linien)
+        // Zeichne Welt-Grenzen nur wenn sie im sichtbaren Bereich sind
         const wallThickness = 3;
         const wallColor = '#0a0a0a'; // Sehr dunkel, fast schwarz
         ctx.fillStyle = wallColor;
         
-        // Obere Wand
-        ctx.fillRect(0, 0, this.worldWidth, wallThickness);
-        // Untere Wand
-        ctx.fillRect(0, this.worldHeight - wallThickness, this.worldWidth, wallThickness);
-        // Linke Wand
-        ctx.fillRect(0, 0, wallThickness, this.worldHeight);
-        // Rechte Wand
-        ctx.fillRect(this.worldWidth - wallThickness, 0, wallThickness, this.worldHeight);
+        // Obere Wand (nur wenn sichtbar)
+        if (viewTop <= 0 && viewBottom >= 0) {
+            ctx.fillRect(Math.max(drawLeft, 0), 0, Math.min(drawRight, this.worldWidth) - Math.max(drawLeft, 0), wallThickness);
+        }
+        // Untere Wand (nur wenn sichtbar)
+        if (viewTop <= this.worldHeight && viewBottom >= this.worldHeight) {
+            ctx.fillRect(Math.max(drawLeft, 0), this.worldHeight - wallThickness, Math.min(drawRight, this.worldWidth) - Math.max(drawLeft, 0), wallThickness);
+        }
+        // Linke Wand (nur wenn sichtbar)
+        if (viewLeft <= 0 && viewRight >= 0) {
+            ctx.fillRect(0, Math.max(drawTop, 0), wallThickness, Math.min(drawBottom, this.worldHeight) - Math.max(drawTop, 0));
+        }
+        // Rechte Wand (nur wenn sichtbar)
+        if (viewLeft <= this.worldWidth && viewRight >= this.worldWidth) {
+            ctx.fillRect(this.worldWidth - wallThickness, Math.max(drawTop, 0), wallThickness, Math.min(drawBottom, this.worldHeight) - Math.max(drawTop, 0));
+        }
         
-        // Zusätzliche visuelle Marker an den Ecken (größere Markierungen)
+        // Zusätzliche visuelle Marker an den Ecken (nur wenn sichtbar)
         const cornerSize = 15;
         ctx.fillStyle = '#ff0000'; // Rot für bessere Sichtbarkeit
-        // Obere linke Ecke
-        ctx.fillRect(0, 0, cornerSize, cornerSize);
-        // Obere rechte Ecke
-        ctx.fillRect(this.worldWidth - cornerSize, 0, cornerSize, cornerSize);
-        // Untere linke Ecke
-        ctx.fillRect(0, this.worldHeight - cornerSize, cornerSize, cornerSize);
-        // Untere rechte Ecke
-        ctx.fillRect(this.worldWidth - cornerSize, this.worldHeight - cornerSize, cornerSize, cornerSize);
         
-        // Pixel-Art Boden-Textur (für die ganze Welt)
+        // Obere linke Ecke
+        if (viewLeft <= cornerSize && viewTop <= cornerSize && viewRight >= 0 && viewBottom >= 0) {
+            ctx.fillRect(0, 0, cornerSize, cornerSize);
+        }
+        // Obere rechte Ecke
+        if (viewLeft <= this.worldWidth && viewTop <= cornerSize && viewRight >= this.worldWidth - cornerSize && viewBottom >= 0) {
+            ctx.fillRect(this.worldWidth - cornerSize, 0, cornerSize, cornerSize);
+        }
+        // Untere linke Ecke
+        if (viewLeft <= cornerSize && viewTop <= this.worldHeight && viewRight >= 0 && viewBottom >= this.worldHeight - cornerSize) {
+            ctx.fillRect(0, this.worldHeight - cornerSize, cornerSize, cornerSize);
+        }
+        // Untere rechte Ecke
+        if (viewLeft <= this.worldWidth && viewTop <= this.worldHeight && viewRight >= this.worldWidth - cornerSize && viewBottom >= this.worldHeight - cornerSize) {
+            ctx.fillRect(this.worldWidth - cornerSize, this.worldHeight - cornerSize, cornerSize, cornerSize);
+        }
+        
+        // Pixel-Art Boden-Textur (nur innerhalb der Weltgrenzen, aber für sichtbaren Bereich)
         ctx.fillStyle = '#2a2a2a';
-        for (let y = this.worldHeight - 20; y < this.worldHeight; y++) {
-            for (let x = 0; x < this.worldWidth; x += 4) {
+        const floorStartY = Math.max(drawTop, this.worldHeight - 20);
+        const floorEndY = Math.min(drawBottom, this.worldHeight);
+        const floorStartX = Math.max(drawLeft, 0);
+        const floorEndX = Math.min(drawRight, this.worldWidth);
+        
+        for (let y = floorStartY; y < floorEndY; y++) {
+            for (let x = floorStartX; x < floorEndX; x += 4) {
                 if ((x + y) % 8 < 4) {
                     drawPixelRect(x, y, 2, 2, '#2a2a2a');
                 }
             }
         }
         
-        // Prozedurale Pixel-Art Details (für die ganze Welt)
+        // Prozedurale Pixel-Art Details (nur innerhalb der Weltgrenzen)
         ctx.fillStyle = '#333333';
         for (let i = 0; i < 200; i++) {
             const x = (i * 47) % this.worldWidth;
             const y = (i * 73) % (this.worldHeight - 30);
-            drawPixelRect(x, y, 1, 1, '#333333');
+            // Nur zeichnen wenn im sichtbaren Bereich
+            if (x >= drawLeft && x <= drawRight && y >= drawTop && y <= drawBottom) {
+                drawPixelRect(x, y, 1, 1, '#333333');
+            }
         }
         
-        // Regen-Effekt (optional, Rain World Stil)
+        // Regen-Effekt (optional, Rain World Stil) - für gesamten sichtbaren Bereich
         ctx.fillStyle = '#444444';
+        const rainStartX = Math.max(drawLeft, 0);
+        const rainEndX = Math.min(drawRight, this.worldWidth);
+        const rainStartY = Math.max(drawTop, 0);
+        const rainEndY = Math.min(drawBottom, this.worldHeight);
+        
         for (let i = 0; i < 100; i++) {
             const x = (i * 53 + Date.now() * 0.01) % this.worldWidth;
             const y = (i * 37 + Date.now() * 0.02) % this.worldHeight;
-            drawPixelRect(Math.floor(x), Math.floor(y), 1, 3, '#444444');
+            // Nur zeichnen wenn im sichtbaren Bereich
+            if (x >= rainStartX && x <= rainEndX && y >= rainStartY && y <= rainEndY) {
+                drawPixelRect(Math.floor(x), Math.floor(y), 1, 3, '#444444');
+            }
         }
     }
     
@@ -5519,22 +6327,69 @@ function updateUITexts() {
     if (stopBtn) stopBtn.textContent = t('stop');
     if (resetBtn) resetBtn.textContent = t('reset');
     
-    // Speed Label
-    const speedLabel = document.getElementById('speedLabel');
-    if (speedLabel) {
-        const speedValue = document.getElementById('speedValue')?.textContent || '1.0x';
-        speedLabel.innerHTML = `${t('speed')}: <input type="range" id="speedSlider" min="0.5" max="3" step="0.1" value="${window.simulator?.speed || 1}"> <span id="speedValue">${speedValue}</span>`;
-        // Event-Listener für Slider neu setzen
-        const speedSlider = document.getElementById('speedSlider');
-        const speedValueSpan = document.getElementById('speedValue');
-        if (speedSlider && speedValueSpan && window.simulator) {
-            // Alte Listener entfernen (durch Neuerstellung des Elements)
-            speedSlider.addEventListener('input', (e) => {
-                window.simulator.speed = parseFloat(e.target.value);
-                speedValueSpan.textContent = window.simulator.speed.toFixed(1) + 'x';
-            });
-        }
+    // Dev Mode Speed Label
+    const devModeSpeedLabel = document.getElementById('devModeSpeedLabel');
+    const devModeSpeedText = document.getElementById('devModeSpeedText');
+    const devModeSpeedSlider = document.getElementById('devModeSpeedSlider');
+    const devModeSpeedValue = document.getElementById('devModeSpeedValue');
+    if (devModeSpeedText) devModeSpeedText.textContent = t('speed') + ':';
+    if (devModeSpeedSlider && devModeSpeedValue && window.simulator) {
+        devModeSpeedSlider.value = window.simulator.speed;
+        devModeSpeedValue.textContent = window.simulator.speed.toFixed(1) + 'x';
     }
+    
+    // Highscore Tab Buttons
+    const upgradesTabBtn = document.getElementById('upgradesTabBtn');
+    const highscoreTabBtn = document.getElementById('highscoreTabBtn');
+    const highscoreTitle = document.getElementById('highscoreTitle');
+    if (upgradesTabBtn) upgradesTabBtn.textContent = t('upgrades');
+    if (highscoreTabBtn) highscoreTabBtn.textContent = t('highscore');
+    if (highscoreTitle) highscoreTitle.textContent = t('highscore');
+    
+    // Highscore Name Input
+    const highscoreCongratsText = document.getElementById('highscoreCongratsText');
+    const highscoreEnterNameText = document.getElementById('highscoreEnterNameText');
+    const submitHighscoreBtn = document.getElementById('submitHighscoreBtn');
+    const skipHighscoreBtn = document.getElementById('skipHighscoreBtn');
+    const playerNameInput = document.getElementById('playerNameInput');
+    if (highscoreCongratsText) highscoreCongratsText.textContent = t('congratsTop100');
+    if (highscoreEnterNameText) highscoreEnterNameText.textContent = t('enterName');
+    if (submitHighscoreBtn) submitHighscoreBtn.textContent = t('save');
+    if (skipHighscoreBtn) skipHighscoreBtn.textContent = t('skip');
+    if (playerNameInput) playerNameInput.placeholder = t('name');
+    
+    // Login/Register UI
+    const loginTitle = document.getElementById('loginTitle');
+    const registerTitle = document.getElementById('registerTitle');
+    const loginBtn = document.getElementById('loginBtn');
+    const registerBtn = document.getElementById('registerBtn');
+    const showRegisterBtn = document.getElementById('showRegisterBtn');
+    const showLoginBtn = document.getElementById('showLoginBtn');
+    const noAccountText = document.getElementById('noAccountText');
+    const hasAccountText = document.getElementById('hasAccountText');
+    const welcomeText = document.getElementById('welcomeText');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const generateHashtagBtn = document.getElementById('generateHashtagBtn');
+    const loginNameInput = document.getElementById('loginNameInput');
+    const loginHashtagInput = document.getElementById('loginHashtagInput');
+    const registerNameInput = document.getElementById('registerNameInput');
+    const registerHashtagInput = document.getElementById('registerHashtagInput');
+    
+    if (loginTitle) loginTitle.textContent = t('loginTitle');
+    if (registerTitle) registerTitle.textContent = t('registerTitle');
+    if (loginBtn) loginBtn.textContent = t('login');
+    if (registerBtn) registerBtn.textContent = t('register');
+    if (showRegisterBtn) showRegisterBtn.textContent = t('register');
+    if (showLoginBtn) showLoginBtn.textContent = t('login');
+    if (noAccountText) noAccountText.textContent = t('noAccount');
+    if (hasAccountText) hasAccountText.textContent = t('hasAccount');
+    if (welcomeText) welcomeText.textContent = t('welcome');
+    if (logoutBtn) logoutBtn.textContent = t('logout');
+    if (generateHashtagBtn) generateHashtagBtn.textContent = '🎲 ' + t('random');
+    if (loginNameInput) loginNameInput.placeholder = t('name');
+    if (loginHashtagInput) loginHashtagInput.placeholder = t('hashtag');
+    if (registerNameInput) registerNameInput.placeholder = t('name');
+    if (registerHashtagInput) registerHashtagInput.placeholder = t('hashtag');
     
     // Upgrade Overlay
     const upgradeOverlayTitle = document.getElementById('upgradeOverlayTitle');
@@ -5669,17 +6524,31 @@ function setupLanguageSelector() {
 
 // Initialisierung - warte bis DOM geladen ist
 function initializeGame() {
+    // Stelle sicher, dass Canvas initialisiert ist
+    if (!canvas || !ctx) {
+        if (!initCanvas()) {
+            console.error('Failed to initialize canvas!');
+            return;
+        }
+    }
+    
     // Simulator initialisieren
     const simulator = new Simulator();
     window.simulator = simulator; // Für Debug-Log-Zugriff
     simulator.updateUpgradeDisplay();
-    simulator.draw();
+    
+    // Zeichne NICHT beim Start, da Container versteckt ist
+    // Das würde zu einem Fehler führen, da Canvas noch keine Größe hat
+    // simulator.draw();
     
     // Sprachauswahl einrichten
     setupLanguageSelector();
     
     // HTML lang-Attribut auf aktuelle Sprache setzen
     document.documentElement.lang = currentLanguage;
+    
+    // Hauptmenü anzeigen (Spiel startet im Menü)
+    simulator.showMainMenu();
 }
 
 // Warte bis DOM vollständig geladen ist
