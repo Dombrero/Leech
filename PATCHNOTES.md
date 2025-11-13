@@ -1,5 +1,20 @@
 # Patch Notes - Leech Game
 
+## Version 1.1.1 - Language System Fixes
+
+### Bugfixes
+- **Sprachinitialisierung korrigiert**: Standard-Sprache ist jetzt korrekt auf Englisch gesetzt
+- **DOM-Loading-Fix**: Initialisierung wartet jetzt korrekt auf vollständiges DOM-Loading
+- **HTML lang-Attribut**: Wird jetzt dynamisch auf die gewählte Sprache gesetzt
+- **Sprachauswahl-Button**: Funktioniert jetzt auch in der Online-Version korrekt
+
+### Technische Verbesserungen
+- Initialisierung in `initializeGame()` Funktion gekapselt
+- Korrekte Behandlung von DOM-Loading-Zuständen
+- Entfernung von doppelter Initialisierung
+
+---
+
 ## Version 1.1.0 - Multi-Language Support & UI Improvements
 
 ### Neue Features
