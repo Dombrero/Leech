@@ -1,0 +1,19 @@
+# Ignoriere Node Modules (falls später verwendet)
+node_modules/
+npm-debug.log
+
+# Ignoriere Editor-Dateien
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Ignoriere OS-Dateien
+.DS_Store
+Thumbs.db
+
+# Ignoriere temporäre Dateien
+*.tmp
+*.log
+

@@ -1,0 +1,211 @@
+═══════════════════════════════════════════════════════════════
+  GITHUB PAGES SETUP - SCHRITT FÜR SCHRITT ANLEITUNG
+═══════════════════════════════════════════════════════════════
+
+📌 TEIL 1: GITHUB ACCOUNT & REPOSITORY ERSTELLEN
+═══════════════════════════════════════════════════════════════
+
+SCHRITT 1: GitHub Account erstellen
+────────────────────────────────────
+1. Gehe zu: https://github.com
+2. Klicke oben rechts auf "Sign up"
+3. Gib deine Email ein
+4. Wähle Benutzernamen (z.B. "deinname")
+5. Wähle Passwort
+6. Klicke "Create account"
+7. Bestätige Email (falls nötig)
+
+
+SCHRITT 2: Neues Repository erstellen
+──────────────────────────────────────
+1. Nach Login: Klicke oben rechts auf das ➕ Symbol
+2. Wähle "New repository"
+
+3. Fülle aus:
+   ┌─────────────────────────────────────────┐
+   │ Repository name: leech-game              │
+   │ Description: (optional)                  │
+   │ ✅ Public  (MUSS Public sein!)           │
+   │ ❌ Add README (NICHT ankreuzen!)         │
+   │ ❌ Add .gitignore (NICHT ankreuzen!)     │
+   │ ❌ Choose a license (NICHT ankreuzen!)   │
+   └─────────────────────────────────────────┘
+
+4. Klicke "Create repository" (grüner Button)
+
+
+═══════════════════════════════════════════════════════════════
+📌 TEIL 2: PROJEKT ZU GITHUB HOCHLADEN
+═══════════════════════════════════════════════════════════════
+
+SCHRITT 3: PowerShell öffnen
+─────────────────────────────
+1. Drücke: Windows-Taste + X
+2. Wähle: "Windows PowerShell" oder "Terminal"
+
+
+SCHRITT 4: Zum Projektordner navigieren
+────────────────────────────────────────
+Kopiere diesen Befehl und drücke Enter:
+
+cd "G:\Creative Folder\Programmieren\cursor projekte\procecdural simulator"
+
+
+SCHRITT 5: Git konfigurieren (NUR beim ersten Mal!)
+─────────────────────────────────────────────────────
+Falls du Git noch nie konfiguriert hast:
+
+git config --global user.name "Dein Name"
+git config --global user.email "deine-email@example.com"
+
+(Ersetze mit deinem Namen und Email)
+
+
+SCHRITT 6: Dateien hinzufügen
+──────────────────────────────
+git add .
+
+
+SCHRITT 7: Ersten Commit erstellen
+───────────────────────────────────
+git commit -m "Initial commit - Leech Game"
+
+
+SCHRITT 8: Mit GitHub verbinden
+────────────────────────────────
+Gehe zurück zu GitHub (dein neues Repository sollte offen sein)
+
+Du siehst eine Seite mit Anweisungen. Kopiere diese beiden Befehle:
+
+git remote add origin https://github.com/DEIN-USERNAME/leech-game.git
+git branch -M main
+git push -u origin main
+
+⚠️ WICHTIG: Ersetze "DEIN-USERNAME" mit deinem GitHub-Benutzernamen!
+
+Führe diese Befehle in PowerShell aus.
+
+
+SCHRITT 9: GitHub Login (falls gefragt)
+────────────────────────────────────────
+GitHub fragt nach Username und Passwort:
+
+Username: Dein GitHub-Benutzername
+Password: Du brauchst einen "Personal Access Token"!
+
+So erstellst du einen Token:
+1. Gehe zu: https://github.com/settings/tokens
+2. Klicke "Generate new token (classic)"
+3. Name: "leech-game"
+4. Scopes: ✅ "repo" (alles unter repo ankreuzen)
+5. Klicke "Generate token"
+6. ⚠️ KOPIERE DEN TOKEN SOFORT! (du siehst ihn nur einmal!)
+7. Verwende diesen Token als Passwort
+
+
+Nach erfolgreichem Push siehst du alle Dateien auf GitHub! ✅
+
+
+═══════════════════════════════════════════════════════════════
+📌 TEIL 3: GITHUB PAGES AKTIVIEREN
+═══════════════════════════════════════════════════════════════
+
+SCHRITT 10: Pages aktivieren
+─────────────────────────────
+1. Gehe zu deinem Repository auf GitHub
+2. Klicke oben auf den Tab "Settings" (ganz rechts)
+3. Scrolle im linken Menü nach unten zu "Pages"
+4. Unter "Source":
+   ┌─────────────────────────────────────────┐
+   │ Source: [Deploy from a branch ▼]        │
+   │ Branch: [main ▼]                        │
+   │ Folder: [/ (root) ▼]                    │
+   └─────────────────────────────────────────┘
+5. Klicke "Save" (grüner Button)
+
+
+SCHRITT 11: URL erhalten
+─────────────────────────
+1. Warte 1-2 Minuten
+2. Die Seite lädt automatisch neu
+3. Oben siehst du eine grüne Box:
+   ┌──────────────────────────────────────────────┐
+   │ ✅ Your site is live at                      │
+   │ https://DEIN-USERNAME.github.io/leech-game/  │
+   └──────────────────────────────────────────────┘
+
+4. Klicke auf die URL oder kopiere sie
+5. Öffne die URL im Browser - dein Spiel ist online! 🎉
+
+
+═══════════════════════════════════════════════════════════════
+📌 TEIL 4: UPDATES HOCHLADEN
+═══════════════════════════════════════════════════════════════
+
+Jedes Mal wenn du Änderungen machst:
+
+1. Öffne PowerShell im Projektordner
+2. Führe aus:
+   ┌─────────────────────────────────────────────┐
+   │ git add .                                   │
+   │ git commit -m "Was wurde geändert"          │
+   │ git push                                    │
+   └─────────────────────────────────────────────┘
+
+3. Warte 1-2 Minuten
+4. Drücke F5 im Browser (oder Strg+F5 für Hard Refresh)
+5. Updates sind live! 🚀
+
+Beispiel:
+   git add .
+   git commit -m "Mutationen-Werte erhöht"
+   git push
+
+
+═══════════════════════════════════════════════════════════════
+🆘 HILFE BEI PROBLEMEN
+═══════════════════════════════════════════════════════════════
+
+❌ "git: command not found"
+   → Git ist nicht installiert
+   → Gehe zu: https://git-scm.com/download/win
+   → Installiere Git und starte PowerShell neu
+
+❌ "Permission denied" beim Push
+   → Erstelle Personal Access Token (siehe Schritt 9)
+   → Verwende Token als Passwort
+
+❌ "Repository not found"
+   → Prüfe ob Repository-Name richtig ist
+   → Prüfe ob Repository "Public" ist
+
+❌ Seite zeigt 404 Error
+   → Warte 2-3 Minuten (erster Deploy braucht länger)
+   → Prüfe ob index.html im Root-Ordner ist
+   → Prüfe ob Branch "main" heißt
+
+❌ Updates erscheinen nicht
+   → Warte 1-2 Minuten
+   → Browser-Cache leeren: Strg + F5
+   → Oder im Inkognito-Modus testen
+
+
+═══════════════════════════════════════════════════════════════
+✅ CHECKLISTE
+═══════════════════════════════════════════════════════════════
+
+[ ] GitHub Account erstellt
+[ ] Repository erstellt (Public!)
+[ ] Git lokal konfiguriert
+[ ] Dateien committed
+[ ] Mit GitHub verbunden
+[ ] Ersten Push gemacht
+[ ] GitHub Pages aktiviert
+[ ] URL erhalten
+[ ] Spiel getestet
+
+
+═══════════════════════════════════════════════════════════════
+
+Viel Erfolg! 🚀
+
