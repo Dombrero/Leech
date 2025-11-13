@@ -1,3 +1,356 @@
+// Übersetzungssystem
+const TRANSLATIONS = {
+    de: {
+        // UI
+        score: "Score",
+        length: "Länge",
+        start: "Start",
+        stop: "Stop",
+        reset: "Zurücksetzen",
+        speed: "Geschwindigkeit",
+        selectUpgrade: "Upgrade auswählen!",
+        selectMutation: "Mutation auswählen!",
+        currentLength: "Aktuelle Länge",
+        segments: "Segmente",
+        activeUpgrades: "Aktive Upgrades",
+        noUpgrades: "Noch keine Upgrades",
+        gameOver: "GAME OVER",
+        finalScore: "Finaler Score",
+        lengthReached: "Länge erreicht",
+        restart: "Neu starten",
+        devMode: "Dev Mode",
+        devModeTitle: "🔧 Dev Mode - Upgrade/Mutation Tester",
+        upgrades: "Upgrades",
+        mutations: "Mutationen",
+        close: "Schließen",
+        debugLog: "Debug Log",
+        copyLog: "Copy Log",
+        clear: "Clear",
+        cost: "Kosten",
+        notEnough: "Nicht genug!",
+        notEnoughSegments: "Nicht genug Segmente für Mutationen!",
+        stacks: "Stacks",
+        all: "Alle",
+        mutation: "MUTATION",
+        // Upgrade-Namen und Beschreibungen werden dynamisch übersetzt
+    },
+    en: {
+        score: "Score",
+        length: "Length",
+        start: "Start",
+        stop: "Stop",
+        reset: "Reset",
+        speed: "Speed",
+        selectUpgrade: "Select Upgrade!",
+        selectMutation: "Select Mutation!",
+        currentLength: "Current Length",
+        segments: "segments",
+        activeUpgrades: "Active Upgrades",
+        noUpgrades: "No upgrades yet",
+        gameOver: "GAME OVER",
+        finalScore: "Final Score",
+        lengthReached: "Length Reached",
+        restart: "Restart",
+        devMode: "Dev Mode",
+        devModeTitle: "🔧 Dev Mode - Upgrade/Mutation Tester",
+        upgrades: "Upgrades",
+        mutations: "Mutations",
+        close: "Close",
+        debugLog: "Debug Log",
+        copyLog: "Copy Log",
+        clear: "Clear",
+        cost: "Cost",
+        notEnough: "Not enough!",
+        notEnoughSegments: "Not enough segments for mutations!",
+        stacks: "Stacks",
+        all: "All",
+        mutation: "MUTATION",
+    },
+    fr: {
+        score: "Score",
+        length: "Longueur",
+        start: "Démarrer",
+        stop: "Arrêter",
+        reset: "Réinitialiser",
+        speed: "Vitesse",
+        selectUpgrade: "Choisir une amélioration!",
+        selectMutation: "Choisir une mutation!",
+        currentLength: "Longueur actuelle",
+        segments: "segments",
+        activeUpgrades: "Améliorations actives",
+        noUpgrades: "Aucune amélioration",
+        gameOver: "GAME OVER",
+        finalScore: "Score final",
+        lengthReached: "Longueur atteinte",
+        restart: "Redémarrer",
+        devMode: "Mode Dev",
+        devModeTitle: "🔧 Mode Dev - Testeur d'améliorations/mutations",
+        upgrades: "Améliorations",
+        mutations: "Mutations",
+        close: "Fermer",
+        debugLog: "Journal de débogage",
+        copyLog: "Copier le journal",
+        clear: "Effacer",
+        cost: "Coût",
+        notEnough: "Pas assez!",
+        notEnoughSegments: "Pas assez de segments pour les mutations!",
+        stacks: "Empilements",
+        all: "Toutes les",
+        mutation: "MUTATION",
+    },
+    es: {
+        score: "Puntuación",
+        length: "Longitud",
+        start: "Iniciar",
+        stop: "Detener",
+        reset: "Reiniciar",
+        speed: "Velocidad",
+        selectUpgrade: "¡Selecciona una mejora!",
+        selectMutation: "¡Selecciona una mutación!",
+        currentLength: "Longitud actual",
+        segments: "segmentos",
+        activeUpgrades: "Mejoras activas",
+        noUpgrades: "Sin mejoras aún",
+        gameOver: "GAME OVER",
+        finalScore: "Puntuación final",
+        lengthReached: "Longitud alcanzada",
+        restart: "Reiniciar",
+        devMode: "Modo Dev",
+        devModeTitle: "🔧 Modo Dev - Probador de mejoras/mutaciones",
+        upgrades: "Mejoras",
+        mutations: "Mutaciones",
+        close: "Cerrar",
+        debugLog: "Registro de depuración",
+        copyLog: "Copiar registro",
+        clear: "Limpiar",
+        cost: "Costo",
+        notEnough: "¡No suficiente!",
+        notEnoughSegments: "¡No hay suficientes segmentos para mutaciones!",
+        stacks: "Pilas",
+        all: "Todas las",
+        mutation: "MUTACIÓN",
+    },
+    ja: {
+        score: "スコア",
+        length: "長さ",
+        start: "開始",
+        stop: "停止",
+        reset: "リセット",
+        speed: "速度",
+        selectUpgrade: "アップグレードを選択！",
+        selectMutation: "変異を選択！",
+        currentLength: "現在の長さ",
+        segments: "セグメント",
+        activeUpgrades: "アクティブなアップグレード",
+        noUpgrades: "アップグレードなし",
+        gameOver: "ゲームオーバー",
+        finalScore: "最終スコア",
+        lengthReached: "到達した長さ",
+        restart: "再開",
+        devMode: "開発モード",
+        devModeTitle: "🔧 開発モード - アップグレード/変異テスター",
+        upgrades: "アップグレード",
+        mutations: "変異",
+        close: "閉じる",
+        debugLog: "デバッグログ",
+        copyLog: "ログをコピー",
+        clear: "クリア",
+        cost: "コスト",
+        notEnough: "不足しています！",
+        notEnoughSegments: "変異には十分なセグメントがありません！",
+        stacks: "スタック",
+        all: "すべての",
+        mutation: "変異",
+    }
+};
+
+// Übersetzungen für Upgrade-Namen und Beschreibungen
+const UPGRADE_TRANSLATIONS = {
+    de: {
+        'Leichter Speed': 'Leichter Speed',
+        '+3% Bewegungsgeschwindigkeit': '+3% Bewegungsgeschwindigkeit',
+        'Längerer Körper': 'Längerer Körper',
+        '+2 Segmente': '+2 Segmente',
+        'Leichte Agilität': 'Leichte Agilität',
+        '+15% Drehgeschwindigkeit': '+15% Drehgeschwindigkeit',
+        'Schwache Regeneration': 'Schwache Regeneration',
+        '+1% Chance auf extra Food': '+1% Chance auf extra Food',
+        'Geschwindigkeits-Boost': 'Geschwindigkeits-Boost',
+        '+5% Bewegungsgeschwindigkeit': '+5% Bewegungsgeschwindigkeit',
+        '+3 Segmente': '+3 Segmente',
+        'Agilität': 'Agilität',
+        '+30% Drehgeschwindigkeit': '+30% Drehgeschwindigkeit',
+        'Stärke': 'Stärke',
+        '+4% Geschwindigkeit, +2 Segmente': '+4% Geschwindigkeit, +2 Segmente',
+        '+5 Segmente': '+5 Segmente',
+        '+6% Geschwindigkeit, +4 Segmente': '+6% Geschwindigkeit, +4 Segmente',
+        '+8 Segmente': '+8 Segmente',
+        '+10% Geschwindigkeit, +6 Segmente': '+10% Geschwindigkeit, +6 Segmente',
+        'Legendärer Boost': 'Legendärer Boost',
+        '+8% Geschwindigkeit, +30% Drehgeschwindigkeit, +3 Segmente': '+8% Geschwindigkeit, +30% Drehgeschwindigkeit, +3 Segmente',
+        'Max Stamina': 'Max Stamina',
+        '+2 Max Stamina': '+2 Max Stamina',
+    },
+    en: {
+        'Leichter Speed': 'Light Speed',
+        '+3% Bewegungsgeschwindigkeit': '+3% Movement Speed',
+        'Längerer Körper': 'Longer Body',
+        '+2 Segmente': '+2 Segments',
+        'Leichte Agilität': 'Light Agility',
+        '+15% Drehgeschwindigkeit': '+15% Turn Speed',
+        'Schwache Regeneration': 'Weak Regeneration',
+        '+1% Chance auf extra Food': '+1% Extra Food Chance',
+        'Geschwindigkeits-Boost': 'Speed Boost',
+        '+5% Bewegungsgeschwindigkeit': '+5% Movement Speed',
+        '+3 Segmente': '+3 Segments',
+        'Agilität': 'Agility',
+        '+30% Drehgeschwindigkeit': '+30% Turn Speed',
+        'Stärke': 'Strength',
+        '+4% Geschwindigkeit, +2 Segmente': '+4% Speed, +2 Segments',
+        '+5 Segmente': '+5 Segments',
+        '+6% Geschwindigkeit, +4 Segmente': '+6% Speed, +4 Segments',
+        '+8 Segmente': '+8 Segments',
+        '+10% Geschwindigkeit, +6 Segmente': '+10% Speed, +6 Segments',
+        'Legendärer Boost': 'Legendary Boost',
+        '+8% Geschwindigkeit, +30% Drehgeschwindigkeit, +3 Segmente': '+8% Speed, +30% Turn Speed, +3 Segments',
+        'Max Stamina': 'Max Stamina',
+        '+2 Max Stamina': '+2 Max Stamina',
+    },
+    fr: {
+        'Leichter Speed': 'Vitesse Légère',
+        '+3% Bewegungsgeschwindigkeit': '+3% Vitesse de Déplacement',
+        'Längerer Körper': 'Corps Plus Long',
+        '+2 Segmente': '+2 Segments',
+        'Leichte Agilität': 'Agilité Légère',
+        '+15% Drehgeschwindigkeit': '+15% Vitesse de Rotation',
+        'Schwache Regeneration': 'Régénération Faible',
+        '+1% Chance auf extra Food': '+1% Chance de Nourriture Supplémentaire',
+        'Geschwindigkeits-Boost': 'Boost de Vitesse',
+        '+5% Bewegungsgeschwindigkeit': '+5% Vitesse de Déplacement',
+        '+3 Segmente': '+3 Segments',
+        'Agilität': 'Agilité',
+        '+30% Drehgeschwindigkeit': '+30% Vitesse de Rotation',
+        'Stärke': 'Force',
+        '+4% Geschwindigkeit, +2 Segmente': '+4% Vitesse, +2 Segments',
+        '+5 Segmente': '+5 Segments',
+        '+6% Geschwindigkeit, +4 Segmente': '+6% Vitesse, +4 Segments',
+        '+8 Segmente': '+8 Segments',
+        '+10% Geschwindigkeit, +6 Segmente': '+10% Vitesse, +6 Segments',
+        'Legendärer Boost': 'Boost Légendaire',
+        '+8% Geschwindigkeit, +30% Drehgeschwindigkeit, +3 Segmente': '+8% Vitesse, +30% Vitesse de Rotation, +3 Segments',
+        'Max Stamina': 'Endurance Max',
+        '+2 Max Stamina': '+2 Endurance Max',
+    },
+    es: {
+        'Leichter Speed': 'Velocidad Ligera',
+        '+3% Bewegungsgeschwindigkeit': '+3% Velocidad de Movimiento',
+        'Längerer Körper': 'Cuerpo Más Largo',
+        '+2 Segmente': '+2 Segmentos',
+        'Leichte Agilität': 'Agilidad Ligera',
+        '+15% Drehgeschwindigkeit': '+15% Velocidad de Giro',
+        'Schwache Regeneration': 'Regeneración Débil',
+        '+1% Chance auf extra Food': '+1% Probabilidad de Comida Extra',
+        'Geschwindigkeits-Boost': 'Impulso de Velocidad',
+        '+5% Bewegungsgeschwindigkeit': '+5% Velocidad de Movimiento',
+        '+3 Segmente': '+3 Segmentos',
+        'Agilität': 'Agilidad',
+        '+30% Drehgeschwindigkeit': '+30% Velocidad de Giro',
+        'Stärke': 'Fuerza',
+        '+4% Geschwindigkeit, +2 Segmente': '+4% Velocidad, +2 Segmentos',
+        '+5 Segmente': '+5 Segmentos',
+        '+6% Geschwindigkeit, +4 Segmente': '+6% Velocidad, +4 Segmentos',
+        '+8 Segmente': '+8 Segmentos',
+        '+10% Geschwindigkeit, +6 Segmente': '+10% Velocidad, +6 Segmentos',
+        'Legendärer Boost': 'Impulso Legendario',
+        '+8% Geschwindigkeit, +30% Drehgeschwindigkeit, +3 Segmente': '+8% Velocidad, +30% Velocidad de Giro, +3 Segmentos',
+        'Max Stamina': 'Resistencia Máx',
+        '+2 Max Stamina': '+2 Resistencia Máx',
+    },
+    ja: {
+        'Leichter Speed': '軽い速度',
+        '+3% Bewegungsgeschwindigkeit': '+3%移動速度',
+        'Längerer Körper': '長い体',
+        '+2 Segmente': '+2セグメント',
+        'Leichte Agilität': '軽い敏捷性',
+        '+15% Drehgeschwindigkeit': '+15%回転速度',
+        'Schwache Regeneration': '弱い再生',
+        '+1% Chance auf extra Food': '+1%追加フード確率',
+        'Geschwindigkeits-Boost': '速度ブースト',
+        '+5% Bewegungsgeschwindigkeit': '+5%移動速度',
+        '+3 Segmente': '+3セグメント',
+        'Agilität': '敏捷性',
+        '+30% Drehgeschwindigkeit': '+30%回転速度',
+        'Stärke': '強さ',
+        '+4% Geschwindigkeit, +2 Segmente': '+4%速度、+2セグメント',
+        '+5 Segmente': '+5セグメント',
+        '+6% Geschwindigkeit, +4 Segmente': '+6%速度、+4セグメント',
+        '+8 Segmente': '+8セグメント',
+        '+10% Geschwindigkeit, +6 Segmente': '+10%速度、+6セグメント',
+        'Legendärer Boost': '伝説のブースト',
+        '+8% Geschwindigkeit, +30% Drehgeschwindigkeit, +3 Segmente': '+8%速度、+30%回転速度、+3セグメント',
+        'Max Stamina': '最大スタミナ',
+        '+2 Max Stamina': '+2最大スタミナ',
+    }
+};
+
+// Übersetzungen für Mutation-Namen und Beschreibungen
+const MUTATION_TRANSLATIONS = {
+    de: {
+        'Hungry Leech': 'Hungry Leech',
+        'Körper wird beim Essen größer (max 50% pro Stack)': 'Körper wird beim Essen größer (max 50% pro Stack)',
+        'Hammer Head': 'Hammer Head',
+        'Kopf wird breiter für einfachere Token-Sammlung (30% pro Stack)': 'Kopf wird breiter für einfachere Token-Sammlung (30% pro Stack)',
+        'Magnetic Skin': 'Magnetic Skin',
+        'Zieht nahe Tokens an (40px Reichweite pro Stack)': 'Zieht nahe Tokens an (40px Reichweite pro Stack)',
+    },
+    en: {
+        'Hungry Leech': 'Hungry Leech',
+        'Körper wird beim Essen größer (max 50% pro Stack)': 'Body grows larger when eating (max 50% per stack)',
+        'Hammer Head': 'Hammer Head',
+        'Kopf wird breiter für einfachere Token-Sammlung (30% pro Stack)': 'Head becomes wider for easier token collection (30% per stack)',
+        'Magnetic Skin': 'Magnetic Skin',
+        'Zieht nahe Tokens an (40px Reichweite pro Stack)': 'Attracts nearby tokens (40px range per stack)',
+    },
+    fr: {
+        'Hungry Leech': 'Sangsue Affamée',
+        'Körper wird beim Essen größer (max 50% pro Stack)': 'Le corps grandit en mangeant (max 50% par empilement)',
+        'Hammer Head': 'Tête Marteau',
+        'Kopf wird breiter für einfachere Token-Sammlung (30% pro Stack)': 'La tête devient plus large pour faciliter la collecte (30% par empilement)',
+        'Magnetic Skin': 'Peau Magnétique',
+        'Zieht nahe Tokens an (40px Reichweite pro Stack)': 'Attire les jetons proches (40px de portée par empilement)',
+    },
+    es: {
+        'Hungry Leech': 'Sanguijuela Hambrienta',
+        'Körper wird beim Essen größer (max 50% pro Stack)': 'El cuerpo crece al comer (máx 50% por pila)',
+        'Hammer Head': 'Cabeza Martillo',
+        'Kopf wird breiter für einfachere Token-Sammlung (30% pro Stack)': 'La cabeza se vuelve más ancha para facilitar la recolección (30% por pila)',
+        'Magnetic Skin': 'Piel Magnética',
+        'Zieht nahe Tokens an (40px Reichweite pro Stack)': 'Atrae fichas cercanas (40px de alcance por pila)',
+    },
+    ja: {
+        'Hungry Leech': '空腹のヒル',
+        'Körper wird beim Essen größer (max 50% pro Stack)': '食べると体が大きくなる（スタックあたり最大50%）',
+        'Hammer Head': 'ハンマーヘッド',
+        'Kopf wird breiter für einfachere Token-Sammlung (30% pro Stack)': 'トークン収集が容易になるように頭が広くなる（スタックあたり30%）',
+        'Magnetic Skin': '磁気の皮膚',
+        'Zieht nahe Tokens an (40px Reichweite pro Stack)': '近くのトークンを引き寄せる（スタックあたり40px範囲）',
+    }
+};
+
+// Aktuelle Sprache (Standard: Englisch)
+let currentLanguage = localStorage.getItem('gameLanguage') || 'en';
+
+// Funktion zum Übersetzen von Upgrade/Mutation-Texten
+function translateText(text) {
+    if (currentLanguage === 'de') return text; // Deutsch ist die Basis-Sprache
+    return UPGRADE_TRANSLATIONS[currentLanguage]?.[text] || MUTATION_TRANSLATIONS[currentLanguage]?.[text] || text;
+}
+
+// Übersetzungsfunktion
+function t(key) {
+    return TRANSLATIONS[currentLanguage]?.[key] || TRANSLATIONS.de[key] || key;
+}
+
 // Canvas Setup mit Pixel-Art Rendering
 const canvas = document.getElementById('simulatorCanvas');
 const ctx = canvas.getContext('2d');
@@ -678,6 +1031,9 @@ class RainWorldTier {
         this.segmentDistance = 6;
         this.headX = x;
         this.headY = y;
+        // Startposition speichern (für Bewegungsradius-Begrenzung)
+        this.anchorX = x;
+        this.anchorY = y;
         this.targetAngle = Math.random() * Math.PI * 2;
         this.angle = this.targetAngle;
         this.baseSpeed = 0.8; // Basis-Geschwindigkeit (wird nicht verändert)
@@ -686,6 +1042,9 @@ class RainWorldTier {
         this.currentSpeed = 0.8; // Aktuelle Geschwindigkeit (für Beschleunigung)
         this.targetSpeed = 0.8; // Zielgeschwindigkeit
         this.speedMultiplier = 1.0; // Geschwindigkeits-Multiplikator
+        // Bewegungsradius (wird durch Speed-Upgrades reduziert)
+        this.baseMovementRadius = 2000; // Basis-Radius (sehr groß, praktisch unbegrenzt)
+        this.maxMovementRadius = this.baseMovementRadius;
         this.angularVelocity = 0; // Winkelgeschwindigkeit für Trägheit
         this.turnSpeed = 0.05;
         this.originalTurnSpeed = 0.05; // Original für Reset
@@ -722,6 +1081,8 @@ class RainWorldTier {
             body: '#4a4a4a',
             bodyDark: '#2a2a2a',
             bodyLight: '#6a6a6a',
+            leg: '#5a5a5a', // Hellere Farbe für Beine
+            legDark: '#3a3a3a', // Dunklere Bein-Farbe für Kontrast
             eye: '#ff4444',
             eyeGlow: '#ff8888'
         };
@@ -872,6 +1233,7 @@ class RainWorldTier {
         this.bodyWave = Math.sin(this.wavePhase) * effectiveAmplitude;
         
         // Wenn ein Target gesetzt ist (Mausfolge), steuere darauf zu
+        let shouldMove = true;
         if (this.hasTarget && this.targetX !== null && this.targetY !== null) {
             const dx = this.targetX - this.headX;
             const dy = this.targetY - this.headY;
@@ -880,12 +1242,13 @@ class RainWorldTier {
             if (distance > 5) { // Nur steuern wenn nicht zu nah
                 // Berechne Winkel zum Target
                 this.targetAngle = Math.atan2(dy, dx);
+            } else {
+                // Target erreicht - stoppe Bewegung
+                shouldMove = false;
             }
         } else {
-            // Zufällige Richtungsänderung (nur wenn kein Target)
-            if (Math.random() < 0.02) {
-                this.targetAngle += (Math.random() - 0.5) * 1.5;
-            }
+            // Kein Target gesetzt - stoppe Bewegung (keine zufälligen Richtungsänderungen mehr)
+            shouldMove = false;
         }
         
         // Trägheit beim Drehen - Winkelgeschwindigkeit
@@ -906,7 +1269,12 @@ class RainWorldTier {
         
         // Geschwindigkeitsanpassung mit Trägheit (mit Stamina-Speed-Boost)
         const speedMultiplier = (this.staminaSpeedBoostActive || this.staminaSpeedBoostAnimation) ? this.staminaSpeedBoostMultiplier : 1.0;
-        this.targetSpeed = this.speed * speedMultiplier;
+        if (shouldMove) {
+            this.targetSpeed = this.speed * speedMultiplier;
+        } else {
+            // Stoppe Bewegung wenn kein Target oder Target erreicht
+            this.targetSpeed = 0;
+        }
         this.currentSpeed += (this.targetSpeed - this.currentSpeed) * this.acceleration;
         
         // Kopf-Bewegung mit sanfter prozeduraler Welle und Geschwindigkeitsvariation
@@ -916,6 +1284,37 @@ class RainWorldTier {
         
         this.headX += Math.cos(this.angle) * moveSpeed;
         this.headY += Math.sin(this.angle) * moveSpeed + waveOffset * 0.2;
+        
+        // Bewegungsradius-Begrenzung basierend auf Speed-Upgrades
+        if (window.simulator && window.simulator.activeUpgrades) {
+            // Zähle alle Speed-Upgrades
+            let speedUpgradeCount = 0;
+            Object.keys(window.simulator.activeUpgrades).forEach(upgradeId => {
+                if (upgradeId.includes('speed_boost') || upgradeId.includes('power_legs')) {
+                    speedUpgradeCount += window.simulator.activeUpgrades[upgradeId];
+                }
+            });
+            
+            // Berechne maximalen Bewegungsradius (kleiner mit mehr Speed-Upgrades)
+            // Jedes Speed-Upgrade reduziert den Radius um 15%
+            const radiusReduction = Math.pow(0.85, speedUpgradeCount); // Exponentiell kleiner
+            this.maxMovementRadius = this.baseMovementRadius * radiusReduction;
+            
+            // Prüfe ob Spieler zu weit vom Anker entfernt ist
+            const dx = this.headX - this.anchorX;
+            const dy = this.headY - this.anchorY;
+            const distanceFromAnchor = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distanceFromAnchor > this.maxMovementRadius) {
+                // Ziehe Spieler zurück zum Anker (wie eine unsichtbare Leine)
+                const pullBackRatio = this.maxMovementRadius / distanceFromAnchor;
+                this.headX = this.anchorX + dx * pullBackRatio;
+                this.headY = this.anchorY + dy * pullBackRatio;
+                
+                // Ändere Richtung leicht (als ob man gegen eine unsichtbare Wand stößt)
+                this.targetAngle = Math.atan2(dy, dx) + Math.PI; // In Richtung Anker
+            }
+        }
         
         // Welt-Grenzen prüfen (Kollision mit Wänden)
         const margin = 10; // Sicherheitsabstand zu den Wänden
@@ -1101,10 +1500,35 @@ class RainWorldTier {
             ctx.restore();
         }
         
-        // Beine zeichnen (prozedural animiert)
+        // Beine zeichnen (prozedural animiert - optimiert und mehrgliedrig)
         for (let i = 2; i < this.segments.length - 2; i += 2) {
             const seg = this.segments[i];
             const progress = i / this.segments.length;
+            
+            // Berechne Körperbreite an dieser Position (wie beim Körper-Zeichnen)
+            const headWidth = 6;
+            const tailWidth = 1;
+            const widthFactor = Math.pow(1 - progress, 1.5); // Gleiche Kurve wie beim Körper
+            const curveCompression = 0.85;
+            let bodyWidth = (headWidth * widthFactor + tailWidth * (1 - widthFactor)) * curveCompression;
+            
+            // Hungry Leech Mutation: Körper wird größer beim Essen (temporär)
+            if (simulator && simulator.activeMutations) {
+                const hungryLeechMutations = Object.keys(simulator.activeMutations).filter(id => id.includes('hungry_leech'));
+                hungryLeechMutations.forEach(mutationId => {
+                    const mutation = MUTATIONS.find(m => m.id === mutationId);
+                    if (mutation && simulator.hungryLeechSizeBoost) {
+                        const stacks = simulator.activeMutations[mutationId];
+                        const maxBoost = mutation.bonusPerStack * stacks / 100; // Max Boost in Prozent
+                        bodyWidth *= (1 + simulator.hungryLeechSizeBoost * maxBoost);
+                    }
+                });
+            }
+            
+            // Bein-Größen-Faktor basierend auf Körperbreite (proportional zum Körper)
+            // bodyWidth variiert von ~5.1 (vorne) bis ~0.85 (hinten)
+            // Normalisiere auf 0.2-1.0 für Bein-Skalierung
+            const legSizeFactor = Math.max(0.2, Math.min(1.0, bodyWidth / 5.1));
             
             // Winkel zum nächsten Segment
             let angle = this.angle;
@@ -1117,44 +1541,158 @@ class RainWorldTier {
             
             const perpAngle = angle + Math.PI / 2;
             
-            // Prozedurale Bein-Animation (alternierend) - geschwindigkeitsabhängig
-            const legPhase = this.wavePhase - i * 0.5;
-            const speedFactor = Math.min(this.currentSpeed / this.baseSpeed, 1.5);
-            const legOffset = Math.sin(legPhase) * 3 * speedFactor;
-            const legLift = Math.max(0, Math.sin(legPhase)) * (2 + speedFactor);
+            // Geschwindigkeitsfaktor für realistischere Bewegung
+            const speedFactor = Math.min(this.currentSpeed / this.baseSpeed, 2.0);
+            const normalizedSpeed = Math.min(speedFactor, 1.5) / 1.5; // 0-1 normalisiert
             
-            // Beine heben sich mehr bei höherer Geschwindigkeit
-            const legSwing = Math.sin(legPhase * 2) * 1.5 * speedFactor;
+            // Bein-Phase mit besserer Phasenverschiebung (jedes Bein-Paar hat eigene Phase)
+            const legPairPhase = this.wavePhase - i * 0.35; // Langsamere Phasenverschiebung für flüssigere Bewegung
+            const leftLegPhase = legPairPhase;
+            const rightLegPhase = legPairPhase + Math.PI; // Gegenphasig (180° versetzt)
             
-            // Linkes Bein mit realistischerem Schwung
-            const leftLegX = seg.x + Math.cos(perpAngle) * 3;
-            const leftLegY = seg.y + Math.sin(perpAngle) * 3;
-            const leftFootX = leftLegX + Math.cos(angle + Math.PI + legSwing * 0.2) * (4 + legOffset);
-            const leftFootY = leftLegY + Math.sin(angle + Math.PI + legSwing * 0.2) * (4 + legOffset) - legLift;
+            // Realistischere Schrittbewegung
+            // Bein hebt sich beim Schritt (0-π) und setzt auf (π-2π)
+            const leftStepCycle = Math.sin(leftLegPhase);
+            const rightStepCycle = Math.sin(rightLegPhase);
             
-            ctx.strokeStyle = this.colors.bodyDark;
-            ctx.lineWidth = 2;
+            // Bein-Hebung (nur wenn Bein in der Luft ist) - skaliert mit Bein-Größe
+            const leftLift = Math.max(0, leftStepCycle) * (2.5 + normalizedSpeed * 3.5) * legSizeFactor;
+            const rightLift = Math.max(0, rightStepCycle) * (2.5 + normalizedSpeed * 3.5) * legSizeFactor;
+            
+            // Bein-Schwung (vor/zurück beim Schritt) - flüssiger, skaliert
+            const leftSwing = Math.sin(leftLegPhase * 1.3) * (2.5 + normalizedSpeed * 2.5) * legSizeFactor;
+            const rightSwing = Math.sin(rightLegPhase * 1.3) * (2.5 + normalizedSpeed * 2.5) * legSizeFactor;
+            
+            // Bein-Länge (leicht variabel für natürlichere Bewegung) - skaliert mit Körperbreite
+            const baseLegLength = (5.5 + normalizedSpeed * 1.5) * legSizeFactor;
+            const leftLegLength = baseLegLength + Math.sin(leftLegPhase * 2) * 0.8 * legSizeFactor;
+            const rightLegLength = baseLegLength + Math.sin(rightLegPhase * 2) * 0.8 * legSizeFactor;
+            
+            // Knie-Position (etwa 55% der Beinlänge)
+            const kneeRatio = 0.55;
+            
+            // Abstand vom Körper (Hip-Position) - skaliert mit Körperbreite
+            const hipOffset = 3.5 * legSizeFactor;
+            
+            // Linkes Bein - Mehrgliedrig (Oberschenkel -> Knie -> Unterschenkel -> Pfote)
+            const leftHipX = seg.x + Math.cos(perpAngle) * hipOffset;
+            const leftHipY = seg.y + Math.sin(perpAngle) * hipOffset;
+            
+            // Oberschenkel-Winkel (leicht nach hinten geneigt beim Schritt)
+            const leftThighAngle = angle + Math.PI + leftSwing * 0.12;
+            const leftKneeX = leftHipX + Math.cos(leftThighAngle) * (leftLegLength * kneeRatio);
+            const leftKneeY = leftHipY + Math.sin(leftThighAngle) * (leftLegLength * kneeRatio);
+            
+            // Unterschenkel-Winkel (Knie beugt sich beim Schritt)
+            const leftKneeBend = Math.max(0, leftStepCycle) * 0.35; // Knie beugt sich wenn Bein gehoben
+            const leftShinAngle = leftThighAngle - leftKneeBend;
+            const leftFootX = leftKneeX + Math.cos(leftShinAngle) * (leftLegLength * (1 - kneeRatio));
+            const leftFootY = leftKneeY + Math.sin(leftShinAngle) * (leftLegLength * (1 - kneeRatio)) - leftLift;
+            
+            // Rechtes Bein - Mehrgliedrig (gegenphasig)
+            const rightHipX = seg.x - Math.cos(perpAngle) * hipOffset;
+            const rightHipY = seg.y - Math.sin(perpAngle) * hipOffset;
+            
+            // Oberschenkel-Winkel
+            const rightThighAngle = angle + Math.PI - rightSwing * 0.12;
+            const rightKneeX = rightHipX + Math.cos(rightThighAngle) * (rightLegLength * kneeRatio);
+            const rightKneeY = rightHipY + Math.sin(rightThighAngle) * (rightLegLength * kneeRatio);
+            
+            // Unterschenkel-Winkel
+            const rightKneeBend = Math.max(0, rightStepCycle) * 0.35;
+            const rightShinAngle = rightThighAngle + rightKneeBend;
+            const rightFootX = rightKneeX + Math.cos(rightShinAngle) * (rightLegLength * (1 - kneeRatio));
+            const rightFootY = rightKneeY + Math.sin(rightShinAngle) * (rightLegLength * (1 - kneeRatio)) - rightLift;
+            
+            // Zeichne Beine mit hellerer Farbe und skalierten Linien für bessere Sichtbarkeit
+            ctx.strokeStyle = this.colors.leg; // Hellere Farbe
+            ctx.lineWidth = 2.2 * legSizeFactor; // Linien-Dicke skaliert mit Bein-Größe
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            // Linkes Bein: Oberschenkel
             ctx.beginPath();
-            ctx.moveTo(Math.floor(leftLegX), Math.floor(leftLegY));
+            ctx.moveTo(Math.floor(leftHipX), Math.floor(leftHipY));
+            ctx.lineTo(Math.floor(leftKneeX), Math.floor(leftKneeY));
+            ctx.stroke();
+            
+            // Linkes Bein: Unterschenkel
+            ctx.beginPath();
+            ctx.moveTo(Math.floor(leftKneeX), Math.floor(leftKneeY));
             ctx.lineTo(Math.floor(leftFootX), Math.floor(leftFootY));
             ctx.stroke();
             
-            // Pfote
-            drawPixelCircle(leftFootX, leftFootY, 1.5, this.colors.bodyDark);
+            // Knie-Gelenk (linkes Bein) - skaliert
+            drawPixelCircle(leftKneeX, leftKneeY, 2 * legSizeFactor, this.colors.leg);
             
-            // Rechtes Bein (gegenphasig) mit realistischerem Schwung
-            const rightLegX = seg.x - Math.cos(perpAngle) * 3;
-            const rightLegY = seg.y - Math.sin(perpAngle) * 3;
-            const rightFootX = rightLegX + Math.cos(angle + Math.PI - legSwing * 0.2) * (4 - legOffset);
-            const rightFootY = rightLegY + Math.sin(angle + Math.PI - legSwing * 0.2) * (4 - legOffset) - (Math.max(0, Math.sin(legPhase + Math.PI)) * (2 + speedFactor));
+            // Flossenartige Pfote (linkes Bein) - skaliert
+            // Berechne Winkel der Flosse (in Richtung der Bein-Bewegung)
+            const leftFinAngle = leftShinAngle;
+            const leftFinLength = 4 * legSizeFactor; // Länge der Flosse
+            const leftFinWidth = 2.5 * legSizeFactor; // Breite der Flosse
             
+            // Flossenform: länglich-oval mit spitzerer Kante
+            ctx.save();
+            ctx.translate(Math.floor(leftFootX), Math.floor(leftFootY));
+            ctx.rotate(leftFinAngle);
+            ctx.fillStyle = this.colors.legDark;
+            ctx.strokeStyle = this.colors.legDark;
+            ctx.lineWidth = 1;
             ctx.beginPath();
-            ctx.moveTo(Math.floor(rightLegX), Math.floor(rightLegY));
+            // Flossenform: länglich mit spitzerer Vorderkante
+            ctx.ellipse(0, 0, leftFinLength, leftFinWidth, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            // Spitzere Vorderkante (Flossen-Spitze)
+            ctx.beginPath();
+            ctx.moveTo(leftFinLength * 0.8, 0);
+            ctx.lineTo(leftFinLength, -leftFinWidth * 0.3);
+            ctx.lineTo(leftFinLength, leftFinWidth * 0.3);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+            
+            // Rechtes Bein: Oberschenkel
+            ctx.beginPath();
+            ctx.moveTo(Math.floor(rightHipX), Math.floor(rightHipY));
+            ctx.lineTo(Math.floor(rightKneeX), Math.floor(rightKneeY));
+            ctx.stroke();
+            
+            // Rechtes Bein: Unterschenkel
+            ctx.beginPath();
+            ctx.moveTo(Math.floor(rightKneeX), Math.floor(rightKneeY));
             ctx.lineTo(Math.floor(rightFootX), Math.floor(rightFootY));
             ctx.stroke();
             
-            // Pfote
-            drawPixelCircle(rightFootX, rightFootY, 1.5, this.colors.bodyDark);
+            // Knie-Gelenk (rechtes Bein) - skaliert
+            drawPixelCircle(rightKneeX, rightKneeY, 2 * legSizeFactor, this.colors.leg);
+            
+            // Flossenartige Pfote (rechtes Bein) - skaliert
+            // Berechne Winkel der Flosse (in Richtung der Bein-Bewegung)
+            const rightFinAngle = rightShinAngle;
+            const rightFinLength = 4 * legSizeFactor; // Länge der Flosse
+            const rightFinWidth = 2.5 * legSizeFactor; // Breite der Flosse
+            
+            // Flossenform: länglich-oval mit spitzerer Kante
+            ctx.save();
+            ctx.translate(Math.floor(rightFootX), Math.floor(rightFootY));
+            ctx.rotate(rightFinAngle);
+            ctx.fillStyle = this.colors.legDark;
+            ctx.strokeStyle = this.colors.legDark;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            // Flossenform: länglich mit spitzerer Vorderkante
+            ctx.ellipse(0, 0, rightFinLength, rightFinWidth, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
+            // Spitzere Vorderkante (Flossen-Spitze)
+            ctx.beginPath();
+            ctx.moveTo(rightFinLength * 0.8, 0);
+            ctx.lineTo(rightFinLength, -rightFinWidth * 0.3);
+            ctx.lineTo(rightFinLength, rightFinWidth * 0.3);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
         }
         
         // Körper-Details und Textur (nicht am Schwanzende)
@@ -1785,29 +2323,124 @@ class HunterCreature {
     }
     
     drawWithClimbing() {
-        // Dezente Kletter-Animation: Wackeln/Knabbern
+        // Dezente Kletter-Animation: Nur der Kopf wackelt, nicht der ganze Körper
         // Aktualisiere Animationsphase
         this.climbingAnimationPhase += 0.2; // Langsame Animation
         
-        // Zeichne normalen Hunter mit leichter Wackel-Animation
+        // Zeichne Körper normal (ohne Transformation)
         ctx.save();
         
-        const head = this.segments[0];
+        // Körper-Umriss zeichnen (ohne Kopf)
+        ctx.strokeStyle = this.colors.bodyDark;
+        ctx.fillStyle = this.colors.body;
+        ctx.lineWidth = 1;
         
-        // Dezentes Wackeln: Leichte Rotation und Position-Verschiebung
+        const bodyPoints = [];
+        
+        // Zeichne alle Segmente außer dem Kopf (Index 0)
+        for (let i = 1; i < this.segments.length; i++) {
+            const seg = this.segments[i];
+            const progress = i / (this.segments.length - 1);
+            
+            const curveCompression = 1.0 - Math.abs(this.angularVelocity) * 0.2;
+            const headWidth = 5;
+            const tailWidth = 0;
+            const widthFactor = Math.pow(1 - progress, 1.5);
+            const bodyWidth = (headWidth * widthFactor + tailWidth * (1 - widthFactor)) * curveCompression;
+            
+            let angle = this.angle;
+            if (i < this.segments.length - 1) {
+                const nextSeg = this.segments[i + 1];
+                const dx = nextSeg.x - seg.x;
+                const dy = nextSeg.y - seg.y;
+                angle = Math.atan2(dy, dx);
+            } else if (i > 0) {
+                const prevSeg = this.segments[i - 1];
+                const dx = seg.x - prevSeg.x;
+                const dy = seg.y - prevSeg.y;
+                angle = Math.atan2(dy, dx);
+            }
+            
+            const perpAngle = angle + Math.PI / 2;
+            const topX = seg.x + Math.cos(perpAngle) * bodyWidth;
+            const topY = seg.y + Math.sin(perpAngle) * bodyWidth;
+            const bottomX = seg.x - Math.cos(perpAngle) * bodyWidth;
+            const bottomY = seg.y - Math.sin(perpAngle) * bodyWidth;
+            
+            bodyPoints.push({ top: { x: topX, y: topY }, bottom: { x: bottomX, y: bottomY }, seg: seg });
+        }
+        
+        // Körper-Umriss zeichnen
+        if (bodyPoints.length > 0) {
+            ctx.beginPath();
+            // Verbinde mit Kopf-Position (erste Körper-Position)
+            const firstBodyPoint = bodyPoints[0];
+            const head = this.segments[0];
+            ctx.moveTo(Math.floor(head.x + Math.cos(this.angle + Math.PI / 2) * 5), Math.floor(head.y + Math.sin(this.angle + Math.PI / 2) * 5));
+            
+            for (let i = 0; i < bodyPoints.length; i++) {
+                const point = bodyPoints[i];
+                ctx.lineTo(Math.floor(point.top.x), Math.floor(point.top.y));
+            }
+            for (let i = bodyPoints.length - 1; i >= 0; i--) {
+                const point = bodyPoints[i];
+                ctx.lineTo(Math.floor(point.bottom.x), Math.floor(point.bottom.y));
+            }
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+        }
+        
+        // Schwanzspitze
+        const tailSegment = this.segments[this.segments.length - 1];
+        if (tailSegment) {
+            drawPixelCircle(tailSegment.x, tailSegment.y, 1, this.colors.bodyDark);
+        }
+        
+        // Stamina-Anzeige
+        this.drawStaminaIndicator();
+        
+        ctx.restore();
+        
+        // Kopf separat mit Wackel-Animation zeichnen
+        const head = this.segments[0];
+        const headSize = 7;
+        
+        // Dezentes Wackeln: Leichte Rotation und Position-Verschiebung (nur Kopf)
         const wobbleAmount = Math.sin(this.climbingAnimationPhase) * 1.5; // Sehr dezentes Wackeln (1.5 Pixel)
         const rotationAmount = Math.sin(this.climbingAnimationPhase * 1.3) * 0.15; // Leichte Rotation
         
-        // Verschiebe und rotiere um den Kopf
-        ctx.translate(head.x, head.y);
-        ctx.rotate(rotationAmount);
-        ctx.translate(-head.x, -head.y);
+        ctx.save();
         
-        // Zeichne Hunter mit leicht verschobener Position (Wackeln)
-        ctx.translate(Math.sin(this.climbingAnimationPhase) * wobbleAmount, Math.cos(this.climbingAnimationPhase * 0.7) * wobbleAmount);
+        // Verschiebe und rotiere nur den Kopf
+        const wobbleX = Math.sin(this.climbingAnimationPhase) * wobbleAmount;
+        const wobbleY = Math.cos(this.climbingAnimationPhase * 0.7) * wobbleAmount;
+        ctx.translate(head.x + wobbleX, head.y + wobbleY);
+        ctx.rotate(this.angle + rotationAmount);
         
-        // Normale draw() Methode aufrufen
-        this.draw();
+        // Kopf zeichnen (mit Wackel-Animation)
+        ctx.fillStyle = this.colors.body;
+        ctx.beginPath();
+        ctx.ellipse(0, 0, headSize, headSize * 0.8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = this.colors.bodyDark;
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        // Augen (gelb, drohend)
+        const eyeOffset = 2.5;
+        const eyeSize = 2;
+        const eyeX1 = Math.cos(0) * 2 - Math.sin(0) * eyeOffset;
+        const eyeY1 = Math.sin(0) * 2 + Math.cos(0) * eyeOffset;
+        const eyeX2 = Math.cos(0) * 2 + Math.sin(0) * eyeOffset;
+        const eyeY2 = Math.sin(0) * 2 - Math.cos(0) * eyeOffset;
+        
+        drawPixelCircle(eyeX1, eyeY1, eyeSize, this.colors.eye);
+        drawPixelCircle(eyeX2, eyeY2, eyeSize, this.colors.eye);
+        drawPixelCircle(eyeX1 - 0.5, eyeY1 - 0.5, 0.5, this.colors.eyeGlow);
+        drawPixelCircle(eyeX2 + 0.5, eyeY2 - 0.5, 0.5, this.colors.eyeGlow);
+        
+        ctx.restore();
         
         // Dezentes Knabbern: Kleine Zähne/Maul-Bewegung am Kopf
         const bitePhase = Math.sin(this.climbingAnimationPhase * 2) * 0.5 + 0.5; // 0-1
@@ -1831,8 +2464,6 @@ class HunterCreature {
             ctx.lineTo(mouthX2, mouthY2);
             ctx.stroke();
         }
-        
-        ctx.restore();
     }
     
     draw() {
@@ -2187,6 +2818,9 @@ class FatHunterCreature {
         // Food-Zähler
         this.foodCount = 0;
         
+        // Damage-Cooldown (individuell für jeden Fat Hunter)
+        this.damageCooldown = 0; // Cooldown zwischen Schäden (2 Sekunden = 120 Frames)
+        
         // Reservierte Tokens (um Konflikte mit anderen fetten Hunters zu vermeiden)
         this.reservedFoodIndex = -1; // Index des reservierten Foods
         this.reservedTokenIndex = -1; // Index des reservierten Stamina-Tokens
@@ -2373,6 +3007,10 @@ class FatHunterCreature {
         return null;
     }
     
+    getHeadPosition() {
+        return { x: this.headX, y: this.headY };
+    }
+    
     checkFoodCollision(foods) {
         const hunterHead = this.getHeadPosition();
         for (let i = 0; i < foods.length; i++) {
@@ -2465,6 +3103,8 @@ class Simulator {
         this.mouseX = null;
         this.mouseY = null;
         this.isMouseOverCanvas = false;
+        this.lastMouseClientX = null;
+        this.lastMouseClientY = null;
         this.foods = []; // Array für mehrere Foods
         this.staminaTokens = []; // Array für Stamina-Token
         this.hunters = []; // Array für mehrere Jäger-Kreaturen
@@ -2603,10 +3243,10 @@ class Simulator {
             
             option.innerHTML = `
                 <div class="upgrade-icon">${upgrade.icon}</div>
-                <div class="upgrade-name">${upgrade.name}</div>
-                <div class="upgrade-description">${upgrade.description}</div>
+                <div class="upgrade-name">${translateText(upgrade.name)}</div>
+                <div class="upgrade-description">${translateText(upgrade.description)}</div>
                 <div style="color: #aaaaaa; margin-top: 8px; font-size: 0.85em;">
-                    Stacks: ${stacks}
+                    ${t('stacks')}: ${stacks}
                 </div>
                 <div class="upgrade-rarity" style="color: ${upgrade.rarity.color}; margin-top: 8px; font-size: 0.85em; font-weight: 600;">
                     ${upgrade.rarity.name.toUpperCase()}
@@ -2676,13 +3316,13 @@ class Simulator {
             
             option.innerHTML = `
                 <div class="upgrade-icon">${mutation.icon}</div>
-                <div class="upgrade-name">${mutation.name}</div>
-                <div class="upgrade-description">${mutation.description}</div>
+                <div class="upgrade-name">${translateText(mutation.name)}</div>
+                <div class="upgrade-description">${translateText(mutation.description)}</div>
                 <div style="color: ${canAfford ? '#ff6666' : '#ff0000'}; margin-top: 8px; font-weight: 600;">
-                    Kosten: ${mutation.cost} Segmente ${canAfford ? '' : '(Nicht genug!)'}
+                    ${t('cost')}: ${mutation.cost} ${t('segments')} ${canAfford ? '' : `(${t('notEnough')})`}
                 </div>
                 <div style="color: #aaaaaa; margin-top: 4px; font-size: 0.85em;">
-                    Stacks: ${stacks}
+                    ${t('stacks')}: ${stacks}
                 </div>
                 <div class="upgrade-rarity" style="color: ${mutation.rarity.color}; margin-top: 8px; font-size: 0.85em; font-weight: 600;">
                     ${mutation.rarity.name.toUpperCase()}
@@ -2809,30 +3449,25 @@ class Simulator {
             this.start();
         });
         
-        // Mausposition-Tracking für Mausfolge
+        // Mausposition-Tracking für Mausfolge (speichere nur Canvas-Koordinaten)
         canvas.addEventListener('mousemove', (e) => {
             const rect = canvas.getBoundingClientRect();
-            const canvasX = (e.clientX - rect.left) / PIXEL_SCALE;
-            const canvasY = (e.clientY - rect.top) / PIXEL_SCALE;
-            // Konvertiere Canvas-Koordinaten zu Welt-Koordinaten
-            this.mouseX = canvasX + this.cameraX - renderWidth / 2;
-            this.mouseY = canvasY + this.cameraY - renderHeight / 2;
+            this.lastMouseClientX = e.clientX - rect.left;
+            this.lastMouseClientY = e.clientY - rect.top;
         });
         
         canvas.addEventListener('mouseenter', (e) => {
             this.isMouseOverCanvas = true;
             const rect = canvas.getBoundingClientRect();
-            const canvasX = (e.clientX - rect.left) / PIXEL_SCALE;
-            const canvasY = (e.clientY - rect.top) / PIXEL_SCALE;
-            // Konvertiere Canvas-Koordinaten zu Welt-Koordinaten
-            this.mouseX = canvasX + this.cameraX - renderWidth / 2;
-            this.mouseY = canvasY + this.cameraY - renderHeight / 2;
+            this.lastMouseClientX = e.clientX - rect.left;
+            this.lastMouseClientY = e.clientY - rect.top;
         });
         
         canvas.addEventListener('mouseleave', () => {
             this.isMouseOverCanvas = false;
-            this.mouseX = null;
-            this.mouseY = null;
+            // Behalte die letzten Mauskoordinaten, damit die Kreatur weiterhin dem letzten Ziel folgt
+            // this.lastMouseClientX und this.lastMouseClientY bleiben erhalten
+            // this.mouseX und this.mouseY bleiben ebenfalls erhalten
         });
     }
     
@@ -3031,10 +3666,58 @@ class Simulator {
     checkFoodCollision() {
         if (!this.tier || this.foods.length === 0) return null;
         
-        const head = this.tier.getHeadPosition();
+        // Prüfe Kollision mit allen Segmenten (nicht nur Kopf)
         for (let i = 0; i < this.foods.length; i++) {
-            if (this.foods[i].checkCollision(head.x, head.y)) {
-                return i; // Index des gefressenen Foods
+            const food = this.foods[i];
+            
+            // Prüfe alle Segmente des Spielers
+            for (let segIndex = 0; segIndex < this.tier.segments.length; segIndex++) {
+                const seg = this.tier.segments[segIndex];
+                const progress = segIndex / (this.tier.segments.length - 1);
+                
+                // Berechne Körperbreite an dieser Position (wie beim Zeichnen)
+                const curveCompression = 1.0 - Math.abs(this.tier.angularVelocity) * 0.2;
+                let headWidth = 6;
+                
+                // Hammer Head Mutation: Kopf wird breiter
+                if (this.activeMutations) {
+                    const hammerHeadMutations = Object.keys(this.activeMutations).filter(id => id.includes('hammer_head'));
+                    hammerHeadMutations.forEach(mutationId => {
+                        const mutation = MUTATIONS.find(m => m.id === mutationId);
+                        if (mutation) {
+                            const stacks = this.activeMutations[mutationId];
+                            headWidth *= (1 + (mutation.bonusPerStack * stacks / 100));
+                        }
+                    });
+                }
+                
+                const tailWidth = 1;
+                const widthFactor = Math.pow(1 - progress, 1.5);
+                let bodyWidth = (headWidth * widthFactor + tailWidth * (1 - widthFactor)) * curveCompression;
+                
+                // Hungry Leech Mutation: Körper wird größer beim Essen (temporär)
+                if (this.activeMutations) {
+                    const hungryLeechMutations = Object.keys(this.activeMutations).filter(id => id.includes('hungry_leech'));
+                    hungryLeechMutations.forEach(mutationId => {
+                        const mutation = MUTATIONS.find(m => m.id === mutationId);
+                        if (mutation && this.hungryLeechSizeBoost) {
+                            const stacks = this.activeMutations[mutationId];
+                            const maxBoost = mutation.bonusPerStack * stacks / 100;
+                            bodyWidth *= (1 + this.hungryLeechSizeBoost * maxBoost);
+                        }
+                    });
+                }
+                
+                // Kollisionsradius basierend auf Körperbreite (größerer Körper = größerer Radius)
+                const collisionRadius = Math.max(8, bodyWidth * 1.2); // Mindestens 8, aber größer wenn Körper größer ist
+                
+                const dx = food.x - seg.x;
+                const dy = food.y - seg.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < collisionRadius + food.size) {
+                    return i; // Index des gefressenen Foods
+                }
             }
         }
         return null;
@@ -3043,10 +3726,58 @@ class Simulator {
     checkStaminaTokenCollision() {
         if (!this.tier || this.staminaTokens.length === 0) return null;
         
-        const head = this.tier.getHeadPosition();
+        // Prüfe Kollision mit allen Segmenten (nicht nur Kopf)
         for (let i = 0; i < this.staminaTokens.length; i++) {
-            if (this.staminaTokens[i].checkCollision(head.x, head.y)) {
-                return i; // Index des gefressenen Stamina-Tokens
+            const token = this.staminaTokens[i];
+            
+            // Prüfe alle Segmente des Spielers
+            for (let segIndex = 0; segIndex < this.tier.segments.length; segIndex++) {
+                const seg = this.tier.segments[segIndex];
+                const progress = segIndex / (this.tier.segments.length - 1);
+                
+                // Berechne Körperbreite an dieser Position (wie beim Zeichnen)
+                const curveCompression = 1.0 - Math.abs(this.tier.angularVelocity) * 0.2;
+                let headWidth = 6;
+                
+                // Hammer Head Mutation: Kopf wird breiter
+                if (this.activeMutations) {
+                    const hammerHeadMutations = Object.keys(this.activeMutations).filter(id => id.includes('hammer_head'));
+                    hammerHeadMutations.forEach(mutationId => {
+                        const mutation = MUTATIONS.find(m => m.id === mutationId);
+                        if (mutation) {
+                            const stacks = this.activeMutations[mutationId];
+                            headWidth *= (1 + (mutation.bonusPerStack * stacks / 100));
+                        }
+                    });
+                }
+                
+                const tailWidth = 1;
+                const widthFactor = Math.pow(1 - progress, 1.5);
+                let bodyWidth = (headWidth * widthFactor + tailWidth * (1 - widthFactor)) * curveCompression;
+                
+                // Hungry Leech Mutation: Körper wird größer beim Essen (temporär)
+                if (this.activeMutations) {
+                    const hungryLeechMutations = Object.keys(this.activeMutations).filter(id => id.includes('hungry_leech'));
+                    hungryLeechMutations.forEach(mutationId => {
+                        const mutation = MUTATIONS.find(m => m.id === mutationId);
+                        if (mutation && this.hungryLeechSizeBoost) {
+                            const stacks = this.activeMutations[mutationId];
+                            const maxBoost = mutation.bonusPerStack * stacks / 100;
+                            bodyWidth *= (1 + this.hungryLeechSizeBoost * maxBoost);
+                        }
+                    });
+                }
+                
+                // Kollisionsradius basierend auf Körperbreite (größerer Körper = größerer Radius)
+                const collisionRadius = Math.max(8, bodyWidth * 1.2); // Mindestens 8, aber größer wenn Körper größer ist
+                
+                const dx = token.x - seg.x;
+                const dy = token.y - seg.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < collisionRadius + token.size) {
+                    return i; // Index des gefressenen Stamina-Tokens
+                }
             }
         }
         return null;
@@ -3103,8 +3834,8 @@ class Simulator {
             option.style.boxShadow = `0 0 15px ${upgrade.rarity.color}40`;
             option.innerHTML = `
                 <div class="upgrade-icon">${upgrade.icon}</div>
-                <div class="upgrade-name">${upgrade.name}</div>
-                <div class="upgrade-description">${upgrade.description}</div>
+                <div class="upgrade-name">${translateText(upgrade.name)}</div>
+                <div class="upgrade-description">${translateText(upgrade.description)}</div>
                 <div class="upgrade-rarity" style="color: ${upgrade.rarity.color}; margin-top: 8px; font-size: 0.85em; font-weight: 600;">
                     ${upgrade.rarity.name.toUpperCase()}
                 </div>
@@ -3159,7 +3890,7 @@ class Simulator {
         const activeMutationIds = Object.keys(this.activeMutations);
         
         if (activeUpgradeIds.length === 0 && activeMutationIds.length === 0) {
-            listContainer.innerHTML = '<div class="no-upgrades">Noch keine Upgrades</div>';
+            listContainer.innerHTML = `<div class="no-upgrades" id="noUpgradesText">${t('noUpgrades')}</div>`;
             return;
         }
         
@@ -3169,14 +3900,15 @@ class Simulator {
             if (!upgrade) return;
             
             const stacks = this.activeUpgrades[upgradeId];
-            const bonusText = upgrade.getBonusText ? upgrade.getBonusText(stacks) : upgrade.description;
+            const bonusTextRaw = upgrade.getBonusText ? upgrade.getBonusText(stacks) : upgrade.description;
+            const bonusText = translateText(bonusTextRaw);
             
             const upgradeItem = document.createElement('div');
             upgradeItem.className = 'active-upgrade-item';
             upgradeItem.innerHTML = `
                 <div class="upgrade-item-header">
                     <span class="upgrade-item-icon">${upgrade.icon}</span>
-                    <span class="upgrade-item-name">${upgrade.name}</span>
+                    <span class="upgrade-item-name">${translateText(upgrade.name)}</span>
                     ${stacks > 1 ? `<span class="upgrade-stack">x${stacks}</span>` : ''}
                 </div>
                 <div class="upgrade-item-bonus">${bonusText}</div>
@@ -3190,7 +3922,8 @@ class Simulator {
             if (!mutation) return;
             
             const stacks = this.activeMutations[mutationId];
-            const bonusText = mutation.getBonusText ? mutation.getBonusText(stacks) : mutation.description;
+            const bonusTextRaw = mutation.getBonusText ? mutation.getBonusText(stacks) : mutation.description;
+            const bonusText = translateText(bonusTextRaw);
             
             const mutationItem = document.createElement('div');
             mutationItem.className = 'active-upgrade-item';
@@ -3199,9 +3932,9 @@ class Simulator {
             mutationItem.innerHTML = `
                 <div class="upgrade-item-header">
                     <span class="upgrade-item-icon">${mutation.icon}</span>
-                    <span class="upgrade-item-name" style="color: ${mutation.rarity.color};">${mutation.name}</span>
+                    <span class="upgrade-item-name" style="color: ${mutation.rarity.color};">${translateText(mutation.name)}</span>
                     ${stacks > 1 ? `<span class="upgrade-stack">x${stacks}</span>` : ''}
-                    <span style="color: #ff6666; font-size: 0.8em; margin-left: 5px;">[MUTATION]</span>
+                    <span style="color: #ff6666; font-size: 0.8em; margin-left: 5px;">[${t('mutation')}]</span>
                 </div>
                 <div class="upgrade-item-bonus">${bonusText}</div>
             `;
@@ -3259,7 +3992,7 @@ class Simulator {
             noMutationsMsg.style.textAlign = 'center';
             noMutationsMsg.style.color = '#ff6666';
             noMutationsMsg.style.padding = '20px';
-            noMutationsMsg.textContent = 'Nicht genug Segmente für Mutationen!';
+            noMutationsMsg.textContent = t('notEnoughSegments');
             optionsContainer.appendChild(noMutationsMsg);
         } else {
             selectedMutations.forEach((mutation, index) => {
@@ -3277,10 +4010,10 @@ class Simulator {
                 
                 option.innerHTML = `
                     <div class="upgrade-icon">${mutation.icon}</div>
-                    <div class="upgrade-name">${mutation.name}</div>
-                    <div class="upgrade-description">${mutation.description}</div>
+                    <div class="upgrade-name">${translateText(mutation.name)}</div>
+                    <div class="upgrade-description">${translateText(mutation.description)}</div>
                     <div style="color: ${canAfford ? '#ff6666' : '#ff0000'}; margin-top: 8px; font-weight: 600;">
-                        Kosten: ${mutation.cost} Segmente ${canAfford ? '' : '(Nicht genug!)'}
+                        ${t('cost')}: ${mutation.cost} ${t('segments')} ${canAfford ? '' : `(${t('notEnough')})`}
                     </div>
                     <div class="upgrade-rarity" style="color: ${mutation.rarity.color}; margin-top: 8px; font-size: 0.85em; font-weight: 600;">
                         ${mutation.rarity.name.toUpperCase()}
@@ -3384,6 +4117,9 @@ class Simulator {
         const startX = this.worldWidth / 2;
         const startY = this.worldHeight / 2;
         this.tier = new RainWorldTier(startX, startY);
+        // Anker-Position aktualisieren (für Bewegungsradius)
+        this.tier.anchorX = startX;
+        this.tier.anchorY = startY;
         // Kamera auf Spieler setzen
         this.cameraX = startX;
         this.cameraY = startY;
@@ -3437,6 +4173,9 @@ class Simulator {
             const startX = this.worldWidth / 2;
             const startY = this.worldHeight / 2;
             this.tier = new RainWorldTier(startX, startY);
+            // Anker-Position aktualisieren (für Bewegungsradius)
+            this.tier.anchorX = startX;
+            this.tier.anchorY = startY;
             // Kamera auf Spieler setzen
             this.cameraX = startX;
             this.cameraY = startY;
@@ -3740,6 +4479,73 @@ class Simulator {
                 
                 // Aktualisiere fette Jäger
                 fatHunter.update();
+                
+                // Individuellen Cooldown für diesen Fat Hunter aktualisieren
+                if (fatHunter.damageCooldown > 0) {
+                    fatHunter.damageCooldown--;
+                }
+                
+                // Kollisionsprüfung zwischen Fat Hunter und Spieler (mit individuellem Cooldown)
+                if (fatHunter.damageCooldown === 0) {
+                    const fatHunterHead = fatHunter.getHeadPosition();
+                    const playerHead = this.tier.getHeadPosition();
+                    const dx = fatHunterHead.x - playerHead.x;
+                    const dy = fatHunterHead.y - playerHead.y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    // Größerer Kollisionsradius für Fat Hunter (größerer Kopf)
+                    if (distance < 14) {
+                        // Kopf-Kollision - Spieler verliert Segment
+                        const hitSegment = this.tier.segments[0]; // Kopf
+                        
+                        // Erstelle Partikel-Effekt (Blut/Splitter) am getroffenen Segment
+                        for (let i = 0; i < 12; i++) {
+                            // Rote Partikel (Blut)
+                            this.particles.push(new Particle(
+                                hitSegment.x + (Math.random() - 0.5) * 4,
+                                hitSegment.y + (Math.random() - 0.5) * 4,
+                                '#ff4444'
+                            ));
+                            // Dunklere Partikel (Fleisch/Splitter)
+                            this.particles.push(new Particle(
+                                hitSegment.x + (Math.random() - 0.5) * 4,
+                                hitSegment.y + (Math.random() - 0.5) * 4,
+                                '#8a2a2a'
+                            ));
+                        }
+                        
+                        // Biss-Animation starten
+                        this.biteAnimation = {
+                            duration: 15, // Kurze Animation
+                            hunterIndex: -1, // -1 für Fat Hunter (wird nicht verwendet)
+                            hunterX: fatHunterHead.x,
+                            hunterY: fatHunterHead.y,
+                            targetX: hitSegment.x,
+                            targetY: hitSegment.y
+                        };
+                        
+                        // Damage-Flash starten
+                        this.damageFlash = 20; // Kurzer roter Flash
+                        
+                        // Spieler verliert ein Segment
+                        this.tier.shrink();
+                        
+                        // Prüfe auf Game Over
+                        if (this.checkGameOver()) {
+                            return; // Spiel beendet
+                        }
+                        
+                        // Fat Hunter wird stärker: wächst (zählt als Food)
+                        fatHunter.grow();
+                        fatHunter.foodCount++; // Zählt als Food-Token
+                        
+                        this.log(`Fat Hunter beißt Spieler (Kopf) - Fat Hunter Länge: ${fatHunter.numSegments}, Food Count: ${fatHunter.foodCount}`, 'error');
+                        
+                        // Cooldown setzen (2 Sekunden = 120 Frames)
+                        fatHunter.damageCooldown = 120;
+                        this.updateScore();
+                    }
+                }
                 
                 // Prüfe auf Food-Kollision
                 const eatenFoodIndex = fatHunter.checkFoodCollision(this.foods);
@@ -4489,11 +5295,16 @@ class Simulator {
             this.tier.waveSpeed = baseWaveSpeed * this.speed;
             
             // Mausposition an Tier übergeben für Verfolgung
-            if (this.isMouseOverCanvas && this.mouseX !== null && this.mouseY !== null) {
+            // Berechne Welt-Koordinaten basierend auf aktueller Kamera-Position
+            if (this.lastMouseClientX !== null && this.lastMouseClientY !== null) {
+                const canvasX = this.lastMouseClientX / PIXEL_SCALE;
+                const canvasY = this.lastMouseClientY / PIXEL_SCALE;
+                // Konvertiere Canvas-Koordinaten zu Welt-Koordinaten (mit aktueller Kamera-Position)
+                this.mouseX = canvasX + this.cameraX - renderWidth / 2;
+                this.mouseY = canvasY + this.cameraY - renderHeight / 2;
                 this.tier.setTarget(this.mouseX, this.mouseY);
-            } else {
-                this.tier.clearTarget();
             }
+            // Wenn die Maus außerhalb ist, behält die Kreatur das letzte Ziel bei
             
             this.tier.update();
             this.tier.draw(this); // Simulator-Referenz für Flash-Effekt - Spieler wird zuerst gezeichnet
@@ -4686,9 +5497,182 @@ class Simulator {
     }
 }
 
+// UI-Texte aktualisieren basierend auf aktueller Sprache
+function updateUITexts() {
+    // Score und Länge Labels
+    const scoreLabel = document.getElementById('scoreLabel');
+    const lengthLabel = document.getElementById('lengthLabel');
+    if (scoreLabel) {
+        const scoreValue = document.getElementById('scoreValue')?.textContent || '0';
+        scoreLabel.innerHTML = `${t('score')}: <span id="scoreValue">${scoreValue}</span>`;
+    }
+    if (lengthLabel) {
+        const lengthValue = document.getElementById('lengthValue')?.textContent || '10';
+        lengthLabel.innerHTML = `${t('length')}: <span id="lengthValue">${lengthValue}</span>`;
+    }
+    
+    // Buttons
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    if (startBtn) startBtn.textContent = t('start');
+    if (stopBtn) stopBtn.textContent = t('stop');
+    if (resetBtn) resetBtn.textContent = t('reset');
+    
+    // Speed Label
+    const speedLabel = document.getElementById('speedLabel');
+    if (speedLabel) {
+        const speedValue = document.getElementById('speedValue')?.textContent || '1.0x';
+        speedLabel.innerHTML = `${t('speed')}: <input type="range" id="speedSlider" min="0.5" max="3" step="0.1" value="${window.simulator?.speed || 1}"> <span id="speedValue">${speedValue}</span>`;
+        // Event-Listener für Slider neu setzen
+        const speedSlider = document.getElementById('speedSlider');
+        const speedValueSpan = document.getElementById('speedValue');
+        if (speedSlider && speedValueSpan && window.simulator) {
+            // Alte Listener entfernen (durch Neuerstellung des Elements)
+            speedSlider.addEventListener('input', (e) => {
+                window.simulator.speed = parseFloat(e.target.value);
+                speedValueSpan.textContent = window.simulator.speed.toFixed(1) + 'x';
+            });
+        }
+    }
+    
+    // Upgrade Overlay
+    const upgradeOverlayTitle = document.getElementById('upgradeOverlayTitle');
+    if (upgradeOverlayTitle) upgradeOverlayTitle.textContent = t('selectUpgrade');
+    
+    // Mutation Overlay
+    const mutationOverlayTitle = document.getElementById('mutationOverlayTitle');
+    if (mutationOverlayTitle) mutationOverlayTitle.textContent = t('selectMutation');
+    const currentLengthText = document.getElementById('currentLengthText');
+    if (currentLengthText) {
+        const currentLength = document.getElementById('currentLengthDisplay')?.textContent || '10';
+        currentLengthText.innerHTML = `${t('currentLength')}: <span id="currentLengthDisplay">${currentLength}</span> ${t('segments')}`;
+    }
+    
+    // Active Upgrades
+    const activeUpgradesTitle = document.getElementById('activeUpgradesTitle');
+    if (activeUpgradesTitle) activeUpgradesTitle.textContent = t('activeUpgrades');
+    const noUpgradesText = document.getElementById('noUpgradesText');
+    if (noUpgradesText) noUpgradesText.textContent = t('noUpgrades');
+    
+    // Game Over
+    const gameOverTitle = document.getElementById('gameOverTitle');
+    if (gameOverTitle) gameOverTitle.textContent = t('gameOver');
+    const finalScoreText = document.getElementById('finalScoreText');
+    if (finalScoreText) {
+        const finalScore = document.getElementById('finalScore')?.textContent || '0';
+        finalScoreText.innerHTML = `${t('finalScore')}: <span id="finalScore">${finalScore}</span>`;
+    }
+    const finalLengthText = document.getElementById('finalLengthText');
+    if (finalLengthText) {
+        const finalLength = document.getElementById('finalLength')?.textContent || '0';
+        finalLengthText.innerHTML = `${t('lengthReached')}: <span id="finalLength">${finalLength}</span>`;
+    }
+    const restartBtn = document.getElementById('restartBtn');
+    if (restartBtn) restartBtn.textContent = t('restart');
+    
+    // Dev Mode
+    const devModeTitle = document.querySelector('#devModeOverlay h2');
+    if (devModeTitle) devModeTitle.textContent = t('devModeTitle');
+    const devModeUpgradesTab = document.getElementById('devModeUpgradesTab');
+    const devModeMutationsTab = document.getElementById('devModeMutationsTab');
+    const devModeCloseBtn = document.getElementById('devModeCloseBtn');
+    const devModeAllUpgradesTitle = document.getElementById('devModeAllUpgradesTitle');
+    const devModeAllMutationsTitle = document.getElementById('devModeAllMutationsTitle');
+    const devModeCurrentLengthText = document.getElementById('devModeCurrentLengthText');
+    if (devModeUpgradesTab) devModeUpgradesTab.textContent = t('upgrades');
+    if (devModeMutationsTab) devModeMutationsTab.textContent = t('mutations');
+    if (devModeCloseBtn) devModeCloseBtn.textContent = t('close');
+    if (devModeAllUpgradesTitle) devModeAllUpgradesTitle.textContent = `${t('all')} ${t('upgrades')}`;
+    if (devModeAllMutationsTitle) devModeAllMutationsTitle.textContent = `${t('all')} ${t('mutations')}`;
+    if (devModeCurrentLengthText) {
+        const devModeCurrentLength = document.getElementById('devModeCurrentLength')?.textContent || '10';
+        devModeCurrentLengthText.innerHTML = `${t('currentLength')}: <span id="devModeCurrentLength">${devModeCurrentLength}</span> ${t('segments')}`;
+    }
+    
+    // Debug Log
+    const debugLogHeader = document.querySelector('#debugLogHeader span:first-child');
+    const copyLogBtn = document.getElementById('copyLogBtn');
+    const clearLogBtn = document.getElementById('clearLogBtn');
+    if (debugLogHeader) debugLogHeader.textContent = t('debugLog');
+    if (copyLogBtn) copyLogBtn.textContent = t('copyLog');
+    if (clearLogBtn) clearLogBtn.textContent = t('clear');
+    
+    // Upgrade Display aktualisieren (falls Simulator bereits existiert)
+    if (window.simulator) {
+        window.simulator.updateUpgradeDisplay();
+    }
+}
+
+// Sprachauswahl Event-Listener
+function setupLanguageSelector() {
+    const languageBtn = document.getElementById('languageBtn');
+    const languageMenu = document.getElementById('languageMenu');
+    const langOptions = document.querySelectorAll('.lang-option');
+    
+    // Flaggen-Emojis für verschiedene Sprachen
+    const flags = {
+        de: '🇩🇪',
+        en: '🇬🇧',
+        fr: '🇫🇷',
+        es: '🇪🇸',
+        ja: '🇯🇵'
+    };
+    
+    // Button klicken öffnet/schließt Menü
+    if (languageBtn) {
+        languageBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            languageMenu.style.display = languageMenu.style.display === 'none' ? 'block' : 'none';
+        });
+    }
+    
+    // Sprache auswählen
+    langOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const lang = option.getAttribute('data-lang');
+            currentLanguage = lang;
+            localStorage.setItem('gameLanguage', lang);
+            
+            // Button-Emoji aktualisieren
+            if (languageBtn) {
+                languageBtn.textContent = flags[lang] || '🇬🇧';
+            }
+            
+            // Menü schließen
+            languageMenu.style.display = 'none';
+            
+            // UI-Texte aktualisieren
+            updateUITexts();
+            
+            // HTML lang-Attribut aktualisieren
+            document.documentElement.lang = lang;
+        });
+    });
+    
+    // Klick außerhalb schließt Menü
+    document.addEventListener('click', () => {
+        if (languageMenu) {
+            languageMenu.style.display = 'none';
+        }
+    });
+    
+    // Initial Button-Emoji setzen
+    if (languageBtn) {
+        languageBtn.textContent = flags[currentLanguage] || '🇩🇪';
+    }
+    
+    // Initial UI-Texte aktualisieren
+    updateUITexts();
+}
+
 // Simulator initialisieren
 const simulator = new Simulator();
 window.simulator = simulator; // Für Debug-Log-Zugriff
 simulator.updateUpgradeDisplay();
 simulator.draw();
+
+// Sprachauswahl einrichten
+setupLanguageSelector();
 

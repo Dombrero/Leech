@@ -7,19 +7,33 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Sprachauswahl Button -->
+    <div id="languageSelector" style="position: fixed; top: 10px; right: 10px; z-index: 10000;">
+        <button id="languageBtn" style="background: none; border: 2px solid #666; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 20px;">
+            🇬🇧
+        </button>
+        <div id="languageMenu" style="display: none; position: absolute; top: 35px; right: 0; background: #2a2a2a; border: 2px solid #666; border-radius: 5px; padding: 5px; min-width: 150px;">
+            <div class="lang-option" data-lang="de" style="padding: 8px; cursor: pointer; border-radius: 3px; margin: 2px 0;">🇩🇪 Deutsch</div>
+            <div class="lang-option" data-lang="en" style="padding: 8px; cursor: pointer; border-radius: 3px; margin: 2px 0;">🇬🇧 English</div>
+            <div class="lang-option" data-lang="fr" style="padding: 8px; cursor: pointer; border-radius: 3px; margin: 2px 0;">🇫🇷 Français</div>
+            <div class="lang-option" data-lang="es" style="padding: 8px; cursor: pointer; border-radius: 3px; margin: 2px 0;">🇪🇸 Español</div>
+            <div class="lang-option" data-lang="ja" style="padding: 8px; cursor: pointer; border-radius: 3px; margin: 2px 0;">🇯🇵 日本語</div>
+        </div>
+    </div>
+    
     <div class="container">
         <div class="main-content">
-            <h1>Leech</h1>
+            <h1 id="gameTitle">Leech</h1>
             <div class="score-display">
-                <span>Score: <span id="scoreValue">0</span></span>
-                <span>Länge: <span id="lengthValue">10</span></span>
+                <span id="scoreLabel">Score: <span id="scoreValue">0</span></span>
+                <span id="lengthLabel">Länge: <span id="lengthValue">10</span></span>
             </div>
             <canvas id="simulatorCanvas"></canvas>
         
         <!-- Upgrade-Auswahl Overlay -->
         <div id="upgradeOverlay" class="upgrade-overlay" style="display: none;">
             <div class="upgrade-container">
-                <h2>Upgrade auswählen!</h2>
+                <h2 id="upgradeOverlayTitle">Upgrade auswählen!</h2>
                 <div class="upgrade-options" id="upgradeOptions">
                     <!-- Wird dynamisch gefüllt -->
                 </div>
@@ -29,8 +43,8 @@
         <!-- Mutation-Auswahl Overlay -->
         <div id="mutationOverlay" class="upgrade-overlay" style="display: none;">
             <div class="upgrade-container">
-                <h2>Mutation auswählen!</h2>
-                <div style="text-align: center; color: #cccccc; margin-bottom: 15px; font-size: 0.9em;">
+                <h2 id="mutationOverlayTitle">Mutation auswählen!</h2>
+                <div style="text-align: center; color: #cccccc; margin-bottom: 15px; font-size: 0.9em;" id="currentLengthText">
                     Aktuelle Länge: <span id="currentLengthDisplay">10</span> Segmente
                 </div>
                 <div class="upgrade-options" id="mutationOptions">
@@ -48,14 +62,14 @@
                     <button id="devModeMutationsTab" class="debug-btn" style="padding: 8px 16px; font-size: 14px; background: #444444;">Mutationen</button>
                 </div>
                 <div id="devModeUpgradesContent" style="display: block;">
-                    <h3 style="color: #cccccc; margin-bottom: 15px;">Alle Upgrades</h3>
+                    <h3 style="color: #cccccc; margin-bottom: 15px;" id="devModeAllUpgradesTitle">Alle Upgrades</h3>
                     <div class="upgrade-options" id="devModeUpgradesList" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); max-height: 60vh; overflow-y: auto;">
                         <!-- Wird dynamisch gefüllt -->
                     </div>
                 </div>
                 <div id="devModeMutationsContent" style="display: none;">
-                    <h3 style="color: #cccccc; margin-bottom: 15px;">Alle Mutationen</h3>
-                    <div style="text-align: center; color: #cccccc; margin-bottom: 15px; font-size: 0.9em;">
+                    <h3 style="color: #cccccc; margin-bottom: 15px;" id="devModeAllMutationsTitle">Alle Mutationen</h3>
+                    <div style="text-align: center; color: #cccccc; margin-bottom: 15px; font-size: 0.9em;" id="devModeCurrentLengthText">
                         Aktuelle Länge: <span id="devModeCurrentLength">10</span> Segmente
                     </div>
                     <div class="upgrade-options" id="devModeMutationsList" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); max-height: 60vh; overflow-y: auto;">
@@ -71,10 +85,10 @@
         <!-- Game Over Overlay -->
         <div id="gameOverOverlay" class="upgrade-overlay" style="display: none;">
             <div class="upgrade-container">
-                <h2 style="color: #ff4444;">GAME OVER</h2>
+                <h2 style="color: #ff4444;" id="gameOverTitle">GAME OVER</h2>
                 <div style="text-align: center; color: #cccccc; margin: 20px 0;">
-                    <p style="font-size: 1.2em; margin-bottom: 10px;">Finaler Score: <span id="finalScore">0</span></p>
-                    <p style="font-size: 1.2em;">Länge erreicht: <span id="finalLength">0</span></p>
+                    <p style="font-size: 1.2em; margin-bottom: 10px;" id="finalScoreText">Finaler Score: <span id="finalScore">0</span></p>
+                    <p style="font-size: 1.2em;" id="finalLengthText">Länge erreicht: <span id="finalLength">0</span></p>
                 </div>
                 <div style="text-align: center;">
                     <button id="restartBtn" style="padding: 12px 24px; font-size: 16px; background: #ff4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
@@ -88,7 +102,7 @@
             <button id="startBtn">Start</button>
             <button id="stopBtn">Stop</button>
             <button id="resetBtn">Zurücksetzen</button>
-            <label>
+            <label id="speedLabel">
                 Geschwindigkeit:
                 <input type="range" id="speedSlider" min="0.5" max="3" step="0.1" value="1">
                 <span id="speedValue">1.0x</span>
