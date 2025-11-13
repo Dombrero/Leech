@@ -5660,19 +5660,33 @@ function setupLanguageSelector() {
     
     // Initial Button-Emoji setzen
     if (languageBtn) {
-        languageBtn.textContent = flags[currentLanguage] || '🇩🇪';
+        languageBtn.textContent = flags[currentLanguage] || '🇬🇧';
     }
     
     // Initial UI-Texte aktualisieren
     updateUITexts();
 }
 
-// Simulator initialisieren
-const simulator = new Simulator();
-window.simulator = simulator; // Für Debug-Log-Zugriff
-simulator.updateUpgradeDisplay();
-simulator.draw();
+// Initialisierung - warte bis DOM geladen ist
+function initializeGame() {
+    // Simulator initialisieren
+    const simulator = new Simulator();
+    window.simulator = simulator; // Für Debug-Log-Zugriff
+    simulator.updateUpgradeDisplay();
+    simulator.draw();
+    
+    // Sprachauswahl einrichten
+    setupLanguageSelector();
+    
+    // HTML lang-Attribut auf aktuelle Sprache setzen
+    document.documentElement.lang = currentLanguage;
+}
 
-// Sprachauswahl einrichten
-setupLanguageSelector();
+// Warte bis DOM vollständig geladen ist
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeGame);
+} else {
+    // DOM ist bereits geladen, initialisiere sofort
+    initializeGame();
+}
 
