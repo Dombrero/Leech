@@ -20,7 +20,7 @@ Vermeide die Jäger, die dich jagen und an dir klettern können!
 
 ## 🚀 Spielen
 
-Öffne einfach `index.html` im Browser oder besuche die Online-Version.
+Öffne einfach `index.html` im Browser oder besuche die [Online-Version](https://dombrero.github.io/Leech/).
 
 ## 🛠️ Technologien
 

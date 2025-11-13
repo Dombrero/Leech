@@ -3403,19 +3403,11 @@ class Simulator {
         
         // Enter-Taste für Login/Register
         const loginNameInput = document.getElementById('loginNameInput');
-        const loginHashtagInput = document.getElementById('loginHashtagInput');
         const registerNameInput = document.getElementById('registerNameInput');
         const registerHashtagInput = document.getElementById('registerHashtagInput');
         
         if (loginNameInput) {
             loginNameInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    loginHashtagInput?.focus();
-                }
-            });
-        }
-        if (loginHashtagInput) {
-            loginHashtagInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
                     this.handleLogin();
                 }
@@ -3484,36 +3476,27 @@ class Simulator {
     
     handleLogin() {
         const nameInput = document.getElementById('loginNameInput');
-        const hashtagInput = document.getElementById('loginHashtagInput');
         
-        if (!nameInput || !hashtagInput) return;
+        if (!nameInput) return;
         
         const name = nameInput.value.trim();
-        const hashtag = hashtagInput.value.trim();
         
         if (!name) {
             alert(t('nameRequired'));
             return;
         }
-        if (!hashtag) {
-            alert(t('hashtagRequired'));
-            return;
-        }
         
-        // Normalisiere Hashtag (entferne # falls vorhanden, füge es wieder hinzu)
-        const normalizedHashtag = hashtag.startsWith('#') ? hashtag : '#' + hashtag;
-        
-        // Prüfe ob Account existiert
+        // Prüfe ob Account mit diesem Namen existiert
         const accounts = this.getAllAccounts();
-        const account = accounts.find(acc => acc.name === name && acc.hashtag === normalizedHashtag);
+        const account = accounts.find(acc => acc.name === name);
         
         if (account) {
-            // Login erfolgreich
+            // Login erfolgreich - Hashtag wird automatisch aus dem Account geladen
             this.setCurrentUser(account);
             this.showGameSection(account);
             this.log(t('loginSuccess'), 'success');
         } else {
-            // Login fehlgeschlagen
+            // Login fehlgeschlagen - kein Account mit diesem Namen gefunden
             alert(t('loginError'));
             this.log(t('loginError'), 'error');
         }
@@ -3540,12 +3523,19 @@ class Simulator {
         // Normalisiere Hashtag (entferne # falls vorhanden, füge es wieder hinzu)
         hashtag = hashtag.startsWith('#') ? hashtag : '#' + hashtag;
         
-        // Prüfe ob Account bereits existiert
+        // Prüfe ob Account bereits existiert (Name+Hashtag-Kombination muss eindeutig sein)
         const accounts = this.getAllAccounts();
         const existingAccount = accounts.find(acc => acc.name === name && acc.hashtag === hashtag);
         
         if (existingAccount) {
-            alert(t('loginError')); // Account existiert bereits
+            alert(t('loginError')); // Account mit dieser Name+Hashtag-Kombination existiert bereits
+            return;
+        }
+        
+        // Prüfe ob Name bereits verwendet wird (ein Name kann nur einmal existieren)
+        const existingName = accounts.find(acc => acc.name === name);
+        if (existingName) {
+            alert('Dieser Name ist bereits vergeben! Bitte wähle einen anderen Namen.');
             return;
         }
         
@@ -3568,9 +3558,7 @@ class Simulator {
         this.showLoginSection();
         // Leere Input-Felder
         const loginNameInput = document.getElementById('loginNameInput');
-        const loginHashtagInput = document.getElementById('loginHashtagInput');
         if (loginNameInput) loginNameInput.value = '';
-        if (loginHashtagInput) loginHashtagInput.value = '';
     }
     
     getCurrentUser() {
@@ -6371,7 +6359,6 @@ function updateUITexts() {
     const logoutBtn = document.getElementById('logoutBtn');
     const generateHashtagBtn = document.getElementById('generateHashtagBtn');
     const loginNameInput = document.getElementById('loginNameInput');
-    const loginHashtagInput = document.getElementById('loginHashtagInput');
     const registerNameInput = document.getElementById('registerNameInput');
     const registerHashtagInput = document.getElementById('registerHashtagInput');
     
@@ -6387,7 +6374,6 @@ function updateUITexts() {
     if (logoutBtn) logoutBtn.textContent = t('logout');
     if (generateHashtagBtn) generateHashtagBtn.textContent = '🎲 ' + t('random');
     if (loginNameInput) loginNameInput.placeholder = t('name');
-    if (loginHashtagInput) loginHashtagInput.placeholder = t('hashtag');
     if (registerNameInput) registerNameInput.placeholder = t('name');
     if (registerHashtagInput) registerHashtagInput.placeholder = t('hashtag');
     
