@@ -1292,6 +1292,15 @@ class RainWorldTier {
         this.staminaSpeedBoostMultiplier = 1.0; // 30% Boost = 1.3
         this.staminaSpeedBoostAnimation = null; // { duration: number, phase: number }
         
+        // Kopf-Animationen
+        this.eyeAngle = 0; // Augen-Blickrichtung (Winkel)
+        this.mouthOpen = 0; // Mundöffnung (0-1)
+        this.justAte = false; // Flag für Ess-Animation
+        this.eatingAnimationTimer = 0; // Timer für Ess-Animation
+        
+        // Token-Animation durch den Körper
+        this.animatingTokens = []; // Array von Token, die durch den Körper wandern: { type: 'stamina'|'food', progress: 0-1, x, y, size, digestPhase: 0-1 }
+        
         // Segment-Initialisierung
         this.initializeSegments(x, y);
         
@@ -1302,8 +1311,9 @@ class RainWorldTier {
             bodyLight: '#6a6a6a',
             leg: '#5a5a5a', // Hellere Farbe für Beine
             legDark: '#3a3a3a', // Dunklere Bein-Farbe für Kontrast
-            eye: '#ff4444',
-            eyeGlow: '#ff8888'
+            eye: '#ffdd00', // Gelbes Auge
+            eyeGlow: '#ffaa00', // Orange-gelber Glanz
+            pupil: '#000000' // Schwarze Pupille
         };
     }
     
@@ -1408,16 +1418,7 @@ class RainWorldTier {
     }
     
     update() {
-        // Stamina-Regeneration (wenn nicht voll)
-        if (this.currentStamina < this.maxStamina) {
-            this.staminaRegenTimer++;
-            if (this.staminaRegenTimer >= this.staminaRegenInterval) {
-                this.staminaRegenTimer = 0;
-                this.currentStamina = Math.min(this.currentStamina + 1, this.maxStamina);
-            }
-        } else {
-            this.staminaRegenTimer = 0; // Reset Timer wenn voll
-        }
+        // Stamina-Regeneration entfernt - nur noch durch Tokens sammeln
         
         // Sprint-Animation aktualisieren
         if (this.staminaSpeedBoostAnimation) {
@@ -1440,6 +1441,48 @@ class RainWorldTier {
             }
         }
         
+        // Ess-Animation Timer
+        if (this.eatingAnimationTimer > 0) {
+            this.eatingAnimationTimer--;
+            if (this.eatingAnimationTimer === 0) {
+                this.justAte = false;
+            }
+        }
+        
+        // Token-Animation durch den Körper aktualisieren
+        for (let i = this.animatingTokens.length - 1; i >= 0; i--) {
+            const token = this.animatingTokens[i];
+            
+            // Token bewegt sich vom Kopf (0) zur Mitte (0.5)
+            if (token.progress < 0.5) {
+                token.progress += 0.015; // Bewegt sich langsam durch den Körper
+            } else if (token.progress < 0.5 + 0.3) {
+                // Verdau-Animation: Token verschwindet langsam (0.5 bis 0.8)
+                if (!token.digestStarted) {
+                    token.digestStarted = true;
+                    if (token.type === 'stamina') {
+                        // Stamina hinzufügen, wenn Verdauung beginnt
+                        if (window.simulator && window.simulator.tier) {
+                            const oldStamina = this.currentStamina;
+                            this.currentStamina = Math.min(this.currentStamina + 1, this.maxStamina);
+                            if (window.simulator) {
+                                window.simulator.log(`Stamina-Token verdaut - Stamina: ${oldStamina} → ${this.currentStamina}`, 'success');
+                            }
+                        }
+                    } else if (token.type === 'food') {
+                        // Food-Effekte werden bereits beim Essen angewendet, hier nur Log
+                        if (window.simulator) {
+                            window.simulator.log('Food verdaut', 'info');
+                        }
+                    }
+                }
+                token.progress += 0.008; // Langsamere Bewegung während Verdauung
+                token.digestPhase = (token.progress - 0.5) / 0.3; // 0-1 für Verdau-Phase
+            } else {
+                // Token ist vollständig verdaut - entfernen
+                this.animatingTokens.splice(i, 1);
+            }
+        }
         
         // Geschwindigkeitsabhängige Wellenbewegung
         const speedFactor = Math.min(this.currentSpeed / this.baseSpeed, 2.0);
@@ -1593,6 +1636,25 @@ class RainWorldTier {
         // Stelle sicher, dass Pixel-Art Rendering aktiv ist
         ctx.imageSmoothingEnabled = false;
         
+        // Viewport-Culling: Prüfe ob Kreatur überhaupt im sichtbaren Bereich ist
+        if (simulator && this.segments.length > 0) {
+            const headX = this.segments[0].x;
+            const headY = this.segments[0].y;
+            const tailX = this.segments[this.segments.length - 1].x;
+            const tailY = this.segments[this.segments.length - 1].y;
+            // Schätze Radius basierend auf Segment-Anzahl und Position
+            const estimatedRadius = Math.max(50, this.segments.length * 3);
+            const minX = Math.min(headX, tailX) - estimatedRadius;
+            const maxX = Math.max(headX, tailX) + estimatedRadius;
+            const minY = Math.min(headY, tailY) - estimatedRadius;
+            const maxY = Math.max(headY, tailY) + estimatedRadius;
+            
+            // Prüfe ob Kreatur-Bounding-Box den Viewport schneidet
+            if (!simulator.isRectInViewport(minX, minY, maxX - minX, maxY - minY)) {
+                return; // Kreatur ist nicht sichtbar, überspringe Rendering
+            }
+        }
+        
         // Körper als zusammenhängende Form zeichnen
         // Zuerst den Körper-Umriss
         ctx.strokeStyle = this.colors.bodyDark;
@@ -1603,9 +1665,33 @@ class RainWorldTier {
         ctx.beginPath();
         const bodyPoints = [];
         
-        // Punkte für obere und untere Körperlinie sammeln
+        // Viewport-Bereich für Segment-Culling
+        let viewLeft, viewRight, viewTop, viewBottom;
+        if (simulator) {
+            viewLeft = simulator.cameraX - renderWidth / (2 * simulator.cameraZoom) - 50;
+            viewRight = simulator.cameraX + renderWidth / (2 * simulator.cameraZoom) + 50;
+            viewTop = simulator.cameraY - renderHeight / (2 * simulator.cameraZoom) - 50;
+            viewBottom = simulator.cameraY + renderHeight / (2 * simulator.cameraZoom) + 50;
+        }
+        
+        // Punkte für obere und untere Körperlinie sammeln (nur sichtbare Segmente)
         for (let i = 0; i < this.segments.length; i++) {
             const seg = this.segments[i];
+            
+            // Culling: Überspringe Segmente außerhalb des Viewports (mit Padding)
+            if (simulator && (seg.x < viewLeft || seg.x > viewRight || seg.y < viewTop || seg.y > viewBottom)) {
+                // Wenn Segment außerhalb, füge trotzdem einen Punkt hinzu für Kontinuität
+                // aber nur wenn benachbarte Segmente sichtbar sind
+                if (i > 0 && i < this.segments.length - 1) {
+                    const prevSeg = this.segments[i - 1];
+                    const nextSeg = this.segments[i + 1];
+                    const prevVisible = !simulator || (prevSeg.x >= viewLeft && prevSeg.x <= viewRight && prevSeg.y >= viewTop && prevSeg.y <= viewBottom);
+                    const nextVisible = !simulator || (nextSeg.x >= viewLeft && nextSeg.x <= viewRight && nextSeg.y >= viewTop && nextSeg.y <= viewBottom);
+                    if (!prevVisible && !nextVisible) {
+                        continue; // Überspringe komplett unsichtbare Segmente
+                    }
+                }
+            }
             const progress = i / (this.segments.length - 1);
             
             // Körperbreite: breit am Kopf, spitz am Schwanz (Eidechsen-Stil)
@@ -1625,9 +1711,23 @@ class RainWorldTier {
                     }
                 });
             }
-            const tailWidth = 0; // Spitz am Ende
-            // Exponentielle Abnahme für natürlicheren Verlauf
-            const widthFactor = Math.pow(1 - progress, 1.5); // 1.5 gibt eine schöne Kurve
+            // Schwanz-Breite: Breiter bleiben für bessere Performance (weniger sehr kleine Segmente)
+            // Erst ab 80% der Länge wird der Schwanz dünner
+            const tailStartProgress = 0.8; // Ab 80% der Länge beginnt der Schwanz dünn zu werden
+            let tailWidth = 0; // Spitz am Ende
+            let widthFactor;
+            
+            if (progress < tailStartProgress) {
+                // Hauptkörper: bleibt breit (weniger dünne Segmente = bessere Performance)
+                widthFactor = 1.0; // Keine Abnahme im Hauptkörper
+                tailWidth = headWidth * 0.4; // Schwanz bleibt relativ breit
+            } else {
+                // Schwanz-Ende: wird dünn (nur letzte 20%)
+                const tailProgress = (progress - tailStartProgress) / (1 - tailStartProgress); // 0-1 für Schwanz-Bereich
+                widthFactor = Math.pow(1 - tailProgress, 2.0); // Schnellere Abnahme im Schwanz
+                tailWidth = 0;
+            }
+            
             let bodyWidth = (headWidth * widthFactor + tailWidth * (1 - widthFactor)) * curveCompression;
             
             // Hungry Leech Mutation: Körper wird größer beim Essen (temporär)
@@ -1668,7 +1768,8 @@ class RainWorldTier {
             bodyPoints.push({ top: { x: topX, y: topY }, bottom: { x: bottomX, y: bottomY }, seg: seg });
         }
         
-        // Körper-Umriss zeichnen
+        // Körper-Umriss zeichnen (leicht transparent, damit Token sichtbar sind)
+        ctx.globalAlpha = 0.85; // Leicht transparent
         ctx.beginPath();
         // Obere Linie
         for (let i = 0; i < bodyPoints.length; i++) {
@@ -1687,6 +1788,7 @@ class RainWorldTier {
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
+        ctx.globalAlpha = 1.0; // Alpha zurücksetzen
         
         // Damage-Flash-Effekt (roter Überlay wenn getroffen)
         if (simulator && simulator.damageFlash > 0) {
@@ -1699,14 +1801,32 @@ class RainWorldTier {
         }
         
         // Beine zeichnen (prozedural animiert - optimiert und mehrgliedrig)
+        // Nur Beine für Segmente rendern, die im Viewport sind
         for (let i = 2; i < this.segments.length - 2; i += 2) {
             const seg = this.segments[i];
+            
+            // Culling: Überspringe Beine außerhalb des Viewports
+            if (simulator && (seg.x < viewLeft || seg.x > viewRight || seg.y < viewTop || seg.y > viewBottom)) {
+                continue;
+            }
             const progress = i / this.segments.length;
             
             // Berechne Körperbreite an dieser Position (wie beim Körper-Zeichnen)
+            // Optimiert: Schwanz bleibt breiter für bessere Performance
             const headWidth = 6;
-            const tailWidth = 1;
-            const widthFactor = Math.pow(1 - progress, 1.5); // Gleiche Kurve wie beim Körper
+            const tailStartProgress = 0.8;
+            let tailWidth = 1;
+            let widthFactor;
+            
+            if (progress < tailStartProgress) {
+                widthFactor = 1.0;
+                tailWidth = headWidth * 0.4;
+            } else {
+                const tailProgress = (progress - tailStartProgress) / (1 - tailStartProgress);
+                widthFactor = Math.pow(1 - tailProgress, 2.0);
+                tailWidth = 1;
+            }
+            
             const curveCompression = 0.85;
             let bodyWidth = (headWidth * widthFactor + tailWidth * (1 - widthFactor)) * curveCompression;
             
@@ -1894,9 +2014,15 @@ class RainWorldTier {
         }
         
         // Körper-Details und Textur (nicht am Schwanzende)
+        // Nur Details für Segmente rendern, die im Viewport sind
         const tailStart = Math.floor(this.segments.length * 0.85); // Letzte 15% sind Schwanz
         for (let i = 1; i < this.segments.length - 1 && i < tailStart; i++) {
             const seg = this.segments[i];
+            
+            // Culling: Überspringe Details außerhalb des Viewports
+            if (simulator && (seg.x < viewLeft || seg.x > viewRight || seg.y < viewTop || seg.y > viewBottom)) {
+                continue;
+            }
             const progress = i / this.segments.length;
             
             // Leichte Schattierung
@@ -1919,7 +2045,7 @@ class RainWorldTier {
         
         // Kopf mit Augen (Rain World Stil)
         const head = this.segments[0];
-        let headSize = 8;
+        let headSize = 8.8; // 10% größer (8 * 1.1 = 8.8)
         
         // Hammer Head Mutation: Kopf wird breiter
         if (simulator && simulator.activeMutations) {
@@ -1942,34 +2068,200 @@ class RainWorldTier {
         ctx.lineWidth = 1;
         ctx.stroke();
         
-        // Augen (prozedural blinkend)
-        const eyeOffset = 2.5;
-        const blink = Math.sin(this.wavePhase * 3) > 0.7 ? 0.5 : 1;
-        const eyeSize = 2 * blink;
+        // Augen schauen auf nächsten Gegner
+        let targetEyeAngle = this.angle; // Standard: schauen nach vorne
         
-        // Augen-Winkel basierend auf Bewegungsrichtung
-        const eyeAngle = this.angle;
-        const eyeX1 = head.x + Math.cos(eyeAngle) * 2 - Math.sin(eyeAngle) * eyeOffset;
-        const eyeY1 = head.y + Math.sin(eyeAngle) * 2 + Math.cos(eyeAngle) * eyeOffset;
-        const eyeX2 = head.x + Math.cos(eyeAngle) * 2 + Math.sin(eyeAngle) * eyeOffset;
-        const eyeY2 = head.y + Math.sin(eyeAngle) * 2 - Math.cos(eyeAngle) * eyeOffset;
-        
-        // Linkes Auge
-        drawPixelCircle(eyeX1, eyeY1, eyeSize, this.colors.eye);
-        if (blink > 0.5) {
-            drawPixelCircle(eyeX1 - 0.5, eyeY1 - 0.5, 0.5, this.colors.eyeGlow);
+        if (simulator) {
+            // Finde nächsten Feind (nur Jäger, nicht Food)
+            let nearestEnemy = null;
+            let nearestEnemyDistSquared = Infinity;
+            const allEnemies = [...(simulator.hunters || []), ...(simulator.fatHunters || [])];
+            
+            for (let i = 0; i < allEnemies.length; i++) {
+                const enemy = allEnemies[i];
+                if (enemy.segments && enemy.segments.length > 0) {
+                    const enemyHead = enemy.segments[0];
+                    const dx = enemyHead.x - head.x;
+                    const dy = enemyHead.y - head.y;
+                    const distSquared = dx * dx + dy * dy;
+                    if (distSquared < nearestEnemyDistSquared && distSquared < 250000) { // 500 Pixel Radius
+                        nearestEnemyDistSquared = distSquared;
+                        nearestEnemy = enemyHead;
+                    }
+                }
+            }
+            
+            // Augen schauen direkt zum Gegner
+            if (nearestEnemy) {
+                const dx = nearestEnemy.x - head.x;
+                const dy = nearestEnemy.y - head.y;
+                targetEyeAngle = Math.atan2(dy, dx);
+            }
         }
         
-        // Rechtes Auge
-        drawPixelCircle(eyeX2, eyeY2, eyeSize, this.colors.eye);
-        if (blink > 0.5) {
-            drawPixelCircle(eyeX2 + 0.5, eyeY2 - 0.5, 0.5, this.colors.eyeGlow);
+        // Schnelle Interpolation der Augenbewegung
+        let angleDiff = targetEyeAngle - this.eyeAngle;
+        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+        this.eyeAngle += angleDiff * 0.6; // Schnellere Interpolation (0.6 statt 0.3)
+        
+        // Ein großes Auge (prozedural blinkend) - Blink-Frequenz basierend auf Gegner-Nähe
+        // Ziel: 1x pro Sekunde (weit weg) bis 3x pro Sekunde (nah) bei 60 FPS
+        let blinkFrequency = 0.875; // Standard: ~1x pro Sekunde (weit weg)
+        let nearestEnemyDistance = Infinity;
+        
+        if (simulator) {
+            // Finde nächsten Feind für Blink-Frequenz
+            const allEnemies = [...(simulator.hunters || []), ...(simulator.fatHunters || [])];
+            for (let i = 0; i < allEnemies.length; i++) {
+                const enemy = allEnemies[i];
+                if (enemy.segments && enemy.segments.length > 0) {
+                    const enemyHead = enemy.segments[0];
+                    const dx = enemyHead.x - head.x;
+                    const dy = enemyHead.y - head.y;
+                    const distSquared = dx * dx + dy * dy;
+                    if (distSquared < nearestEnemyDistance && distSquared < 250000) { // 500 Pixel Radius
+                        nearestEnemyDistance = distSquared;
+                    }
+                }
+            }
+            
+            // Je näher der Gegner, desto schneller blinzeln: 1x/s (weit) bis 3x/s (nah)
+            if (nearestEnemyDistance < 250000) {
+                const distance = Math.sqrt(nearestEnemyDistance);
+                const maxDistance = 500;
+                const proximityFactor = 1 - (distance / maxDistance); // 0-1, 1 = sehr nah
+                // 0.875 (1x/s) bis 2.62 (3x/s) basierend auf Nähe
+                blinkFrequency = 0.875 + proximityFactor * 1.745; // 0.875 bis 2.62
+            }
         }
         
-        // Schnauze/Mund
-        const snoutX = head.x + Math.cos(eyeAngle) * 4;
-        const snoutY = head.y + Math.sin(eyeAngle) * 4;
-        drawPixelCircle(snoutX, snoutY, 1.5, this.colors.bodyDark);
+        // Blinzeln: seltener (höhere Schwelle) und frequenzabhängig
+        const blinkThreshold = 0.85; // Höhere Schwelle = seltener blinzeln
+        const blink = Math.sin(this.wavePhase * blinkFrequency) > blinkThreshold ? 0.5 : 1;
+        const eyeSize = 3.5 * blink; // Größeres Auge (3.5 statt 2)
+        const headAngle = this.angle;
+        
+        // Auge-Position: Mitte vorne am Kopf
+        const eyeForward = 1.5; // Auge ist vorne am Kopf
+        const eyeXBase = 0; // Mitte
+        const eyeYBase = -eyeForward; // Vorne
+        
+        // Blickrichtung: Auge bewegt sich in Richtung des Gegners (max 2.5 Pixel)
+        const maxEyeMovement = 2.5;
+        const eyeLookAngle = this.eyeAngle - headAngle; // Relativer Blickwinkel zum Kopf
+        const eyeMovementX = Math.sin(eyeLookAngle) * maxEyeMovement;
+        const eyeMovementY = -Math.cos(eyeLookAngle) * maxEyeMovement;
+        
+        // Begrenze Augen-Bewegung (damit es im Kopf bleibt)
+        const clampedMovementX = Math.max(-maxEyeMovement, Math.min(maxEyeMovement, eyeMovementX));
+        const clampedMovementY = Math.max(-maxEyeMovement, Math.min(maxEyeMovement, eyeMovementY));
+        
+        // Transformiere Augen-Position in Welt-Koordinaten (rotierter Kopf)
+        const eyeX = head.x + Math.cos(headAngle) * (eyeXBase + clampedMovementX) - Math.sin(headAngle) * (eyeYBase + clampedMovementY);
+        const eyeY = head.y + Math.sin(headAngle) * (eyeXBase + clampedMovementX) + Math.cos(headAngle) * (eyeYBase + clampedMovementY);
+        
+        // Ein großes gelbes Auge zeichnen
+        drawPixelCircle(eyeX, eyeY, eyeSize, this.colors.eye);
+        
+        // Schlangen-Pupille (vertikaler Schlitz) - rotiert mit dem Kopf
+        if (blink > 0.5) {
+            ctx.save();
+            ctx.translate(eyeX, eyeY);
+            ctx.rotate(headAngle); // Pupille rotiert mit dem Kopf, nicht mit Blickrichtung
+            
+            // Vertikale schlitzförmige Pupille (wie bei Schlangen)
+            ctx.fillStyle = this.colors.pupil;
+            ctx.beginPath();
+            // Schlitzförmige Pupille: schmal horizontal, lang vertikal
+            ctx.ellipse(0, 0, eyeSize * 0.3, eyeSize * 0.8, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            // Glanzpunkt in Blickrichtung (nicht rotiert)
+            ctx.restore();
+            ctx.fillStyle = this.colors.eyeGlow;
+            const glowOffsetX = Math.cos(this.eyeAngle) * eyeSize * 0.3;
+            const glowOffsetY = Math.sin(this.eyeAngle) * eyeSize * 0.3;
+            ctx.beginPath();
+            ctx.arc(eyeX - glowOffsetX, eyeY - glowOffsetY, eyeSize * 0.25, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        // Ess-Animation: Mund öffnet sich
+        if (this.justAte && this.eatingAnimationTimer > 0) {
+            const eatProgress = this.eatingAnimationTimer / 20.0; // 20 Frames Animation
+            this.mouthOpen = Math.sin(eatProgress * Math.PI) * 0.8; // Öffnet und schließt sich
+        } else {
+            this.mouthOpen = Math.max(0, this.mouthOpen - 0.1); // Langsam schließen
+        }
+        
+        // Schnauze/Mund (animiert) - weiter vorne und um 90 Grad gedreht
+        const snoutX = head.x + Math.cos(headAngle) * 6; // Weiter vorne (6 statt 4)
+        const snoutY = head.y + Math.sin(headAngle) * 6; // Weiter vorne
+        const baseSnoutSize = 1.5;
+        const snoutSize = baseSnoutSize + this.mouthOpen * 3; // Öffnet sich beim Essen
+        const snoutRotation = headAngle + Math.PI / 2; // 90 Grad gedreht (Math.PI/2)
+        
+        // Mund-Öffnung zeichnen
+        if (this.mouthOpen > 0.05) {
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.ellipse(snoutX, snoutY, snoutSize, snoutSize * 0.7, snoutRotation, 0, Math.PI * 2);
+            ctx.fill();
+        } else {
+            // Normaler Mund (geschlossen)
+            drawPixelCircle(snoutX, snoutY, baseSnoutSize, this.colors.bodyDark);
+        }
+        
+        // Token-Animation durch den Körper zeichnen
+        for (let i = 0; i < this.animatingTokens.length; i++) {
+            const token = this.animatingTokens[i];
+            
+            // Token-Position entlang des Körpers berechnen (nur bis zur Mitte)
+            const effectiveProgress = Math.min(token.progress, 0.5); // Stoppt bei 0.5
+            const segmentIndex = Math.floor(effectiveProgress * (this.segments.length - 1));
+            const nextIndex = Math.min(segmentIndex + 1, this.segments.length - 1);
+            const seg = this.segments[segmentIndex];
+            const nextSeg = this.segments[nextIndex];
+            
+            // Interpoliere zwischen Segmenten
+            const localProgress = (effectiveProgress * (this.segments.length - 1)) - segmentIndex;
+            const tokenX = seg.x + (nextSeg.x - seg.x) * localProgress;
+            const tokenY = seg.y + (nextSeg.y - seg.y) * localProgress;
+            
+            // Verdau-Animation: Token wird kleiner und transparenter
+            let tokenSize = token.size || 2.5;
+            let tokenAlpha = 1.0;
+            
+            if (token.digestPhase !== undefined && token.digestPhase > 0) {
+                // Token verschwindet während Verdauung
+                tokenSize *= (1 - token.digestPhase); // Wird kleiner
+                tokenAlpha = 1 - token.digestPhase; // Wird transparenter
+            }
+            
+            // Token zeichnen (nur wenn noch sichtbar)
+            if (tokenAlpha > 0.1 && tokenSize > 0.5) {
+                const pulse = Math.sin(Date.now() * 0.01 + i) * 0.2 + 0.8;
+                const currentSize = tokenSize * pulse;
+                
+                ctx.save();
+                ctx.globalAlpha = tokenAlpha;
+                
+                // Unterschiedliche Farben für Stamina-Token (cyan) und Food (rot)
+                if (token.type === 'stamina') {
+                    drawPixelCircle(tokenX, tokenY, currentSize, '#00ffff');
+                    drawPixelCircle(tokenX, tokenY, currentSize * 0.7, '#88ffff');
+                    drawPixelCircle(tokenX, tokenY, currentSize * 0.4, '#ffffff');
+                } else if (token.type === 'food') {
+                    drawPixelCircle(tokenX, tokenY, currentSize, '#ff4444');
+                    drawPixelCircle(tokenX, tokenY, currentSize * 0.7, '#ff8888');
+                    drawPixelCircle(tokenX, tokenY, currentSize * 0.4, '#ffaaaa');
+                }
+                
+                ctx.globalAlpha = 1.0;
+                ctx.restore();
+            }
+        }
         
         // Stamina-Anzeige: Leuchtende Striche am Rücken
         this.drawStaminaIndicator();
@@ -2822,20 +3114,20 @@ class HunterCreature {
     }
     
     findClosestSegmentIndex(playerSegments) {
-        // Finde das Segment, das am nächsten zum Jäger ist
+        // Finde das Segment, das am nächsten zum Jäger ist - optimiert mit squared distance
         let closestIndex = 0;
-        let minDistance = Infinity;
+        let minDistanceSquared = Infinity;
         for (let i = 0; i < playerSegments.length; i++) {
             const seg = playerSegments[i];
             const dx = seg.x - this.headX;
             const dy = seg.y - this.headY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            if (distance < minDistance) {
-                minDistance = distance;
+            const distanceSquared = dx * dx + dy * dy;
+            if (distanceSquared < minDistanceSquared) {
+                minDistanceSquared = distanceSquared;
                 closestIndex = i;
             }
         }
-        return { index: closestIndex, distance: minDistance };
+        return { index: closestIndex, distance: Math.sqrt(minDistanceSquared) };
     }
     
     grow() {
@@ -2896,17 +3188,20 @@ class HunterCreature {
     }
     
     findNearestFood(foods) {
-        // Finde das nächste Food innerhalb von 50 Pixeln
+        // Finde das nächste Food innerhalb von 50 Pixeln - optimiert mit squared distance
         let nearestFood = null;
-        let minDistance = 50; // Suchradius
+        const searchRadius = 50;
+        const searchRadiusSquared = searchRadius * searchRadius;
+        let minDistanceSquared = searchRadiusSquared;
         
-        for (let food of foods) {
+        for (let i = 0; i < foods.length; i++) {
+            const food = foods[i];
             const dx = food.x - this.headX;
             const dy = food.y - this.headY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distanceSquared = dx * dx + dy * dy;
             
-            if (distance < minDistance) {
-                minDistance = distance;
+            if (distanceSquared < minDistanceSquared) {
+                minDistanceSquared = distanceSquared;
                 nearestFood = food;
             }
         }
@@ -2915,17 +3210,20 @@ class HunterCreature {
     }
     
     findNearestStaminaToken(staminaTokens) {
-        // Finde den nächsten Stamina-Token innerhalb von 50 Pixeln
+        // Finde den nächsten Stamina-Token innerhalb von 50 Pixeln - optimiert mit squared distance
         let nearestToken = null;
-        let minDistance = 50; // Suchradius
+        const searchRadius = 50;
+        const searchRadiusSquared = searchRadius * searchRadius;
+        let minDistanceSquared = searchRadiusSquared;
         
-        for (let token of staminaTokens) {
+        for (let i = 0; i < staminaTokens.length; i++) {
+            const token = staminaTokens[i];
             const dx = token.x - this.headX;
             const dy = token.y - this.headY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distanceSquared = dx * dx + dy * dy;
             
-            if (distance < minDistance) {
-                minDistance = distance;
+            if (distanceSquared < minDistanceSquared) {
+                minDistanceSquared = distanceSquared;
                 nearestToken = token;
             }
         }
@@ -2934,15 +3232,17 @@ class HunterCreature {
     }
     
     checkStaminaTokenCollision(staminaTokens) {
-        // Prüfe Kollision mit Stamina-Token
+        // Prüfe Kollision mit Stamina-Token - optimiert mit squared distance
         const hunterHead = this.getHeadPosition();
+        const collisionRadius = 5;
         for (let i = 0; i < staminaTokens.length; i++) {
             const token = staminaTokens[i];
             const dx = hunterHead.x - token.x;
             const dy = hunterHead.y - token.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distanceSquared = dx * dx + dy * dy;
+            const collisionRadiusSquared = (token.size + collisionRadius) * (token.size + collisionRadius);
             
-            if (distance < token.size + 5) { // Kollisionsradius
+            if (distanceSquared < collisionRadiusSquared) {
                 return i; // Index des gefressenen Stamina-Tokens
             }
         }
@@ -2950,15 +3250,17 @@ class HunterCreature {
     }
     
     checkFoodCollision(foods) {
-        // Prüfe Kollision mit Food
+        // Prüfe Kollision mit Food - optimiert mit squared distance
         const hunterHead = this.getHeadPosition();
+        const collisionRadius = 5; // Basis-Radius
         for (let i = 0; i < foods.length; i++) {
             const food = foods[i];
             const dx = hunterHead.x - food.x;
             const dy = hunterHead.y - food.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distanceSquared = dx * dx + dy * dy;
+            const collisionRadiusSquared = (food.size + collisionRadius) * (food.size + collisionRadius);
             
-            if (distance < food.size + 5) { // Kollisionsradius
+            if (distanceSquared < collisionRadiusSquared) {
                 return i; // Index des gefressenen Foods
             }
         }
@@ -3142,14 +3444,17 @@ class FatHunterCreature {
     }
     
     checkStaminaTokenCollision(staminaTokens) {
+        // Optimiert mit squared distance
         const hunterHead = this.getHeadPosition();
+        const collisionRadius = 8; // Größerer Kollisionsradius
         for (let i = 0; i < staminaTokens.length; i++) {
             const token = staminaTokens[i];
             const dx = hunterHead.x - token.x;
             const dy = hunterHead.y - token.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distanceSquared = dx * dx + dy * dy;
+            const collisionRadiusSquared = (token.size + collisionRadius) * (token.size + collisionRadius);
             
-            if (distance < token.size + 8) { // Größerer Kollisionsradius
+            if (distanceSquared < collisionRadiusSquared) {
                 return i;
             }
         }
@@ -3161,14 +3466,17 @@ class FatHunterCreature {
     }
     
     checkFoodCollision(foods) {
+        // Optimiert mit squared distance
         const hunterHead = this.getHeadPosition();
+        const collisionRadius = 8; // Größerer Kollisionsradius
         for (let i = 0; i < foods.length; i++) {
             const food = foods[i];
             const dx = hunterHead.x - food.x;
             const dy = hunterHead.y - food.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
+            const distanceSquared = dx * dx + dy * dy;
+            const collisionRadiusSquared = (food.size + collisionRadius) * (food.size + collisionRadius);
             
-            if (distance < food.size + 8) { // Größerer Kollisionsradius
+            if (distanceSquared < collisionRadiusSquared) {
                 return i;
             }
         }
@@ -3872,7 +4180,7 @@ class Simulator {
         const rng = this.seededRandom(seed);
         
         // Generiere Tokens für diesen Chunk
-        const tokensPerChunk = 3 + Math.floor(rng() * 5); // 3-7 Tokens pro Chunk
+        const tokensPerChunk = 5 + Math.floor(rng() * 8); // 5-12 Tokens pro Chunk (erhöht)
         const chunkWorldX = chunkX * this.chunkSize;
         const chunkWorldY = chunkY * this.chunkSize;
         
@@ -3902,9 +4210,9 @@ class Simulator {
             const hunterType = rng();
             if (hunterType < 0.5) {
                 // Normale Hunter
-                // Entferne alte Hunters die zu weit weg sind (mehr als 5 Chunks entfernt)
+                // Entferne alte Hunters die zu weit weg sind (mehr als 10 Chunks entfernt)
                 if (this.hunters.length >= this.maxHunters) {
-                    const maxDistance = this.chunkSize * 5;
+                    const maxDistance = this.chunkSize * 10; // Erhöht von 5 auf 10 Chunks
                     for (let i = this.hunters.length - 1; i >= 0; i--) {
                         const oldHunter = this.hunters[i];
                         const dx = oldHunter.headX - this.cameraX;
@@ -3924,7 +4232,7 @@ class Simulator {
                 // Fat Hunter
                 // Entferne alte Fat Hunters die zu weit weg sind
                 if (this.fatHunters.length >= this.maxFatHunters) {
-                    const maxDistance = this.chunkSize * 5;
+                    const maxDistance = this.chunkSize * 10; // Erhöht von 5 auf 10 Chunks
                     for (let i = this.fatHunters.length - 1; i >= 0; i--) {
                         const oldHunter = this.fatHunters[i];
                         const dx = oldHunter.headX - this.cameraX;
@@ -3942,7 +4250,7 @@ class Simulator {
                 // Elite Hunter
                 // Entferne alte Hunters die zu weit weg sind
                 if (this.hunters.length >= this.maxHunters) {
-                    const maxDistance = this.chunkSize * 5;
+                    const maxDistance = this.chunkSize * 10; // Erhöht von 5 auf 10 Chunks
                     for (let i = this.hunters.length - 1; i >= 0; i--) {
                         const oldHunter = this.hunters[i];
                         const dx = oldHunter.headX - this.cameraX;
@@ -3998,7 +4306,7 @@ class Simulator {
         
         // Debug-Log nur wenn neue Chunks geladen wurden
         if (chunksLoaded > 0) {
-            this.log(`Chunks geladen: ${chunksLoaded} - Hunters: ${this.hunters.length}, Fat: ${this.fatHunters.length}`, 'info');
+            this.log(`Chunks geladen: ${chunksLoaded} - Foods: ${this.foods.length}, Hunters: ${this.hunters.length}, Fat: ${this.fatHunters.length}`, 'info');
         }
     }
     
@@ -4574,9 +4882,11 @@ class Simulator {
         const playerHead = this.tier ? this.tier.getHeadPosition() : { x: this.cameraX, y: this.cameraY };
         
         while (!validPosition && attempts < 50) {
-            // Spawne in der Nähe der Kamera (sichtbarer Bereich)
-            foodX = this.cameraX + (Math.random() - 0.5) * renderWidth * 2;
-            foodY = this.cameraY + (Math.random() - 0.5) * renderHeight * 2;
+            // Spawne in der Nähe der Kamera (sichtbarer Bereich) - mit Zoom-Berücksichtigung
+            const viewWidth = renderWidth / (this.cameraZoom || 1.0);
+            const viewHeight = renderHeight / (this.cameraZoom || 1.0);
+            foodX = this.cameraX + (Math.random() - 0.5) * viewWidth * 2.5;
+            foodY = this.cameraY + (Math.random() - 0.5) * viewHeight * 2.5;
             
             // Prüfe ob Position zu nah an der Schlange oder anderen Foods ist
             let tooClose = false;
@@ -4735,9 +5045,10 @@ class Simulator {
                 
                 const dx = food.x - seg.x;
                 const dy = food.y - seg.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+                const distanceSquared = dx * dx + dy * dy;
+                const collisionRadiusSquared = (collisionRadius + food.size) * (collisionRadius + food.size);
                 
-                if (distance < collisionRadius + food.size) {
+                if (distanceSquared < collisionRadiusSquared) {
                     return i; // Index des gefressenen Foods
                 }
             }
@@ -4795,9 +5106,10 @@ class Simulator {
                 
                 const dx = token.x - seg.x;
                 const dy = token.y - seg.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+                const distanceSquared = dx * dx + dy * dy;
+                const collisionRadiusSquared = (collisionRadius + token.size) * (collisionRadius + token.size);
                 
-                if (distance < collisionRadius + token.size) {
+                if (distanceSquared < collisionRadiusSquared) {
                     return i; // Index des gefressenen Stamina-Tokens
                 }
             }
@@ -5394,6 +5706,11 @@ class Simulator {
             
             // Initiale Chunks laden (um Startposition) - generiert auch Hunters
             this.loadedChunks.clear();
+            // Stelle sicher, dass Kamera-Position gesetzt ist, bevor Chunks geladen werden
+            if (!this.cameraX && !this.cameraY) {
+                this.cameraX = startX;
+                this.cameraY = startY;
+            }
             this.updateChunks();
             
             this.score = 0;
@@ -5404,10 +5721,13 @@ class Simulator {
             document.getElementById('upgradeOverlay').style.display = 'none';
             this.updateScore();
             this.updateUpgradeDisplay();
-            // Tokens werden durch Chunk-System generiert, aber spawne auch initial einige
-            for (let i = 0; i < 5; i++) {
+            // Tokens werden durch Chunk-System generiert, aber spawne auch initial einige (mehr für bessere Sichtbarkeit)
+            // Stelle sicher, dass genug Foods vorhanden sind - spawne immer, auch wenn Chunks Foods generiert haben
+            const foodsToSpawn = Math.max(0, 20 - this.foods.length);
+            for (let i = 0; i < foodsToSpawn; i++) {
                 this.spawnFood();
             }
+            this.log(`Spiel gestartet - Foods: ${this.foods.length}, Hunters: ${this.hunters.length}, Fat: ${this.fatHunters.length}`, 'info');
             this.isRunning = true;
             this.animate();
         }
@@ -5425,11 +5745,11 @@ class Simulator {
             
             // Kamera-Zoom basierend auf Kreatur-Länge
             // Je länger die Kreatur, desto weiter rausgezoomt (kleinerer Zoom-Wert)
-            // Basis: 10 Segmente = Zoom 1.0, jedes weitere Segment = -0.015 Zoom (rauszoomen)
+            // Basis: 10 Segmente = Zoom 1.0, jedes weitere Segment = -0.002 Zoom (sehr wenig rauszoomen für bessere Performance)
             const baseSegments = 10;
-            const zoomPerSegment = 0.015; // Zoom-Reduktion pro Segment (rauszoomen)
+            const zoomPerSegment = 0.002; // Zoom-Reduktion pro Segment (sehr wenig rauszoomen für bessere Performance)
             const targetZoom = this.baseZoom - (this.tier.numSegments - baseSegments) * zoomPerSegment;
-            const minZoom = 0.3; // Minimaler Zoom (maximal rausgezoomt - mehr sichtbar)
+            const minZoom = 0.7; // Minimaler Zoom (maximal rausgezoomt - höher für bessere Performance)
             const maxZoom = 1.0; // Maximaler Zoom (kein Zoom - normal)
             
             // Sanfte Zoom-Interpolation
@@ -5538,35 +5858,31 @@ class Simulator {
             this.damageFlash--;
         }
         
-        // Partikel aktualisieren
-        this.particles = this.particles.filter(particle => {
-            particle.update();
-            return !particle.isDead();
-        });
+        // Partikel aktualisieren - optimiert: entferne tote Partikel ohne filter()
+        for (let i = this.particles.length - 1; i >= 0; i--) {
+            this.particles[i].update();
+            if (this.particles[i].isDead()) {
+                this.particles.splice(i, 1);
+            }
+        }
         
-        // Futter aktualisieren und zeichnen
-        // Stamina-Token aktualisieren
-        this.staminaTokens.forEach(token => {
-            token.update();
-        });
+        // Futter aktualisieren (Rendering erfolgt in draw()) - for Loop ist schneller
+        for (let i = 0; i < this.foods.length; i++) {
+            this.foods[i].update();
+        }
         
-        this.foods.forEach(food => {
-            food.update();
-            food.draw();
-        });
-        
-        // Stamina-Token zeichnen
-        this.staminaTokens.forEach(token => {
-            token.draw();
-        });
+        // Stamina-Token aktualisieren (Rendering erfolgt in draw()) - for Loop ist schneller
+        for (let i = 0; i < this.staminaTokens.length; i++) {
+            this.staminaTokens[i].update();
+        }
         
         // Fette Jäger aktualisieren (primär Food/Stamina-Token, sekundär Spieler)
         if (this.fatHunters.length > 0 && this.tier) {
-            // Zuerst: Reservierungen zurücksetzen
-            this.fatHunters.forEach(fh => {
-                fh.reservedFoodIndex = -1;
-                fh.reservedTokenIndex = -1;
-            });
+            // Zuerst: Reservierungen zurücksetzen - for Loop ist schneller
+            for (let i = 0; i < this.fatHunters.length; i++) {
+                this.fatHunters[i].reservedFoodIndex = -1;
+                this.fatHunters[i].reservedTokenIndex = -1;
+            }
             
             // Dann: Jeder Fat Hunter wählt sein Ziel
             for (let fatHunterIndex = 0; fatHunterIndex < this.fatHunters.length; fatHunterIndex++) {
@@ -6472,31 +6788,36 @@ class Simulator {
                 }
             });
             
-            // Ziehe Food-Tokens an
-            this.foods.forEach(food => {
+            // Ziehe Food-Tokens an - optimiert mit squared distance (kein Math.sqrt)
+            const totalRangeSquared = totalRange * totalRange;
+            for (let i = 0; i < this.foods.length; i++) {
+                const food = this.foods[i];
                 const dx = playerHead.x - food.x;
                 const dy = playerHead.y - food.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+                const distanceSquared = dx * dx + dy * dy;
                 
-                if (distance <= totalRange && distance > 0) {
-                    const pullStrength = (1 - distance / totalRange) * 0.8; // Stärker wenn näher (erhöht von 0.3)
+                if (distanceSquared <= totalRangeSquared && distanceSquared > 0) {
+                    const distance = Math.sqrt(distanceSquared); // Nur einmal sqrt wenn nötig
+                    const pullStrength = (1 - distance / totalRange) * 0.8;
                     food.x += (dx / distance) * pullStrength;
                     food.y += (dy / distance) * pullStrength;
                 }
-            });
+            }
             
-            // Ziehe Stamina-Tokens an
-            this.staminaTokens.forEach(token => {
+            // Ziehe Stamina-Tokens an - optimiert mit squared distance
+            for (let i = 0; i < this.staminaTokens.length; i++) {
+                const token = this.staminaTokens[i];
                 const dx = playerHead.x - token.x;
                 const dy = playerHead.y - token.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+                const distanceSquared = dx * dx + dy * dy;
                 
-                if (distance <= totalRange && distance > 0) {
-                    const pullStrength = (1 - distance / totalRange) * 0.8; // Stärker wenn näher (erhöht von 0.3)
+                if (distanceSquared <= totalRangeSquared && distanceSquared > 0) {
+                    const distance = Math.sqrt(distanceSquared); // Nur einmal sqrt wenn nötig
+                    const pullStrength = (1 - distance / totalRange) * 0.8;
                     token.x += (dx / distance) * pullStrength;
                     token.y += (dy / distance) * pullStrength;
                 }
-            });
+            }
         }
         
         // Tier aktualisieren und zeichnen (Zuerst Spieler, dann Gegner darüber)
@@ -6524,6 +6845,17 @@ class Simulator {
             // Wenn die Maus außerhalb ist, behält die Kreatur das letzte Ziel bei
             
             this.tier.update();
+            
+            // Foods und Tokens ZUERST zeichnen (unter allem) - for Loop ist schneller als forEach
+            for (let i = 0; i < this.foods.length; i++) {
+                this.foods[i].draw();
+            }
+            
+            // Stamina-Token zeichnen
+            for (let i = 0; i < this.staminaTokens.length; i++) {
+                this.staminaTokens[i].draw();
+            }
+            
             this.tier.draw(this); // Simulator-Referenz für Flash-Effekt - Spieler wird zuerst gezeichnet
             
             // Alle Gegner über dem Spieler zeichnen (nach Spieler)
@@ -6547,16 +6879,38 @@ class Simulator {
                 }
             }
             
-            // Fette Jäger zeichnen
-            this.fatHunters.forEach(fatHunter => {
-                fatHunter.draw();
-            });
+            // Fette Jäger zeichnen - for Loop ist schneller
+            for (let i = 0; i < this.fatHunters.length; i++) {
+                this.fatHunters[i].draw();
+            }
             
             // Futter-Kollision prüfen
             const eatenFoodIndex = this.checkFoodCollision();
             if (eatenFoodIndex !== null) {
+                const food = this.foods[eatenFoodIndex];
+                
+                // Starte Food-Animation durch den Körper (vom Kopf zur Mitte)
+                if (this.tier) {
+                    this.tier.animatingTokens.push({
+                        type: 'food', // Token-Typ
+                        progress: 0, // Startet am Kopf
+                        x: food.x,
+                        y: food.y,
+                        size: food.size || 3,
+                        digestPhase: 0, // Wird später gesetzt wenn Verdauung beginnt
+                        digestStarted: false // Flag für Verdauung
+                    });
+                }
+                
                 // Entferne gefressenes Food
                 this.foods.splice(eatenFoodIndex, 1);
+                
+                // Ess-Animation starten
+                if (this.tier) {
+                    this.tier.justAte = true;
+                    this.tier.eatingAnimationTimer = 20; // 20 Frames Animation
+                    this.tier.mouthOpen = 0.8;
+                }
                 
                 this.tier.grow();
                 this.tier.increaseSpeed(); // Geschwindigkeit erhöhen
@@ -6602,15 +6956,25 @@ class Simulator {
             // Stamina-Token-Kollision prüfen
             const eatenTokenIndex = this.checkStaminaTokenCollision();
             if (eatenTokenIndex !== null) {
+                const token = this.staminaTokens[eatenTokenIndex];
+                
+                // Starte Token-Animation durch den Körper (vom Kopf zur Mitte)
+                if (this.tier) {
+                    this.tier.animatingTokens.push({
+                        type: 'stamina', // Token-Typ
+                        progress: 0, // Startet am Kopf
+                        x: token.x,
+                        y: token.y,
+                        size: token.size || 2.5,
+                        digestPhase: 0, // Wird später gesetzt wenn Verdauung beginnt
+                        digestStarted: false // Flag für Stamina-Hinzufügung
+                    });
+                }
+                
                 // Entferne gefressenen Stamina-Token
                 this.staminaTokens.splice(eatenTokenIndex, 1);
                 
-                // Spieler bekommt +1 Stamina (nicht max)
-                if (this.tier) {
-                    const oldStamina = this.tier.currentStamina;
-                    this.tier.currentStamina = Math.min(this.tier.currentStamina + 1, this.tier.maxStamina);
-                    this.log(`Stamina-Token gegessen - Stamina: ${oldStamina} → ${this.tier.currentStamina}`, 'success');
-                }
+                // Stamina wird erst hinzugefügt, wenn Token verdaut ist (in update())
             }
         }
         
@@ -6671,10 +7035,10 @@ class Simulator {
             return projectile.lifetime > 0;
         });
         
-        // Projektil zeichnen
-        this.projectiles.forEach(projectile => {
-            projectile.draw();
-        });
+        // Projektil zeichnen - for Loop ist schneller
+        for (let i = 0; i < this.projectiles.length; i++) {
+            this.projectiles[i].draw();
+        }
         
         // Shockwave-Animation aktualisieren und zeichnen
         if (this.shockwaveAnimation) {
@@ -6718,10 +7082,10 @@ class Simulator {
             }
         }
         
-        // Partikel zeichnen (über allem)
-        this.particles.forEach(particle => {
-            particle.draw();
-        });
+        // Partikel zeichnen (über allem) - for Loop ist schneller
+        for (let i = 0; i < this.particles.length; i++) {
+            this.particles[i].draw();
+        }
         
         // Kamera-Transformation wiederherstellen
         ctx.restore();
@@ -6836,38 +7200,89 @@ class Simulator {
         }
     }
     
+    // Viewport-Culling: Prüft ob ein Objekt im sichtbaren Bereich ist
+    isInViewport(x, y, radius = 0) {
+        // Größeres Padding für bessere Sichtbarkeit (400 Pixel für Gegner)
+        const padding = 400; // Erhöht von 200 auf 400 für bessere Sichtbarkeit
+        const viewLeft = this.cameraX - renderWidth / (2 * this.cameraZoom) - radius - padding;
+        const viewRight = this.cameraX + renderWidth / (2 * this.cameraZoom) + radius + padding;
+        const viewTop = this.cameraY - renderHeight / (2 * this.cameraZoom) - radius - padding;
+        const viewBottom = this.cameraY + renderHeight / (2 * this.cameraZoom) + radius + padding;
+        
+        return x >= viewLeft && x <= viewRight && y >= viewTop && y <= viewBottom;
+    }
+    
+    // Prüft ob ein Rechteck im Viewport ist (für größere Objekte)
+    isRectInViewport(x, y, width, height) {
+        const viewLeft = this.cameraX - renderWidth / (2 * this.cameraZoom);
+        const viewRight = this.cameraX + renderWidth / (2 * this.cameraZoom);
+        const viewTop = this.cameraY - renderHeight / (2 * this.cameraZoom);
+        const viewBottom = this.cameraY + renderHeight / (2 * this.cameraZoom);
+        
+        // Prüfe ob Rechteck den Viewport schneidet
+        return !(x + width < viewLeft || x > viewRight || y + height < viewTop || y > viewBottom);
+    }
+    
     draw() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         this.drawBackground();
-        this.foods.forEach(food => {
-            food.draw();
-        });
         
-        // Stamina-Token zeichnen
-        this.staminaTokens.forEach(token => {
-            token.draw();
-        });
+        // Foods rendern - Culling ist bereits in isInViewport mit großem Padding
+        for (let i = 0; i < this.foods.length; i++) {
+            const food = this.foods[i];
+            if (this.isInViewport(food.x, food.y, food.size)) {
+                food.draw();
+            }
+        }
         
-        // Spieler zuerst zeichnen (unter den Gegnern)
+        // Stamina-Token rendern - for Loop ist schneller
+        for (let i = 0; i < this.staminaTokens.length; i++) {
+            const token = this.staminaTokens[i];
+            if (this.isInViewport(token.x, token.y, token.size)) {
+                token.draw();
+            }
+        }
+        
+        // Spieler zuerst zeichnen (unter den Gegnern) - immer rendern, da er immer sichtbar sein sollte
         if (this.tier) {
             this.tier.draw(this); // Simulator-Referenz für Flash-Effekt
         }
         
-        // Alle Gegner über dem Spieler zeichnen
-        // Normale Jäger zeichnen
-        this.hunters.forEach(hunter => {
-            hunter.draw();
-        });
+        // Nur Jäger rendern, die im Viewport sind - for Loop ist schneller
+        for (let i = 0; i < this.hunters.length; i++) {
+            const hunter = this.hunters[i];
+            if (hunter.segments && hunter.segments.length > 0) {
+                const headX = hunter.segments[0].x;
+                const headY = hunter.segments[0].y;
+                // Schätze Radius basierend auf Segment-Anzahl
+                const estimatedRadius = Math.max(20, hunter.segments.length * 2);
+                if (this.isInViewport(headX, headY, estimatedRadius)) {
+                    hunter.draw();
+                }
+            }
+        }
         
-        // Fette Jäger zeichnen
-        this.fatHunters.forEach(fatHunter => {
-            fatHunter.draw();
-        });
+        // Nur fette Jäger rendern, die im Viewport sind - for Loop ist schneller
+        for (let i = 0; i < this.fatHunters.length; i++) {
+            const fatHunter = this.fatHunters[i];
+            if (fatHunter.segments && fatHunter.segments.length > 0) {
+                const headX = fatHunter.segments[0].x;
+                const headY = fatHunter.segments[0].y;
+                // Schätze Radius basierend auf Segment-Anzahl (fette Jäger sind größer)
+                const estimatedRadius = Math.max(30, fatHunter.segments.length * 3);
+                if (this.isInViewport(headX, headY, estimatedRadius)) {
+                    fatHunter.draw();
+                }
+            }
+        }
         
-        // Partikel zeichnen (über allem)
-        this.particles.forEach(particle => {
-            particle.draw();
-        });
+        // Nur Partikel rendern, die im Viewport sind - for Loop ist schneller
+        for (let i = 0; i < this.particles.length; i++) {
+            const particle = this.particles[i];
+            if (this.isInViewport(particle.x, particle.y, particle.size)) {
+                particle.draw();
+            }
+        }
     }
 }
 
