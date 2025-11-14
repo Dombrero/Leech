@@ -56,3 +56,4 @@
 - Hashtags werden automatisch normalisiert (fügt # hinzu, falls fehlt)
 - Spiel kann nur gestartet werden, wenn ein Account eingeloggt ist
 
+

@@ -529,12 +529,16 @@ window.addEventListener('resize', resizeCanvas);
 // Pixel-Art Zeichenfunktion
 function drawPixelRect(x, y, w, h, color) {
     if (!ctx) return; // Sicherheitsprüfung: ctx muss initialisiert sein
+    // Stelle sicher, dass Pixel-Art Rendering aktiv ist (wichtig nach Transformationen)
+    ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = color;
     ctx.fillRect(Math.floor(x), Math.floor(y), Math.floor(w), Math.floor(h));
 }
 
 function drawPixelCircle(x, y, r, color) {
     if (!ctx) return; // Sicherheitsprüfung: ctx muss initialisiert sein
+    // Stelle sicher, dass Pixel-Art Rendering aktiv ist (wichtig nach Transformationen)
+    ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(Math.floor(x), Math.floor(y), Math.floor(r), 0, Math.PI * 2);
@@ -1074,6 +1078,71 @@ const MUTATIONS = [
     }
 ];
 
+// Evolution-Datenbank (permanente Upgrades für Account)
+const EVOLUTIONS = [
+    {
+        id: 'shot',
+        name: 'Schuss',
+        description: 'Mit Leertaste einen Schuss abgeben (kostet 5 Stamina)',
+        icon: '💥',
+        cost: 100, // Gold-Kosten
+        rarity: RARITY.UNCOMMON
+    },
+    {
+        id: 'shockwave',
+        name: 'Shockwave',
+        description: 'Mit Leertaste eine Schockwelle abgeben (kostet 5 Stamina, schleudert alle gegrabteten Gegner weg)',
+        icon: '🌊',
+        cost: 150, // Gold-Kosten
+        rarity: RARITY.RARE
+    }
+];
+
+// Projektil-Klasse für Schuss
+class Projectile {
+    constructor(x, y, angle, speed = 8) {
+        this.x = x;
+        this.y = y;
+        this.angle = angle;
+        this.speed = speed;
+        this.vx = Math.cos(angle) * speed;
+        this.vy = Math.sin(angle) * speed;
+        this.size = 3;
+        this.lifetime = 120; // 2 Sekunden bei 60 FPS
+        this.maxLifetime = 120;
+    }
+    
+    update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        this.lifetime--;
+        
+        // Keine Weltgrenzen mehr - Projektil verschwindet nur nach Lifetime
+    }
+    
+    draw() {
+        if (!ctx) return;
+        const alpha = this.lifetime / this.maxLifetime;
+        ctx.fillStyle = `rgba(255, 200, 0, ${alpha})`;
+        drawPixelCircle(this.x, this.y, this.size, `rgba(255, 200, 0, ${alpha})`);
+        
+        // Glow-Effekt
+        ctx.save();
+        ctx.globalAlpha = alpha * 0.3;
+        ctx.fillStyle = '#ffaa00';
+        drawPixelCircle(this.x, this.y, this.size * 2, '#ffaa00');
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+    }
+    
+    checkCollision(targetX, targetY, radius) {
+        const dx = this.x - targetX;
+        const dy = this.y - targetY;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        return distance < this.size + radius;
+    }
+}
+
 // Partikel-Klasse für visuelle Effekte
 class Particle {
     constructor(x, y, color) {
@@ -1467,49 +1536,8 @@ class RainWorldTier {
         //     }
         // }
         
-        // Welt-Grenzen prüfen (Kollision mit Wänden) - VERBESSERTE LOGIK
-        const margin = 10; // Sicherheitsabstand zu den Wänden
-        if (window.simulator) {
-            const worldWidth = window.simulator.worldWidth;
-            const worldHeight = window.simulator.worldHeight;
-            
-            // Linke Wand
-            if (this.headX < margin) {
-                this.headX = margin;
-                // Korrekte Reflexion: Spiegeln des Winkels an der vertikalen Wand
-                this.targetAngle = Math.PI - this.targetAngle;
-                // Normalisiere Winkel
-                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
-                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
-            }
-            // Rechte Wand
-            if (this.headX > worldWidth - margin) {
-                this.headX = worldWidth - margin;
-                // Korrekte Reflexion: Spiegeln des Winkels an der vertikalen Wand
-                this.targetAngle = Math.PI - this.targetAngle;
-                // Normalisiere Winkel
-                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
-                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
-            }
-            // Obere Wand
-            if (this.headY < margin) {
-                this.headY = margin;
-                // Korrekte Reflexion: Spiegeln des Winkels an der horizontalen Wand
-                this.targetAngle = -this.targetAngle;
-                // Normalisiere Winkel
-                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
-                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
-            }
-            // Untere Wand
-            if (this.headY > worldHeight - margin) {
-                this.headY = worldHeight - margin;
-                // Korrekte Reflexion: Spiegeln des Winkels an der horizontalen Wand
-                this.targetAngle = -this.targetAngle;
-                // Normalisiere Winkel
-                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
-                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
-            }
-        }
+        // Keine Welt-Grenzen mehr - unendliche prozedurale Welt
+        // Kreaturen können sich frei in alle Richtungen bewegen
         
         // Segment-Update mit prozeduraler Physik
         // Kopf direkt setzen mit Geschwindigkeit
@@ -1562,6 +1590,9 @@ class RainWorldTier {
     }
     
     draw(simulator = null) {
+        // Stelle sicher, dass Pixel-Art Rendering aktiv ist
+        ctx.imageSmoothingEnabled = false;
+        
         // Körper als zusammenhängende Form zeichnen
         // Zuerst den Körper-Umriss
         ctx.strokeStyle = this.colors.bodyDark;
@@ -2221,49 +2252,7 @@ class HunterCreature {
         this.headX += Math.cos(this.angle) * moveSpeed;
         this.headY += Math.sin(this.angle) * moveSpeed + waveOffset * 0.2;
         
-        // Welt-Grenzen prüfen (Kollision mit Wänden) - VERBESSERTE LOGIK
-        const margin = 10; // Sicherheitsabstand zu den Wänden
-        if (window.simulator) {
-            const worldWidth = window.simulator.worldWidth;
-            const worldHeight = window.simulator.worldHeight;
-            
-            // Linke Wand
-            if (this.headX < margin) {
-                this.headX = margin;
-                // Korrekte Reflexion: Spiegeln des Winkels an der vertikalen Wand
-                this.targetAngle = Math.PI - this.targetAngle;
-                // Normalisiere Winkel
-                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
-                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
-            }
-            // Rechte Wand
-            if (this.headX > worldWidth - margin) {
-                this.headX = worldWidth - margin;
-                // Korrekte Reflexion: Spiegeln des Winkels an der vertikalen Wand
-                this.targetAngle = Math.PI - this.targetAngle;
-                // Normalisiere Winkel
-                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
-                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
-            }
-            // Obere Wand
-            if (this.headY < margin) {
-                this.headY = margin;
-                // Korrekte Reflexion: Spiegeln des Winkels an der horizontalen Wand
-                this.targetAngle = -this.targetAngle;
-                // Normalisiere Winkel
-                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
-                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
-            }
-            // Untere Wand
-            if (this.headY > worldHeight - margin) {
-                this.headY = worldHeight - margin;
-                // Korrekte Reflexion: Spiegeln des Winkels an der horizontalen Wand
-                this.targetAngle = -this.targetAngle;
-                // Normalisiere Winkel
-                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
-                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
-            }
-        }
+        // Welt ist jetzt unendlich - keine Grenzen mehr
         
         // Segment-Update
         const headVx = Math.cos(this.angle) * this.currentSpeed;
@@ -2650,6 +2639,9 @@ class HunterCreature {
     }
     
     draw() {
+        // Stelle sicher, dass Pixel-Art Rendering aktiv ist
+        ctx.imageSmoothingEnabled = false;
+        
         // Gleiche Zeichenlogik wie Spieler, aber mit anderen Farben
         ctx.strokeStyle = this.colors.bodyDark;
         ctx.fillStyle = this.colors.body;
@@ -3068,49 +3060,7 @@ class FatHunterCreature {
         this.headX += Math.cos(this.angle) * moveSpeed;
         this.headY += Math.sin(this.angle) * moveSpeed + waveOffset * 0.2;
         
-        // Welt-Grenzen prüfen (Kollision mit Wänden) - VERBESSERTE LOGIK
-        const margin = 10; // Sicherheitsabstand zu den Wänden
-        if (window.simulator) {
-            const worldWidth = window.simulator.worldWidth;
-            const worldHeight = window.simulator.worldHeight;
-            
-            // Linke Wand
-            if (this.headX < margin) {
-                this.headX = margin;
-                // Korrekte Reflexion: Spiegeln des Winkels an der vertikalen Wand
-                this.targetAngle = Math.PI - this.targetAngle;
-                // Normalisiere Winkel
-                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
-                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
-            }
-            // Rechte Wand
-            if (this.headX > worldWidth - margin) {
-                this.headX = worldWidth - margin;
-                // Korrekte Reflexion: Spiegeln des Winkels an der vertikalen Wand
-                this.targetAngle = Math.PI - this.targetAngle;
-                // Normalisiere Winkel
-                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
-                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
-            }
-            // Obere Wand
-            if (this.headY < margin) {
-                this.headY = margin;
-                // Korrekte Reflexion: Spiegeln des Winkels an der horizontalen Wand
-                this.targetAngle = -this.targetAngle;
-                // Normalisiere Winkel
-                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
-                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
-            }
-            // Untere Wand
-            if (this.headY > worldHeight - margin) {
-                this.headY = worldHeight - margin;
-                // Korrekte Reflexion: Spiegeln des Winkels an der horizontalen Wand
-                this.targetAngle = -this.targetAngle;
-                // Normalisiere Winkel
-                while (this.targetAngle > Math.PI) this.targetAngle -= Math.PI * 2;
-                while (this.targetAngle < -Math.PI) this.targetAngle += Math.PI * 2;
-            }
-        }
+        // Welt ist jetzt unendlich - keine Grenzen mehr
         
         // Segment-Update
         const headVx = Math.cos(this.angle) * this.currentSpeed;
@@ -3234,6 +3184,9 @@ class FatHunterCreature {
     }
     
     draw() {
+        // Stelle sicher, dass Pixel-Art Rendering aktiv ist
+        ctx.imageSmoothingEnabled = false;
+        
         // Größere Körperbreite (dicker)
         const baseWidth = 10; // Größer als normaler Jäger (6)
         const headWidth = baseWidth * 1.3;
@@ -3318,30 +3271,39 @@ class Simulator {
         this.activeMutations = {}; // { mutationId: stacks }
         this.hungryLeechSizeBoost = 0; // Temporärer Größen-Boost für Hungry Leech (0-1)
         this.particles = []; // Partikel für visuelle Effekte
+        this.projectiles = []; // Projektil-Array für Schüsse
         this.biteAnimation = null; // Biss-Animation
         this.damageFlash = 0; // Flash-Effekt beim Treffer
         this.fatHunterSpawnAnimation = null; // Animation für Fat Hunter Spawn { duration: number, phase: number, hunterX: number, hunterY: number }
         this.debugLog = []; // Debug-Log Einträge
         this.maxLogEntries = 100; // Maximale Anzahl von Log-Einträgen
+        this.shockwaveAnimation = null; // Shockwave-Animation { duration: number, radius: number, x: number, y: number }
         
-        // Open-World-System
-        this.updateWorldSize(); // Initialisiere Weltgröße
+        // Prozedurale Unendliche Welt
+        this.chunkSize = 500; // Größe eines Chunks in Pixeln
+        this.loadedChunks = new Set(); // Set von geladenen Chunks (als "chunkX,chunkY" Strings)
+        this.chunkPadding = 3; // Wie viele Chunks außerhalb des sichtbaren Bereichs geladen werden (erhöht für mehr Hunters)
+        
         this.cameraX = 0; // Kamera-Position in Welt-Koordinaten
         this.cameraY = 0;
         this.cameraFollowSpeed = 0.1; // Wie schnell die Kamera folgt (0.1 = sanft)
+        this.cameraZoom = 1.0; // Kamera-Zoom (1.0 = normal, größer = rausgezoomt)
+        this.baseZoom = 1.0; // Basis-Zoom
         
-        // Hunter-Spawning
-        this.hunterSpawnTimer = 0;
-        this.hunterSpawnInterval = 600; // Alle 10 Sekunden (bei 60 FPS) - viel häufiger
-        this.maxHunters = 50; // Maximale Anzahl von Hunters in der Welt (viel mehr)
-        this.maxFatHunters = 20; // Maximale Anzahl von Fat Hunters
+        // Hunter-Spawning wird jetzt vollständig durch Chunk-System gehandhabt
+        this.maxHunters = 200; // Maximale Anzahl von Hunters in der Welt (erhöht für prozedurale Welt)
+        this.maxFatHunters = 100; // Maximale Anzahl von Fat Hunters (erhöht)
         
         this.setupControls();
         this.setupDebugLog();
         this.setupAccountSystem();
+        this.setupEvolutionsShop();
         
         // Highscore-Display initialisieren
         this.updateHighscoreDisplay();
+        
+        // Gold-Anzeige beim Start aktualisieren
+        this.updateGoldDisplay();
     }
     
     setupAccountSystem() {
@@ -3472,6 +3434,9 @@ class Simulator {
         if (gameSection) gameSection.style.display = 'block';
         if (currentUserName) currentUserName.textContent = user.name;
         if (currentUserHashtag) currentUserHashtag.textContent = user.hashtag;
+        
+        // Gold-Anzeige aktualisieren
+        this.updateGoldDisplay();
     }
     
     handleLogin() {
@@ -3486,9 +3451,9 @@ class Simulator {
             return;
         }
         
-        // Prüfe ob Account mit diesem Namen existiert
+        // Prüfe ob Account mit diesem Namen existiert (case-insensitive)
         const accounts = this.getAllAccounts();
-        const account = accounts.find(acc => acc.name === name);
+        const account = accounts.find(acc => acc.name.toLowerCase() === name.toLowerCase());
         
         if (account) {
             // Login erfolgreich - Hashtag wird automatisch aus dem Account geladen
@@ -3525,15 +3490,15 @@ class Simulator {
         
         // Prüfe ob Account bereits existiert (Name+Hashtag-Kombination muss eindeutig sein)
         const accounts = this.getAllAccounts();
-        const existingAccount = accounts.find(acc => acc.name === name && acc.hashtag === hashtag);
+        const existingAccount = accounts.find(acc => acc.name.toLowerCase() === name.toLowerCase() && acc.hashtag === hashtag);
         
         if (existingAccount) {
             alert(t('loginError')); // Account mit dieser Name+Hashtag-Kombination existiert bereits
             return;
         }
         
-        // Prüfe ob Name bereits verwendet wird (ein Name kann nur einmal existieren)
-        const existingName = accounts.find(acc => acc.name === name);
+        // Prüfe ob Name bereits verwendet wird (ein Name kann nur einmal existieren, case-insensitive)
+        const existingName = accounts.find(acc => acc.name.toLowerCase() === name.toLowerCase());
         if (existingName) {
             alert('Dieser Name ist bereits vergeben! Bitte wähle einen anderen Namen.');
             return;
@@ -3543,6 +3508,8 @@ class Simulator {
         const newAccount = {
             name: name,
             hashtag: hashtag,
+            gold: 0,
+            evolutions: [], // Array von gekauften Evolution-IDs
             createdAt: new Date().toISOString()
         };
         
@@ -3565,7 +3532,11 @@ class Simulator {
         const stored = localStorage.getItem('leechCurrentUser');
         if (stored) {
             try {
-                return JSON.parse(stored);
+                const user = JSON.parse(stored);
+                // Migriere alte Accounts (füge gold und evolutions hinzu falls fehlen)
+                if (user.gold === undefined) user.gold = 0;
+                if (user.evolutions === undefined) user.evolutions = [];
+                return user;
             } catch (e) {
                 return null;
             }
@@ -3594,16 +3565,441 @@ class Simulator {
     }
     
     saveAllAccounts(accounts) {
+        // Migriere alte Accounts
+        accounts.forEach(acc => {
+            if (acc.gold === undefined) acc.gold = 0;
+            if (acc.evolutions === undefined) acc.evolutions = [];
+        });
         localStorage.setItem('leechAccounts', JSON.stringify(accounts));
     }
     
-    updateWorldSize() {
-        // Aktualisiere Weltgröße basierend auf aktueller Canvas-Größe
-        // Fallback auf Standard-Werte falls renderWidth/renderHeight noch nicht gesetzt sind
-        const baseWidth = renderWidth || 800;
-        const baseHeight = renderHeight || 600;
-        this.worldWidth = baseWidth * 5; // Welt ist 5x größer als Canvas
-        this.worldHeight = baseHeight * 5;
+    setupEvolutionsShop() {
+        const evolutionsBtn = document.getElementById('evolutionsBtn');
+        const closeEvolutionsBtn = document.getElementById('closeEvolutionsBtn');
+        
+        if (evolutionsBtn) {
+            evolutionsBtn.addEventListener('click', () => {
+                this.showEvolutionsShop();
+            });
+        }
+        
+        if (closeEvolutionsBtn) {
+            closeEvolutionsBtn.addEventListener('click', () => {
+                this.hideEvolutionsShop();
+            });
+        }
+    }
+    
+    showEvolutionsShop() {
+        const overlay = document.getElementById('evolutionsOverlay');
+        if (overlay) {
+            overlay.style.display = 'flex';
+            this.updateEvolutionsShop();
+        }
+    }
+    
+    hideEvolutionsShop() {
+        const overlay = document.getElementById('evolutionsOverlay');
+        if (overlay) {
+            overlay.style.display = 'none';
+        }
+    }
+    
+    updateEvolutionsShop() {
+        const currentUser = this.getCurrentUser();
+        if (!currentUser) return;
+        
+        const goldDisplay = document.getElementById('shopGold');
+        const currentGoldDisplay = document.getElementById('currentGold');
+        if (goldDisplay) goldDisplay.textContent = currentUser.gold || 0;
+        if (currentGoldDisplay) currentGoldDisplay.textContent = currentUser.gold || 0;
+        
+        const listContainer = document.getElementById('evolutionsList');
+        if (!listContainer) return;
+        
+        listContainer.innerHTML = '';
+        
+        EVOLUTIONS.forEach(evolution => {
+            const isOwned = currentUser.evolutions && currentUser.evolutions.includes(evolution.id);
+            const canAfford = (currentUser.gold || 0) >= evolution.cost;
+            
+            const evolutionDiv = document.createElement('div');
+            evolutionDiv.style.cssText = `
+                padding: 15px;
+                border: 3px solid ${evolution.rarity.color};
+                border-radius: 10px;
+                background: ${isOwned ? '#2a4a2a' : '#2a2a2a'};
+                color: #cccccc;
+                display: flex;
+                flex-direction: column;
+                gap: 10px;
+                box-shadow: 0 0 15px ${evolution.rarity.color}40;
+            `;
+            
+            evolutionDiv.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="font-size: 2em;">${evolution.icon}</div>
+                    <div style="flex: 1;">
+                        <div style="font-size: 1.2em; font-weight: 600; color: ${evolution.rarity.color};">
+                            ${evolution.name}
+                        </div>
+                        <div style="font-size: 0.9em; color: #aaa; margin-top: 5px;">
+                            ${evolution.description}
+                        </div>
+                        <div style="font-size: 0.85em; color: ${evolution.rarity.color}; margin-top: 5px; font-weight: 600;">
+                            ${evolution.rarity.name.toUpperCase()}
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        ${isOwned ? 
+                            '<div style="color: #4ade80; font-weight: 600;">✓ Besessen</div>' :
+                            `<div style="color: #fbbf24; font-weight: 600;">${evolution.cost} Gold</div>
+                             <button class="buyEvolutionBtn" data-evolution-id="${evolution.id}" 
+                                     style="margin-top: 10px; padding: 8px 20px; background: ${canAfford ? '#4ade80' : '#666'}; 
+                                            color: white; border: none; border-radius: 5px; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; 
+                                            font-weight: 600; font-size: 14px;"
+                                     ${!canAfford ? 'disabled' : ''}>
+                                Kaufen
+                             </button>`
+                        }
+                    </div>
+                </div>
+            `;
+            
+            if (!isOwned) {
+                const buyBtn = evolutionDiv.querySelector('.buyEvolutionBtn');
+                if (buyBtn) {
+                    buyBtn.addEventListener('click', () => {
+                        this.buyEvolution(evolution.id);
+                    });
+                }
+            }
+            
+            listContainer.appendChild(evolutionDiv);
+        });
+    }
+    
+    buyEvolution(evolutionId) {
+        const currentUser = this.getCurrentUser();
+        if (!currentUser) return;
+        
+        const evolution = EVOLUTIONS.find(e => e.id === evolutionId);
+        if (!evolution) return;
+        
+        // Prüfe ob bereits besessen
+        if (currentUser.evolutions && currentUser.evolutions.includes(evolutionId)) {
+            alert('Diese Evolution ist bereits gekauft!');
+            return;
+        }
+        
+        // Prüfe ob genug Gold vorhanden
+        if ((currentUser.gold || 0) < evolution.cost) {
+            alert('Nicht genug Gold!');
+            return;
+        }
+        
+        // Kaufe Evolution
+        currentUser.gold -= evolution.cost;
+        if (!currentUser.evolutions) currentUser.evolutions = [];
+        currentUser.evolutions.push(evolutionId);
+        
+        // Speichere Account
+        this.setCurrentUser(currentUser);
+        const accounts = this.getAllAccounts();
+        const accountIndex = accounts.findIndex(acc => acc.name === currentUser.name && acc.hashtag === currentUser.hashtag);
+        if (accountIndex !== -1) {
+            accounts[accountIndex] = currentUser;
+            this.saveAllAccounts(accounts);
+        }
+        
+        // Aktualisiere Shop
+        this.updateEvolutionsShop();
+        this.updateGoldDisplay();
+        this.log(`Evolution gekauft: ${evolution.name}`, 'success');
+    }
+    
+    updateGoldDisplay() {
+        const currentUser = this.getCurrentUser();
+        if (!currentUser) return;
+        
+        const currentGoldDisplay = document.getElementById('currentGold');
+        const shopGoldDisplay = document.getElementById('shopGold');
+        if (currentGoldDisplay) currentGoldDisplay.textContent = currentUser.gold || 0;
+        if (shopGoldDisplay) shopGoldDisplay.textContent = currentUser.gold || 0;
+    }
+    
+    addGoldFromScore(score) {
+        const currentUser = this.getCurrentUser();
+        if (!currentUser) return;
+        
+        // Score wird zu Gold (1:1 Verhältnis)
+        currentUser.gold = (currentUser.gold || 0) + score;
+        
+        // Speichere Account
+        this.setCurrentUser(currentUser);
+        const accounts = this.getAllAccounts();
+        const accountIndex = accounts.findIndex(acc => acc.name === currentUser.name && acc.hashtag === currentUser.hashtag);
+        if (accountIndex !== -1) {
+            accounts[accountIndex] = currentUser;
+            this.saveAllAccounts(accounts);
+        }
+        
+        this.updateGoldDisplay();
+        this.log(`+${score} Gold erhalten!`, 'success');
+    }
+    
+    handleSpacebar() {
+        const currentUser = this.getCurrentUser();
+        if (!currentUser || !this.tier) return;
+        
+        // Prüfe ob genug Stamina vorhanden (5 Stamina benötigt)
+        if (this.tier.currentStamina < 5) {
+            this.log('Nicht genug Stamina! (5 benötigt)', 'warning');
+            return;
+        }
+        
+        // Prüfe welche Evolutions gekauft wurden
+        const hasShot = currentUser.evolutions && currentUser.evolutions.includes('shot');
+        const hasShockwave = currentUser.evolutions && currentUser.evolutions.includes('shockwave');
+        
+        if (hasShockwave) {
+            // Shockwave hat Priorität
+            this.useShockwave();
+        } else if (hasShot) {
+            // Schuss
+            this.useShot();
+        } else {
+            this.log('Keine Evolution gekauft!', 'warning');
+        }
+    }
+    
+    useShot() {
+        if (!this.tier || this.tier.currentStamina < 5) return;
+        
+        // Verbrauche 5 Stamina
+        this.tier.currentStamina -= 5;
+        
+        // Erstelle Projektil in Richtung der Bewegung
+        const head = this.tier.segments[0];
+        const angle = this.tier.angle;
+        const projectile = new Projectile(head.x, head.y, angle, 8);
+        this.projectiles.push(projectile);
+        
+        this.log('Schuss abgefeuert!', 'success');
+    }
+    
+    useShockwave() {
+        if (!this.tier || this.tier.currentStamina < 5) return;
+        
+        // Verbrauche 5 Stamina
+        this.tier.currentStamina -= 5;
+        
+        // Finde alle gegrabteten Gegner
+        const head = this.tier.segments[0];
+        let pushedCount = 0;
+        
+        // Prüfe alle Jäger
+        this.hunters.forEach(hunter => {
+            if (hunter.isClimbing && hunter.grabbedSegmentIndex !== undefined) {
+                // Berechne Richtung weg vom Spieler
+                const dx = hunter.headX - head.x;
+                const dy = hunter.headY - head.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 100) { // Reichweite der Shockwave
+                    // Schleudere Jäger weg
+                    const force = 15; // Stärke der Schockwelle
+                    const angle = Math.atan2(dy, dx);
+                    hunter.headX += Math.cos(angle) * force;
+                    hunter.headY += Math.sin(angle) * force;
+                    
+                    // Lass Jäger los
+                    hunter.isClimbing = false;
+                    hunter.grabbedSegmentIndex = undefined;
+                    hunter.currentStamina = Math.max(0, hunter.currentStamina - 2); // Verliert auch etwas Stamina
+                    pushedCount++;
+                }
+            }
+        });
+        
+        // Starte Shockwave-Animation
+        this.shockwaveAnimation = {
+            duration: 30, // 0.5 Sekunden
+            radius: 0,
+            maxRadius: 100,
+            x: head.x,
+            y: head.y
+        };
+        
+        this.log(`Shockwave! ${pushedCount} Gegner weggeschleudert!`, 'success');
+    }
+    
+    // Chunk-Koordinaten aus Welt-Koordinaten berechnen
+    getChunkCoords(worldX, worldY) {
+        const chunkX = Math.floor(worldX / this.chunkSize);
+        const chunkY = Math.floor(worldY / this.chunkSize);
+        return { x: chunkX, y: chunkY };
+    }
+    
+    // Chunk-String für Set
+    chunkKey(chunkX, chunkY) {
+        return `${chunkX},${chunkY}`;
+    }
+    
+    // Prüfe ob Chunk geladen ist
+    isChunkLoaded(chunkX, chunkY) {
+        return this.loadedChunks.has(this.chunkKey(chunkX, chunkY));
+    }
+    
+    // Markiere Chunk als geladen
+    loadChunk(chunkX, chunkY) {
+        this.loadedChunks.add(this.chunkKey(chunkX, chunkY));
+    }
+    
+    // Seeded Random Number Generator (für deterministische Generierung)
+    seededRandom(seed) {
+        let value = seed;
+        return function() {
+            value = (value * 9301 + 49297) % 233280;
+            return value / 233280;
+        };
+    }
+    
+    // Prozedurale Generierung für einen Chunk
+    generateChunk(chunkX, chunkY) {
+        // Verwende deterministischen Seed basierend auf Chunk-Koordinaten
+        const seed = chunkX * 73856093 ^ chunkY * 19349663;
+        const rng = this.seededRandom(seed);
+        
+        // Generiere Tokens für diesen Chunk
+        const tokensPerChunk = 3 + Math.floor(rng() * 5); // 3-7 Tokens pro Chunk
+        const chunkWorldX = chunkX * this.chunkSize;
+        const chunkWorldY = chunkY * this.chunkSize;
+        
+        for (let i = 0; i < tokensPerChunk; i++) {
+            const tokenX = chunkWorldX + rng() * this.chunkSize;
+            const tokenY = chunkWorldY + rng() * this.chunkSize;
+            
+            // 70% Food, 30% Stamina
+            if (rng() < 0.7) {
+                this.foods.push(new Food(tokenX, tokenY));
+            } else {
+                this.staminaTokens.push(new StaminaToken(tokenX, tokenY));
+            }
+        }
+        
+        // Generiere Hunters für diesen Chunk (mehr Hunters pro Chunk)
+        // Jeder Chunk kann 1-3 Hunters haben
+        const huntersPerChunk = 1 + Math.floor(rng() * 3); // 1-3 Hunters pro Chunk
+        
+        for (let h = 0; h < huntersPerChunk; h++) {
+            // Spawne Hunters immer, auch wenn Limits erreicht sind (für prozedurale Welt)
+            // Entferne alte Hunters die zu weit weg sind, um Platz zu schaffen
+            const hunterX = chunkWorldX + rng() * this.chunkSize;
+            const hunterY = chunkWorldY + rng() * this.chunkSize;
+            
+            // 50% Normal, 30% Fat, 20% Elite
+            const hunterType = rng();
+            if (hunterType < 0.5) {
+                // Normale Hunter
+                // Entferne alte Hunters die zu weit weg sind (mehr als 5 Chunks entfernt)
+                if (this.hunters.length >= this.maxHunters) {
+                    const maxDistance = this.chunkSize * 5;
+                    for (let i = this.hunters.length - 1; i >= 0; i--) {
+                        const oldHunter = this.hunters[i];
+                        const dx = oldHunter.headX - this.cameraX;
+                        const dy = oldHunter.headY - this.cameraY;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance > maxDistance) {
+                            this.hunters.splice(i, 1);
+                            break; // Nur einen entfernen
+                        }
+                    }
+                }
+                // Spawne neuen Hunter
+                const hunter = new HunterCreature(hunterX, hunterY);
+                hunter.isChasing = false; // Startet nicht verfolgend
+                this.hunters.push(hunter);
+            } else if (hunterType < 0.8) {
+                // Fat Hunter
+                // Entferne alte Fat Hunters die zu weit weg sind
+                if (this.fatHunters.length >= this.maxFatHunters) {
+                    const maxDistance = this.chunkSize * 5;
+                    for (let i = this.fatHunters.length - 1; i >= 0; i--) {
+                        const oldHunter = this.fatHunters[i];
+                        const dx = oldHunter.headX - this.cameraX;
+                        const dy = oldHunter.headY - this.cameraY;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance > maxDistance) {
+                            this.fatHunters.splice(i, 1);
+                            break; // Nur einen entfernen
+                        }
+                    }
+                }
+                // Spawne neuen Fat Hunter
+                this.fatHunters.push(new FatHunterCreature(hunterX, hunterY));
+            } else {
+                // Elite Hunter
+                // Entferne alte Hunters die zu weit weg sind
+                if (this.hunters.length >= this.maxHunters) {
+                    const maxDistance = this.chunkSize * 5;
+                    for (let i = this.hunters.length - 1; i >= 0; i--) {
+                        const oldHunter = this.hunters[i];
+                        const dx = oldHunter.headX - this.cameraX;
+                        const dy = oldHunter.headY - this.cameraY;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance > maxDistance) {
+                            this.hunters.splice(i, 1);
+                            break; // Nur einen entfernen
+                        }
+                    }
+                }
+                // Spawne neuen Elite Hunter
+                const hunter = new HunterCreature(hunterX, hunterY);
+                hunter.isElite = true;
+                hunter.isChasing = false;
+                this.hunters.push(hunter);
+            }
+        }
+    }
+    
+    // Lade Chunks im sichtbaren Bereich
+    updateChunks() {
+        // Berechne sichtbaren Bereich in Welt-Koordinaten
+        const viewLeft = this.cameraX - renderWidth / (2 * this.cameraZoom);
+        const viewRight = this.cameraX + renderWidth / (2 * this.cameraZoom);
+        const viewTop = this.cameraY - renderHeight / (2 * this.cameraZoom);
+        const viewBottom = this.cameraY + renderHeight / (2 * this.cameraZoom);
+        
+        // Erweitere um Padding
+        const padding = this.chunkSize * this.chunkPadding;
+        const loadLeft = viewLeft - padding;
+        const loadRight = viewRight + padding;
+        const loadTop = viewTop - padding;
+        const loadBottom = viewBottom + padding;
+        
+        // Berechne Chunk-Bereich
+        const minChunkX = Math.floor(loadLeft / this.chunkSize);
+        const maxChunkX = Math.floor(loadRight / this.chunkSize);
+        const minChunkY = Math.floor(loadTop / this.chunkSize);
+        const maxChunkY = Math.floor(loadBottom / this.chunkSize);
+        
+        // Lade neue Chunks
+        let chunksLoaded = 0;
+        for (let chunkX = minChunkX; chunkX <= maxChunkX; chunkX++) {
+            for (let chunkY = minChunkY; chunkY <= maxChunkY; chunkY++) {
+                if (!this.isChunkLoaded(chunkX, chunkY)) {
+                    this.loadChunk(chunkX, chunkY);
+                    this.generateChunk(chunkX, chunkY);
+                    chunksLoaded++;
+                }
+            }
+        }
+        
+        // Debug-Log nur wenn neue Chunks geladen wurden
+        if (chunksLoaded > 0) {
+            this.log(`Chunks geladen: ${chunksLoaded} - Hunters: ${this.hunters.length}, Fat: ${this.fatHunters.length}`, 'info');
+        }
     }
     
     setupDebugLog() {
@@ -3914,6 +4310,14 @@ class Simulator {
             }
         });
         
+        // Leertaste: Schuss oder Shockwave (je nach gekauften Evolutions)
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && this.isRunning && this.tier) {
+                e.preventDefault();
+                this.handleSpacebar();
+            }
+        });
+        
         // Restart-Button für Game Over
         const restartBtn = document.getElementById('restartBtn');
         if (restartBtn) {
@@ -4056,10 +4460,34 @@ class Simulator {
         });
     }
     
+    drawBackground() {
+        // Zeichne Hintergrund für den sichtbaren Bereich (prozedurale Welt)
+        // Berechne sichtbaren Bereich in Welt-Koordinaten
+        const viewLeft = this.cameraX - renderWidth / (2 * this.cameraZoom);
+        const viewRight = this.cameraX + renderWidth / (2 * this.cameraZoom);
+        const viewTop = this.cameraY - renderHeight / (2 * this.cameraZoom);
+        const viewBottom = this.cameraY + renderHeight / (2 * this.cameraZoom);
+        
+        // Einfacher Hintergrund (dunkelgrau)
+        ctx.fillStyle = '#1a1a1a';
+        ctx.fillRect(viewLeft - 100, viewTop - 100, viewRight - viewLeft + 200, viewBottom - viewTop + 200);
+        
+        // Optional: Prozedurale Details (z.B. kleine Punkte)
+        ctx.fillStyle = '#2a2a2a';
+        const seed = Math.floor(this.cameraX / 50) + Math.floor(this.cameraY / 50);
+        const rng = this.seededRandom(seed);
+        for (let i = 0; i < 20; i++) {
+            const x = viewLeft + (viewRight - viewLeft) * rng();
+            const y = viewTop + (viewBottom - viewTop) * rng();
+            ctx.fillRect(Math.floor(x), Math.floor(y), 2, 2);
+        }
+    }
+    
     spawnRandomHunters(count) {
-        // Spawne Hunter random in der Welt (nicht zu nah am Spieler)
-        const minDistance = 200; // Mindestabstand zum Spieler (reduziert für mehr Spawns)
-        const playerHead = this.tier ? this.tier.getHeadPosition() : { x: this.worldWidth / 2, y: this.worldHeight / 2 };
+        // Spawne Hunter random in der Nähe der Kamera (nicht zu nah am Spieler)
+        const minDistance = 200; // Mindestabstand zum Spieler
+        const playerHead = this.tier ? this.tier.getHeadPosition() : { x: this.cameraX, y: this.cameraY };
+        const spawnRadius = Math.max(renderWidth, renderHeight) * 2; // Spawne in größerem Radius um Kamera
         
         for (let i = 0; i < count; i++) {
             let hunterX, hunterY;
@@ -4067,32 +4495,46 @@ class Simulator {
             let attempts = 0;
             
             while (!validPosition && attempts < 50) {
-                hunterX = 50 + Math.random() * (this.worldWidth - 100);
-                hunterY = 50 + Math.random() * (this.worldHeight - 100);
+                // Spawne in einem Radius um die Kamera
+                const angle = Math.random() * Math.PI * 2;
+                const distance = minDistance + Math.random() * spawnRadius;
+                hunterX = this.cameraX + Math.cos(angle) * distance;
+                hunterY = this.cameraY + Math.sin(angle) * distance;
                 
                 // Prüfe Abstand zum Spieler
                 const dx = hunterX - playerHead.x;
                 const dy = hunterY - playerHead.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+                const dist = Math.sqrt(dx * dx + dy * dy);
                 
-                if (distance >= minDistance) {
+                if (dist >= minDistance) {
                     validPosition = true;
                     
                     // Zufällig entscheiden welche Hunter-Klasse spawnt
                     const hunterType = Math.random();
                     if (hunterType < 0.6) {
                         // 60% normale Hunter
-                        this.hunters.push(new HunterCreature(hunterX, hunterY, false));
+                        if (this.hunters.length < this.maxHunters) {
+                            const hunter = new HunterCreature(hunterX, hunterY);
+                            hunter.isChasing = false;
+                            this.hunters.push(hunter);
+                        }
                     } else if (hunterType < 0.85) {
                         // 25% Elite Hunter
-                        this.hunters.push(new HunterCreature(hunterX, hunterY, true));
+                        if (this.hunters.length < this.maxHunters) {
+                            const hunter = new HunterCreature(hunterX, hunterY);
+                            hunter.isElite = true;
+                            hunter.isChasing = false;
+                            this.hunters.push(hunter);
+                        }
                     } else {
                         // 15% Fat Hunter (wenn noch Platz)
                         if (this.fatHunters.length < this.maxFatHunters) {
                             this.fatHunters.push(new FatHunterCreature(hunterX, hunterY));
-                        } else {
+                        } else if (this.hunters.length < this.maxHunters) {
                             // Fallback zu normalem Hunter wenn maxFatHunters erreicht
-                            this.hunters.push(new HunterCreature(hunterX, hunterY, false));
+                            const hunter = new HunterCreature(hunterX, hunterY);
+                            hunter.isChasing = false;
+                            this.hunters.push(hunter);
                         }
                     }
                 }
@@ -4113,16 +4555,12 @@ class Simulator {
             const tokenX = centerX + Math.cos(angle) * distance;
             const tokenY = centerY + Math.sin(angle) * distance;
             
-            // Stelle sicher, dass Token innerhalb der Welt ist
-            const safeX = Math.max(30, Math.min(this.worldWidth - 30, tokenX));
-            const safeY = Math.max(30, Math.min(this.worldHeight - 30, tokenY));
-            
             if (poolType < 0.5) {
                 // Food-Pool
-                this.foods.push(new Food(safeX, safeY));
+                this.foods.push(new Food(tokenX, tokenY));
             } else {
                 // Stamina-Token-Pool
-                this.staminaTokens.push(new StaminaToken(safeX, safeY));
+                this.staminaTokens.push(new StaminaToken(tokenX, tokenY));
             }
         }
     }
@@ -4133,11 +4571,12 @@ class Simulator {
         let validPosition = false;
         let attempts = 0;
         
-        const playerHead = this.tier ? this.tier.getHeadPosition() : { x: this.worldWidth / 2, y: this.worldHeight / 2 };
+        const playerHead = this.tier ? this.tier.getHeadPosition() : { x: this.cameraX, y: this.cameraY };
         
         while (!validPosition && attempts < 50) {
-            foodX = 30 + Math.random() * (this.worldWidth - 60);
-            foodY = 30 + Math.random() * (this.worldHeight - 60);
+            // Spawne in der Nähe der Kamera (sichtbarer Bereich)
+            foodX = this.cameraX + (Math.random() - 0.5) * renderWidth * 2;
+            foodY = this.cameraY + (Math.random() - 0.5) * renderHeight * 2;
             
             // Prüfe ob Position zu nah an der Schlange oder anderen Foods ist
             let tooClose = false;
@@ -4193,8 +4632,9 @@ class Simulator {
                 tokenX = nearX + Math.cos(angle) * distance;
                 tokenY = nearY + Math.sin(angle) * distance;
             } else {
-                tokenX = 30 + Math.random() * (this.worldWidth - 60);
-                tokenY = 30 + Math.random() * (this.worldHeight - 60);
+                // Spawne in der Nähe der Kamera (sichtbarer Bereich)
+                tokenX = this.cameraX + (Math.random() - 0.5) * renderWidth * 2;
+                tokenY = this.cameraY + (Math.random() - 0.5) * renderHeight * 2;
             }
             
             // Prüfe ob Position zu nah an der Schlange oder anderen Tokens ist
@@ -4232,10 +4672,7 @@ class Simulator {
                 }
             }
             
-            // Prüfe Rand
-            if (tokenX < 20 || tokenX > renderWidth - 20 || tokenY < 20 || tokenY > renderHeight - 20) {
-                tooClose = true;
-            }
+            // Keine Rand-Prüfung mehr - unendliche Welt
             
             if (!tooClose) {
                 validPosition = true;
@@ -4674,6 +5111,9 @@ class Simulator {
         // Stoppe das Spiel
         this.stop();
         
+        // Füge Gold hinzu (Score wird zu Gold)
+        this.addGoldFromScore(this.score);
+        
         // Zeige Game Over Overlay
         const overlay = document.getElementById('gameOverOverlay');
         document.getElementById('finalScore').textContent = this.score;
@@ -4718,6 +5158,22 @@ class Simulator {
         const mainMenuOverlay = document.getElementById('mainMenuOverlay');
         if (mainMenuOverlay) {
             mainMenuOverlay.style.display = 'flex';
+        }
+        
+        // Prüfe ob bereits ein Benutzer eingeloggt ist und stelle Session wieder her
+        const currentUser = this.getCurrentUser();
+        if (currentUser) {
+            // Validiere dass der Account noch existiert
+            const accounts = this.getAllAccounts();
+            const account = accounts.find(acc => acc.name.toLowerCase() === currentUser.name.toLowerCase());
+            if (account) {
+                // Account existiert noch, stelle Session wieder her
+                this.setCurrentUser(account);
+                this.showGameSection(account);
+            } else {
+                // Account existiert nicht mehr, lösche Session
+                this.clearCurrentUser();
+            }
         }
     }
     
@@ -4835,16 +5291,17 @@ class Simulator {
     
     reset() {
         this.stop();
-        // Weltgröße aktualisieren (falls Canvas-Größe sich geändert hat)
-        this.updateWorldSize();
+            // Canvas-Größe aktualisiert (keine Weltgröße mehr nötig - prozedural)
         
         // Alle Foods und Stamina-Token entfernen
         this.foods = [];
         this.staminaTokens = [];
+        this.projectiles = []; // Projektil-Array leeren
+        this.shockwaveAnimation = null; // Shockwave-Animation zurücksetzen
         
-        // Spieler in der Mitte der Welt
-        const startX = this.worldWidth / 2;
-        const startY = this.worldHeight / 2;
+        // Spieler bei (0, 0)
+        const startX = 0;
+        const startY = 0;
         this.tier = new RainWorldTier(startX, startY);
         // Anker-Position aktualisieren (für Bewegungsradius)
         this.tier.anchorX = startX;
@@ -4852,20 +5309,16 @@ class Simulator {
         // Kamera auf Spieler setzen
         this.cameraX = startX;
         this.cameraY = startY;
+        this.cameraZoom = 1.0; // Zoom zurücksetzen
         
         // Jäger zurücksetzen
         this.hunters = [];
         this.fatHunters = [];
-        this.hunterSpawnTimer = 0;
         this.tokenPoolSpawnTimer = 0;
-        this.spawnRandomHunters(15); // Spawne 15 Hunter am Start (alle Klassen)
         
-        // Spawne initiale Token-Pools
-        for (let i = 0; i < 10; i++) {
-            const poolX = 100 + Math.random() * (this.worldWidth - 200);
-            const poolY = 100 + Math.random() * (this.worldHeight - 200);
-            this.spawnTokenPool(poolX, poolY);
-        }
+        // Initiale Chunks laden (um Startposition) - generiert auch Hunters
+        this.loadedChunks.clear();
+        this.updateChunks();
         
         this.score = 0;
         this.foodCount = 0;
@@ -4881,7 +5334,10 @@ class Simulator {
         document.getElementById('mutationOverlay').style.display = 'none';
         this.updateScore();
         this.updateUpgradeDisplay();
-        this.spawnFood();
+        // Spawne initiale Tokens (zusätzlich zu Chunk-Generierung)
+        for (let i = 0; i < 5; i++) {
+            this.spawnFood();
+        }
         this.draw();
     }
     
@@ -4903,25 +5359,25 @@ class Simulator {
                 // Warte kurz, dann resize
                 requestAnimationFrame(() => {
                     resizeCanvas();
-                    // Weltgröße aktualisieren (falls Canvas-Größe sich geändert hat)
-                    this.updateWorldSize();
+            // Canvas-Größe aktualisiert (keine Weltgröße mehr nötig - prozedural)
                 });
             } else {
-                // Weltgröße aktualisieren (falls Canvas-Größe sich geändert hat)
-                this.updateWorldSize();
+            // Canvas-Größe aktualisiert (keine Weltgröße mehr nötig - prozedural)
             }
             
             // Alle Foods und Stamina-Token entfernen
             this.foods = [];
             this.staminaTokens = [];
+            this.projectiles = []; // Projektil-Array leeren
+            this.shockwaveAnimation = null; // Shockwave-Animation zurücksetzen
             // Neues Spiel starten - Geschwindigkeit zurücksetzen
             if (this.tier) {
                 this.tier.speedMultiplier = 1.0;
                 this.tier.speed = this.tier.baseSpeed;
             }
-            // Neues Spiel starten - Spieler in der Mitte der Welt
-            const startX = this.worldWidth / 2;
-            const startY = this.worldHeight / 2;
+            // Neues Spiel starten - Spieler bei (0, 0)
+            const startX = 0;
+            const startY = 0;
             this.tier = new RainWorldTier(startX, startY);
             // Anker-Position aktualisieren (für Bewegungsradius)
             this.tier.anchorX = startX;
@@ -4929,20 +5385,16 @@ class Simulator {
             // Kamera auf Spieler setzen
             this.cameraX = startX;
             this.cameraY = startY;
+            this.cameraZoom = 1.0; // Zoom zurücksetzen
             
-            // Jäger random in der Welt spawnen (nicht zu nah am Spieler)
+            // Jäger werden durch Chunk-System generiert
             this.hunters = [];
             this.fatHunters = [];
-            this.hunterSpawnTimer = 0;
             this.tokenPoolSpawnTimer = 0;
-            this.spawnRandomHunters(15); // Spawne 15 Hunter am Start (alle Klassen)
             
-            // Spawne initiale Token-Pools
-            for (let i = 0; i < 10; i++) {
-                const poolX = 100 + Math.random() * (this.worldWidth - 200);
-                const poolY = 100 + Math.random() * (this.worldHeight - 200);
-                this.spawnTokenPool(poolX, poolY);
-            }
+            // Initiale Chunks laden (um Startposition) - generiert auch Hunters
+            this.loadedChunks.clear();
+            this.updateChunks();
             
             this.score = 0;
             this.foodCount = 0;
@@ -4952,7 +5404,10 @@ class Simulator {
             document.getElementById('upgradeOverlay').style.display = 'none';
             this.updateScore();
             this.updateUpgradeDisplay();
-            this.spawnFood();
+            // Tokens werden durch Chunk-System generiert, aber spawne auch initial einige
+            for (let i = 0; i < 5; i++) {
+                this.spawnFood();
+            }
             this.isRunning = true;
             this.animate();
         }
@@ -4968,44 +5423,59 @@ class Simulator {
             this.cameraX += (playerHead.x - this.cameraX) * this.cameraFollowSpeed;
             this.cameraY += (playerHead.y - this.cameraY) * this.cameraFollowSpeed;
             
+            // Kamera-Zoom basierend auf Kreatur-Länge
+            // Je länger die Kreatur, desto weiter rausgezoomt (kleinerer Zoom-Wert)
+            // Basis: 10 Segmente = Zoom 1.0, jedes weitere Segment = -0.015 Zoom (rauszoomen)
+            const baseSegments = 10;
+            const zoomPerSegment = 0.015; // Zoom-Reduktion pro Segment (rauszoomen)
+            const targetZoom = this.baseZoom - (this.tier.numSegments - baseSegments) * zoomPerSegment;
+            const minZoom = 0.3; // Minimaler Zoom (maximal rausgezoomt - mehr sichtbar)
+            const maxZoom = 1.0; // Maximaler Zoom (kein Zoom - normal)
+            
+            // Sanfte Zoom-Interpolation
+            this.cameraZoom += (Math.max(minZoom, Math.min(maxZoom, targetZoom)) - this.cameraZoom) * 0.1;
+            
             // Kamera-Begrenzung entfernt - Open World ohne Grenzen
             // (Kamera kann überall folgen, aber wir zeichnen visuelle Wände)
         }
         
-        // Kamera-Transformation anwenden
-        ctx.save();
-        ctx.translate(renderWidth / 2 - this.cameraX, renderHeight / 2 - this.cameraY);
+        // Prozedurale Chunk-Generierung aktualisieren (VOR dem Zeichnen)
+        // Wichtig: Muss in jedem Frame aufgerufen werden, damit neue Chunks geladen werden
+        this.updateChunks();
         
-        // Clear canvas (in Welt-Koordinaten)
-        ctx.clearRect(-this.cameraX - 100, -this.cameraY - 100, this.worldWidth + 200, this.worldHeight + 200);
+        // Clear canvas VOR der Transformation (in Screen-Koordinaten)
+        // Das ist wichtig, damit der gesamte Canvas gelöscht wird, nicht nur ein Teil
+        ctx.clearRect(0, 0, renderWidth, renderHeight);
+        
+        // Kamera-Transformation anwenden (mit Zoom)
+        ctx.save();
+        // Pixel-Art Rendering sicherstellen (wichtig nach scale())
+        ctx.imageSmoothingEnabled = false;
+        // Korrekte Reihenfolge: Erst zum Canvas-Zentrum verschieben, dann zoomen, dann zur Kamera-Position
+        ctx.translate(renderWidth / 2, renderHeight / 2);
+        ctx.scale(this.cameraZoom, this.cameraZoom);
+        ctx.translate(-this.cameraX, -this.cameraY);
         
         // Hintergrund zeichnen
         this.drawBackground();
         
-        // Hunter-Spawning während des Spiels
-        this.hunterSpawnTimer++;
-        if (this.hunterSpawnTimer >= this.hunterSpawnInterval) {
-            const totalHunters = this.hunters.length + this.fatHunters.length;
-            if (totalHunters < (this.maxHunters + this.maxFatHunters)) {
-                // Spawne 1-3 Hunter gleichzeitig
-                const spawnCount = 1 + Math.floor(Math.random() * 3);
-                this.spawnRandomHunters(spawnCount);
-                this.hunterSpawnTimer = 0;
-                this.log(`Neue Hunter gespawnt - Normale: ${this.hunters.length}, Fat: ${this.fatHunters.length}`, 'info');
-            }
-        }
+        // Hunter-Spawning wird jetzt vollständig durch Chunk-System gehandhabt
+        // Kein separates Timer-System mehr nötig
         
-        // Token-Pool-Spawning (alle 5 Sekunden)
+        // Token-Pool-Spawning (alle 5 Sekunden) - in der Nähe der Kamera
         if (!this.tokenPoolSpawnTimer) {
             this.tokenPoolSpawnTimer = 0;
         }
         this.tokenPoolSpawnTimer++;
         if (this.tokenPoolSpawnTimer >= 300) { // Alle 5 Sekunden (bei 60 FPS)
-            // Spawne 1-2 Token-Pools
+            // Spawne 1-2 Token-Pools in der Nähe der Kamera
             const poolCount = 1 + Math.floor(Math.random() * 2);
             for (let i = 0; i < poolCount; i++) {
-                const poolX = 100 + Math.random() * (this.worldWidth - 200);
-                const poolY = 100 + Math.random() * (this.worldHeight - 200);
+                // Spawne in einem Radius um die Kamera
+                const angle = Math.random() * Math.PI * 2;
+                const distance = 200 + Math.random() * 300; // 200-500 Pixel von Kamera
+                const poolX = this.cameraX + Math.cos(angle) * distance;
+                const poolY = this.cameraY + Math.sin(angle) * distance;
                 this.spawnTokenPool(poolX, poolY);
             }
             this.tokenPoolSpawnTimer = 0;
@@ -5042,13 +5512,9 @@ class Simulator {
                 // Animation beendet - spawne Fat Hunter
                 const spawnX = this.fatHunterSpawnAnimation.hunterX + (Math.random() - 0.5) * 40;
                 const spawnY = this.fatHunterSpawnAnimation.hunterY + (Math.random() - 0.5) * 40;
-                // Verwende Welt-Größe statt Canvas-Größe
-                const safeX = Math.max(30, Math.min(this.worldWidth - 30, spawnX));
-                const safeY = Math.max(30, Math.min(this.worldHeight - 30, spawnY));
-                
                 // Prüfe ob maxFatHunters noch nicht erreicht
                 if (this.fatHunters.length < this.maxFatHunters) {
-                    this.fatHunters.push(new FatHunterCreature(safeX, safeY));
+                    this.fatHunters.push(new FatHunterCreature(spawnX, spawnY));
                 } else {
                     this.log('Max Fat Hunters erreicht - Spawn abgebrochen', 'info');
                 }
@@ -5056,13 +5522,13 @@ class Simulator {
                 // Partikel-Effekt für Spawn
                 for (let i = 0; i < 25; i++) {
                     this.particles.push(new Particle(
-                        safeX + (Math.random() - 0.5) * 15,
-                        safeY + (Math.random() - 0.5) * 15,
+                        spawnX + (Math.random() - 0.5) * 15,
+                        spawnY + (Math.random() - 0.5) * 15,
                         '#6a8a4a'
                     ));
                 }
                 
-                this.log(`Fat Hunter gespawnt bei (${Math.floor(safeX)}, ${Math.floor(safeY)})`, 'warning');
+                this.log(`Fat Hunter gespawnt bei (${Math.floor(spawnX)}, ${Math.floor(spawnY)})`, 'warning');
                 this.fatHunterSpawnAnimation = null;
             }
         }
@@ -6045,13 +6511,14 @@ class Simulator {
             this.tier.waveSpeed = baseWaveSpeed * this.speed;
             
             // Mausposition an Tier übergeben für Verfolgung
-            // Berechne Welt-Koordinaten basierend auf aktueller Kamera-Position
+            // Berechne Welt-Koordinaten basierend auf aktueller Kamera-Position und Zoom
             if (this.lastMouseClientX !== null && this.lastMouseClientY !== null) {
                 const canvasX = this.lastMouseClientX / PIXEL_SCALE;
                 const canvasY = this.lastMouseClientY / PIXEL_SCALE;
-                // Konvertiere Canvas-Koordinaten zu Welt-Koordinaten (mit aktueller Kamera-Position)
-                this.mouseX = canvasX + this.cameraX - renderWidth / 2;
-                this.mouseY = canvasY + this.cameraY - renderHeight / 2;
+                // Konvertiere Canvas-Koordinaten zu Welt-Koordinaten
+                // Transformation: (canvasX - renderWidth/2) / zoom + cameraX
+                this.mouseX = (canvasX - renderWidth / 2) / this.cameraZoom + this.cameraX;
+                this.mouseY = (canvasY - renderHeight / 2) / this.cameraZoom + this.cameraY;
                 this.tier.setTarget(this.mouseX, this.mouseY);
             }
             // Wenn die Maus außerhalb ist, behält die Kreatur das letzte Ziel bei
@@ -6147,8 +6614,119 @@ class Simulator {
             }
         }
         
+        // Projektil-Update und -Kollision
+        this.projectiles = this.projectiles.filter(projectile => {
+            projectile.update();
+            
+            // Prüfe Kollision mit Jägern
+            for (let i = this.hunters.length - 1; i >= 0; i--) {
+                const hunter = this.hunters[i];
+                const hunterHead = hunter.getHeadPosition();
+                if (projectile.checkCollision(hunterHead.x, hunterHead.y, 8)) {
+                    // Treffer! Jäger verliert ein Segment
+                    if (hunter.numSegments > 1) {
+                        // Wenn Hunter beim Klettern ist, lasse ihn los
+                        if (hunter.isClimbing) {
+                            hunter.isClimbing = false;
+                            hunter.climbingTargetIndex = -1;
+                            hunter.climbingProgress = 0;
+                            hunter.climbCooldown = 60;
+                            this.log('Jäger durch Schuss getroffen - Klettern abgebrochen', 'info');
+                        }
+                        hunter.shrink();
+                    } else {
+                        // Wenn Hunter beim Klettern ist, lasse ihn los bevor er stirbt
+                        if (hunter.isClimbing) {
+                            hunter.isClimbing = false;
+                            hunter.climbingTargetIndex = -1;
+                            hunter.climbingProgress = 0;
+                        }
+                        // Jäger stirbt
+                        this.hunters.splice(i, 1);
+                        this.log('Jäger durch Schuss eliminiert!', 'success');
+                    }
+                    // Projektil entfernen
+                    return false;
+                }
+            }
+            
+            // Prüfe Kollision mit Fat Hunters
+            for (let i = this.fatHunters.length - 1; i >= 0; i--) {
+                const fatHunter = this.fatHunters[i];
+                const fatHunterHead = fatHunter.getHeadPosition();
+                if (projectile.checkCollision(fatHunterHead.x, fatHunterHead.y, 10)) {
+                    // Treffer! Fat Hunter verliert ein Segment
+                    if (fatHunter.numSegments > 1) {
+                        fatHunter.shrink();
+                    } else {
+                        // Fat Hunter stirbt
+                        this.fatHunters.splice(i, 1);
+                        this.log('Fat Hunter durch Schuss eliminiert!', 'success');
+                    }
+                    // Projektil entfernen
+                    return false;
+                }
+            }
+            
+            return projectile.lifetime > 0;
+        });
+        
+        // Projektil zeichnen
+        this.projectiles.forEach(projectile => {
+            projectile.draw();
+        });
+        
+        // Shockwave-Animation aktualisieren und zeichnen
+        if (this.shockwaveAnimation) {
+            this.shockwaveAnimation.duration--;
+            this.shockwaveAnimation.radius += (this.shockwaveAnimation.maxRadius - this.shockwaveAnimation.radius) * 0.2;
+            
+            if (this.shockwaveAnimation.duration > 0) {
+                // Zeichne Shockwave
+                const progress = 1.0 - (this.shockwaveAnimation.duration / 30.0);
+                const alpha = (1.0 - progress) * 0.5;
+                const radius = this.shockwaveAnimation.radius;
+                
+                ctx.save();
+                ctx.strokeStyle = `rgba(0, 200, 255, ${alpha})`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.arc(
+                    Math.floor(this.shockwaveAnimation.x),
+                    Math.floor(this.shockwaveAnimation.y),
+                    radius,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.stroke();
+                
+                // Innerer Ring
+                ctx.strokeStyle = `rgba(100, 255, 255, ${alpha * 0.7})`;
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(
+                    Math.floor(this.shockwaveAnimation.x),
+                    Math.floor(this.shockwaveAnimation.y),
+                    radius * 0.7,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.stroke();
+                ctx.restore();
+            } else {
+                this.shockwaveAnimation = null;
+            }
+        }
+        
+        // Partikel zeichnen (über allem)
+        this.particles.forEach(particle => {
+            particle.draw();
+        });
+        
         // Kamera-Transformation wiederherstellen
         ctx.restore();
+        // Stelle sicher, dass Pixel-Art Rendering nach restore() wieder aktiv ist
+        ctx.imageSmoothingEnabled = false;
         
         this.animationId = requestAnimationFrame(() => this.animate());
     }

@@ -78,13 +78,37 @@
                     </button>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 20px;">
+                    <div style="text-align: center; color: #fbbf24; margin-bottom: 10px; font-size: 1.1em; font-weight: 600;">
+                        <span id="goldLabel">Gold: </span><span id="currentGold" style="color: #ffd700;">0</span>
+                    </div>
                     <button id="startGameBtn" style="padding: 20px 40px; font-size: 20px; background: #4ade80; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);">
                         Spiel starten
+                    </button>
+                    <button id="evolutionsBtn" style="padding: 20px 40px; font-size: 20px; background: #a78bfa; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(167, 139, 250, 0.3);">
+                        Evolutions
                     </button>
                     <button id="viewHighscoreBtn" style="padding: 20px 40px; font-size: 20px; background: #60a5fa; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(96, 165, 250, 0.3);">
                         Highscore
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Evolutions Shop Overlay -->
+    <div id="evolutionsOverlay" class="upgrade-overlay" style="display: none;">
+        <div class="upgrade-container" style="max-width: 700px; max-height: 80vh; overflow-y: auto;">
+            <h2 id="evolutionsTitle" style="color: #a78bfa; text-align: center; margin-bottom: 20px; font-size: 2em; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);">Evolutions</h2>
+            <div style="text-align: center; color: #fbbf24; margin-bottom: 20px; font-size: 1.2em; font-weight: 600;">
+                <span id="shopGoldLabel">Gold: </span><span id="shopGold" style="color: #ffd700;">0</span>
+            </div>
+            <div id="evolutionsList" style="display: flex; flex-direction: column; gap: 15px;">
+                <!-- Evolutions werden hier dynamisch eingefügt -->
+            </div>
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="closeEvolutionsBtn" style="padding: 12px 30px; font-size: 16px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                    Schließen
+                </button>
             </div>
         </div>
     </div>
