@@ -1623,12 +1623,30 @@ class RainWorldTier {
         const dynamicDistance = this.segmentDistance * (1.0 - curveFactor * 0.3); // Kompression bei Kurven
         
         // Segmente nacheinander aktualisieren (wichtig für Stabilität)
+        // Performance-Optimierung: Bei langen Schlangen weniger Updates für hintere Segmente (LOD)
+        const segmentUpdateSkip = this.segments.length > 50 ? Math.floor(this.segments.length / 50) : 1;
+        
         for (let i = 1; i < this.segments.length; i++) {
             const prevSeg = this.segments[i - 1];
             const currentSeg = this.segments[i];
             
             // Normalisierte Position im Körper (0 = Kopf, 1 = Schwanz)
             const normalizedPos = i / this.segments.length;
+            
+            // Performance: Bei langen Schlangen hintere Segmente seltener updaten
+            if (this.segments.length > 50 && i > this.segments.length * 0.7 && i % segmentUpdateSkip !== 0) {
+                // Überspringe Update für dieses Segment (nur Position anpassen)
+                const dx = prevSeg.x - currentSeg.x;
+                const dy = prevSeg.y - currentSeg.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > dynamicDistance * 1.5) {
+                    // Nur wenn zu weit entfernt, anpassen
+                    const ratio = dynamicDistance / dist;
+                    currentSeg.x = prevSeg.x - dx * ratio;
+                    currentSeg.y = prevSeg.y - dy * ratio;
+                }
+                continue;
+            }
             
             // Geschwindigkeitsabhängige Wellenbewegung
             const waveIntensity = Math.min(this.currentSpeed / this.baseSpeed, 1.5);
@@ -3860,6 +3878,12 @@ class Simulator {
         this.cameraZoom = 1.0; // Kamera-Zoom (1.0 = normal, größer = rausgezoomt)
         this.baseZoom = 1.0; // Basis-Zoom
         
+        // FPS-Limitierung für konsistente Performance
+        this.targetFPS = 60; // Ziel-FPS
+        this.frameInterval = 1000 / this.targetFPS; // Millisekunden pro Frame
+        this.lastFrameTime = 0; // Zeit des letzten Frames
+        this.deltaTime = 0; // Delta-Zeit für framerate-unabhängige Updates
+        
         // Hunter-Spawning wird jetzt vollständig durch Chunk-System gehandhabt
         this.maxHunters = 200; // Maximale Anzahl von Hunters in der Welt (erhöht für prozedurale Welt)
         this.maxFatHunters = 100; // Maximale Anzahl von Fat Hunters (erhöht)
@@ -5462,6 +5486,7 @@ class Simulator {
         this.spawnFood();
         if (wasRunning) {
             this.isRunning = true;
+            this.lastFrameTime = performance.now(); // Initialisiere Frame-Zeit für FPS-Limitierung
             this.animate();
         }
     }
@@ -5659,6 +5684,7 @@ class Simulator {
         this.spawnFood();
         if (wasRunning) {
             this.isRunning = true;
+            this.lastFrameTime = performance.now(); // Initialisiere Frame-Zeit für FPS-Limitierung
             this.animate();
         }
     }
@@ -6546,6 +6572,7 @@ class Simulator {
         this.fatHunters = [];
         this.tokenPoolSpawnTimer = 0;
         this.nearbyHunterSpawnTimer = 0;
+        this.lastFrameTime = 0; // Frame-Zeit zurücksetzen
         
         // Initiale Chunks laden (um Startposition) - generiert auch Hunters
         this.loadedChunks.clear();
@@ -6652,12 +6679,28 @@ class Simulator {
             this.updateEvolutionDisplay();
             
             this.isRunning = true;
+            this.lastFrameTime = performance.now(); // Initialisiere Frame-Zeit für FPS-Limitierung
             this.animate();
         }
     }
     
     animate() {
         if (!this.isRunning || this.pendingUpgrades || this.pendingMutations) return;
+        
+        // FPS-Limitierung: Berechne Delta-Zeit und limitiere auf 60 FPS
+        const currentTime = performance.now();
+        const elapsed = currentTime - this.lastFrameTime;
+        
+        if (elapsed < this.frameInterval) {
+            // Noch nicht genug Zeit vergangen - warte
+            this.animationId = requestAnimationFrame(() => this.animate());
+            return;
+        }
+        
+        // Delta-Zeit für framerate-unabhängige Updates (normalisiert auf 60 FPS)
+        this.deltaTime = elapsed / this.frameInterval; // 1.0 = 60 FPS, 2.0 = 30 FPS, etc.
+        this.deltaTime = Math.min(this.deltaTime, 2.0); // Cap bei 2.0 (maximal 30 FPS equivalent)
+        this.lastFrameTime = currentTime - (elapsed % this.frameInterval); // Präzise Timing
         
         // Kamera folgt dem Spieler
         if (this.tier) {
@@ -7102,7 +7145,16 @@ class Simulator {
                 // Aufmerksamkeitsradius prüfen
                 const dx = playerHead.x - hunter.headX;
                 const dy = playerHead.y - hunter.headY;
-                const distanceToPlayer = Math.sqrt(dx * dx + dy * dy);
+                const distanceToPlayerSquared = dx * dx + dy * dy;
+                const distanceToPlayer = Math.sqrt(distanceToPlayerSquared);
+                
+                // Performance-Optimierung: Weit entfernte Hunter seltener updaten
+                if (!hunter.updateFrameCounter) hunter.updateFrameCounter = 0;
+                hunter.updateFrameCounter++;
+                const updateSkip = distanceToPlayer > 500 ? 2 : (distanceToPlayer > 300 ? 1 : 0); // Skip 1 Frame wenn > 300, 2 Frames wenn > 500
+                if (updateSkip > 0 && hunter.updateFrameCounter % (updateSkip + 1) !== 0) {
+                    continue; // Überspringe Update für diesen Frame
+                }
                 
                 if (distanceToPlayer <= hunter.attentionRadius) {
                     // Spieler im Aufmerksamkeitsradius - starte Verfolgung
