@@ -692,7 +692,9 @@ const UPGRADES = [
         bonusPerStack: 15,
         getBonusText: (stacks) => `+${15 * stacks}% Drehgeschwindigkeit`,
         apply: (tier) => {
-            tier.turnSpeed *= 1.15;
+            // Lineare Steigerung statt exponentiell: +15% der Original-Drehgeschwindigkeit
+            const originalTurnSpeed = tier.originalTurnSpeed || 0.05;
+            tier.turnSpeed += originalTurnSpeed * 0.15;
         }
     },
     {
@@ -747,7 +749,9 @@ const UPGRADES = [
         bonusPerStack: 30,
         getBonusText: (stacks) => `+${30 * stacks}% Drehgeschwindigkeit`,
         apply: (tier) => {
-            tier.turnSpeed *= 1.3;
+            // Lineare Steigerung statt exponentiell: +30% der Original-Drehgeschwindigkeit
+            const originalTurnSpeed = tier.originalTurnSpeed || 0.05;
+            tier.turnSpeed += originalTurnSpeed * 0.3;
         }
     },
     {
@@ -820,7 +824,9 @@ const UPGRADES = [
         bonusPerStack: 50,
         getBonusText: (stacks) => `+${50 * stacks}% Drehgeschwindigkeit`,
         apply: (tier) => {
-            tier.turnSpeed *= 1.5;
+            // Lineare Steigerung statt exponentiell: +50% der Original-Drehgeschwindigkeit
+            const originalTurnSpeed = tier.originalTurnSpeed || 0.05;
+            tier.turnSpeed += originalTurnSpeed * 0.5;
         }
     },
     {
@@ -893,7 +899,9 @@ const UPGRADES = [
         bonusPerStack: 75,
         getBonusText: (stacks) => `+${75 * stacks}% Drehgeschwindigkeit`,
         apply: (tier) => {
-            tier.turnSpeed *= 1.75;
+            // Lineare Steigerung statt exponentiell: +75% der Original-Drehgeschwindigkeit
+            const originalTurnSpeed = tier.originalTurnSpeed || 0.05;
+            tier.turnSpeed += originalTurnSpeed * 0.75;
         }
     },
     {
@@ -939,7 +947,9 @@ const UPGRADES = [
             tier.speed *= 1.08;
             tier.targetSpeed *= 1.08;
             tier.currentSpeed *= 1.08;
-            tier.turnSpeed *= 1.3;
+            // Lineare Steigerung der Drehgeschwindigkeit statt exponentiell
+            const originalTurnSpeed = tier.originalTurnSpeed || 0.05;
+            tier.turnSpeed += originalTurnSpeed * 0.3;
             for (let i = 0; i < 3; i++) {
                 tier.grow();
             }
@@ -8410,11 +8420,30 @@ class Simulator {
         
         // Viewport-basiertes Despawnen: Entferne Entities die zu weit weg sind (außer Bossen)
         // Optimiert: Verwende squared distance für bessere Performance
+        // AGGRESSIVES CLEANUP: Wenn Limits überschritten, entferne sofort die entferntesten Entities
         if (this.tier) {
             const playerHead = this.tier.getHeadPosition();
             const despawnRadiusSquared = this.despawnRadius * this.despawnRadius;
             
-            // Hunters despawnen
+            // AGGRESSIVES CLEANUP: Wenn zu viele Hunters, entferne sofort die entferntesten
+            if (this.hunters.length > this.maxHunters) {
+                // Sortiere Hunters nach Entfernung (entfernteste zuerst)
+                const huntersWithDistance = this.hunters.map((hunter, index) => {
+                    const dx = hunter.headX - playerHead.x;
+                    const dy = hunter.headY - playerHead.y;
+                    return { index, distanceSquared: dx * dx + dy * dy };
+                });
+                huntersWithDistance.sort((a, b) => b.distanceSquared - a.distanceSquared);
+                
+                // Entferne die entferntesten Hunters bis unter Limit (rückwärts für korrekte Indizes)
+                const toRemove = this.hunters.length - this.maxHunters;
+                const indicesToRemove = huntersWithDistance.slice(0, toRemove).map(item => item.index).sort((a, b) => b - a);
+                for (const index of indicesToRemove) {
+                    this.hunters.splice(index, 1);
+                }
+            }
+            
+            // Normales Despawnen für Hunters (außerhalb des Despawn-Radius)
             for (let i = this.hunters.length - 1; i >= 0; i--) {
                 const hunter = this.hunters[i];
                 const dx = hunter.headX - playerHead.x;
@@ -8424,7 +8453,25 @@ class Simulator {
                 }
             }
             
-            // Fat Hunters despawnen
+            // AGGRESSIVES CLEANUP: Wenn zu viele Fat Hunters, entferne sofort die entferntesten
+            if (this.fatHunters.length > this.maxFatHunters) {
+                // Sortiere Fat Hunters nach Entfernung (entfernteste zuerst)
+                const fatHuntersWithDistance = this.fatHunters.map((fatHunter, index) => {
+                    const dx = fatHunter.headX - playerHead.x;
+                    const dy = fatHunter.headY - playerHead.y;
+                    return { index, distanceSquared: dx * dx + dy * dy };
+                });
+                fatHuntersWithDistance.sort((a, b) => b.distanceSquared - a.distanceSquared);
+                
+                // Entferne die entferntesten Fat Hunters bis unter Limit (rückwärts für korrekte Indizes)
+                const toRemove = this.fatHunters.length - this.maxFatHunters;
+                const indicesToRemove = fatHuntersWithDistance.slice(0, toRemove).map(item => item.index).sort((a, b) => b - a);
+                for (const index of indicesToRemove) {
+                    this.fatHunters.splice(index, 1);
+                }
+            }
+            
+            // Normales Despawnen für Fat Hunters (außerhalb des Despawn-Radius)
             for (let i = this.fatHunters.length - 1; i >= 0; i--) {
                 const fatHunter = this.fatHunters[i];
                 const dx = fatHunter.headX - playerHead.x;
@@ -8445,6 +8492,26 @@ class Simulator {
             }
             
             // Foods despawnen (außerhalb der aktiven Zone)
+            // AGGRESSIVES CLEANUP: Begrenze Foods auf maximal 500
+            const maxFoods = 500;
+            if (this.foods.length > maxFoods) {
+                // Sortiere Foods nach Entfernung (entfernteste zuerst)
+                const foodsWithDistance = this.foods.map((food, index) => {
+                    const dx = food.x - playerHead.x;
+                    const dy = food.y - playerHead.y;
+                    return { food, index, distanceSquared: dx * dx + dy * dy };
+                });
+                foodsWithDistance.sort((a, b) => b.distanceSquared - a.distanceSquared);
+                
+                // Entferne die entferntesten Foods bis unter Limit
+                const toRemove = this.foods.length - maxFoods;
+                const indicesToRemove = foodsWithDistance.slice(0, toRemove).map(item => item.index).sort((a, b) => b - a);
+                for (const index of indicesToRemove) {
+                    this.foods.splice(index, 1);
+                }
+            }
+            
+            // Normales Despawnen für Foods (außerhalb des Despawn-Radius)
             for (let i = this.foods.length - 1; i >= 0; i--) {
                 const food = this.foods[i];
                 const dx = food.x - playerHead.x;
