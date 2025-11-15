@@ -8,16 +8,16 @@
 </head>
 <body>
     <!-- Sprachauswahl Button -->
-    <div id="languageSelector" style="position: fixed; top: 10px; right: 10px; z-index: 10000;">
-        <button id="languageBtn" style="background: none; border: 2px solid #666; border-radius: 5px; padding: 5px 10px; cursor: pointer; font-size: 20px;">
+    <div id="languageSelector" style="position: fixed; top: 15px; right: 15px; z-index: 10001;">
+        <button id="languageBtn" style="background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(10px); border: 2px solid #666; border-radius: 8px; padding: 8px 12px; cursor: pointer; font-size: 24px; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);">
             🇬🇧
         </button>
-        <div id="languageMenu" style="display: none; position: absolute; top: 35px; right: 0; background: #2a2a2a; border: 2px solid #666; border-radius: 5px; padding: 5px; min-width: 150px;">
-            <div class="lang-option" data-lang="de" style="padding: 8px; cursor: pointer; border-radius: 3px; margin: 2px 0;">🇩🇪 Deutsch</div>
-            <div class="lang-option" data-lang="en" style="padding: 8px; cursor: pointer; border-radius: 3px; margin: 2px 0;">🇬🇧 English</div>
-            <div class="lang-option" data-lang="fr" style="padding: 8px; cursor: pointer; border-radius: 3px; margin: 2px 0;">🇫🇷 Français</div>
-            <div class="lang-option" data-lang="es" style="padding: 8px; cursor: pointer; border-radius: 3px; margin: 2px 0;">🇪🇸 Español</div>
-            <div class="lang-option" data-lang="ja" style="padding: 8px; cursor: pointer; border-radius: 3px; margin: 2px 0;">🇯🇵 日本語</div>
+        <div id="languageMenu" style="display: none; position: absolute; top: 50px; right: 0; background: rgba(42, 42, 42, 0.95); backdrop-filter: blur(10px); border: 2px solid #666; border-radius: 8px; padding: 8px; min-width: 160px; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);">
+            <div class="lang-option" data-lang="de" style="padding: 10px; cursor: pointer; border-radius: 6px; margin: 4px 0; transition: all 0.2s ease; background: rgba(255, 255, 255, 0.05);">🇩🇪 Deutsch</div>
+            <div class="lang-option" data-lang="en" style="padding: 10px; cursor: pointer; border-radius: 6px; margin: 4px 0; transition: all 0.2s ease; background: rgba(255, 255, 255, 0.05);">🇬🇧 English</div>
+            <div class="lang-option" data-lang="fr" style="padding: 10px; cursor: pointer; border-radius: 6px; margin: 4px 0; transition: all 0.2s ease; background: rgba(255, 255, 255, 0.05);">🇫🇷 Français</div>
+            <div class="lang-option" data-lang="es" style="padding: 10px; cursor: pointer; border-radius: 6px; margin: 4px 0; transition: all 0.2s ease; background: rgba(255, 255, 255, 0.05);">🇪🇸 Español</div>
+            <div class="lang-option" data-lang="ja" style="padding: 10px; cursor: pointer; border-radius: 6px; margin: 4px 0; transition: all 0.2s ease; background: rgba(255, 255, 255, 0.05);">🇯🇵 日本語</div>
         </div>
     </div>
     
@@ -80,22 +80,87 @@
     </div>
     
     <div class="container" id="gameContainer" style="display: none;">
-        <div class="main-content">
-            <h1 id="gameTitle">Leech</h1>
-            <div class="score-display">
-                <span id="scoreLabel">Score: <span id="scoreValue">0</span></span>
-                <span id="lengthLabel">Länge: <span id="lengthValue">10</span></span>
+        <!-- Linke Spalte: Player Stats und Active Evolution -->
+        <div style="display: flex; flex-direction: column; gap: 20px; flex: 0 0 auto; min-width: 250px;">
+            <!-- Player Stats Container -->
+            <div id="playerStatsContainer" style="background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px); border: 2px solid #4ade80; border-radius: 12px; padding: 18px; font-family: 'Courier New', monospace; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(74, 222, 128, 0.2);">
+                <div style="color: #4ade80; font-size: 1.2em; font-weight: 700; margin-bottom: 16px; text-align: center; border-bottom: 2px solid rgba(74, 222, 128, 0.3); padding-bottom: 12px; text-shadow: 0 0 10px rgba(74, 222, 128, 0.5);">
+                    📊 Spieler Stats
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 10px; font-size: 0.95em;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; color: #cccccc; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <span style="opacity: 0.9;">Länge:</span>
+                        <span id="statsLength" style="color: #4ade80; font-weight: 700; font-size: 1.1em;">10</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; color: #cccccc; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <span style="opacity: 0.9;">Score:</span>
+                        <span id="statsScore" style="color: #ffd700; font-weight: 700; font-size: 1.1em;">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; color: #cccccc; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <span style="opacity: 0.9;">Geschwindigkeit:</span>
+                        <span id="statsSpeed" style="color: #60a5fa; font-weight: 700; font-size: 1.1em;">1.0x</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; color: #cccccc; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <span style="opacity: 0.9;">Drehgeschwindigkeit:</span>
+                        <span id="statsTurnSpeed" style="color: #ec4899; font-weight: 700; font-size: 1.1em;">1.0x</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; color: #cccccc; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <span style="opacity: 0.9;">Stamina:</span>
+                        <span id="statsStamina" style="color: #34d399; font-weight: 700; font-size: 1.1em;">5/5</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; color: #cccccc; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <span style="opacity: 0.9;">Gold:</span>
+                        <span id="statsGold" style="color: #fbbf24; font-weight: 700; font-size: 1.1em;">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; color: #cccccc; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <span style="opacity: 0.9;">Upgrades:</span>
+                        <span id="statsUpgrades" style="color: #a78bfa; font-weight: 700; font-size: 1.1em;">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; color: #cccccc; padding: 6px 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1);">
+                        <span style="opacity: 0.9;">Mutationen:</span>
+                        <span id="statsMutations" style="color: #f472b6; font-weight: 700; font-size: 1.1em;">0</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; color: #cccccc; padding: 6px 0;">
+                        <span style="opacity: 0.9;">Evolution:</span>
+                        <span id="statsEvolution" style="color: #a78bfa; font-weight: 700; font-size: 0.9em; text-align: right; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">-</span>
+                    </div>
+                </div>
             </div>
-            <div id="activeEvolutionDisplay" style="display: none; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.8); padding: 10px 20px; border-radius: 10px; border: 2px solid #a78bfa; z-index: 1000; pointer-events: none;">
-                <div style="color: #a78bfa; font-size: 0.9em; margin-bottom: 5px; text-align: center;">Aktive Evolution:</div>
-                <div id="activeEvolutionInfo" style="color: #fff; text-align: center; display: flex; align-items: center; justify-content: center;">
+            
+            <!-- Active Evolution Display -->
+            <div id="activeEvolutionDisplay" style="display: none; background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(10px); padding: 18px; border-radius: 12px; border: 2px solid #a78bfa; pointer-events: none; box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 20px rgba(167, 139, 250, 0.3);">
+                <div style="color: #a78bfa; font-size: 0.85em; margin-bottom: 6px; text-align: center; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Aktive Evolution</div>
+                <div id="activeEvolutionInfo" style="color: #fff; text-align: center; display: flex; align-items: center; justify-content: center; font-size: 1em;">
                     <!-- Wird dynamisch gefüllt -->
                 </div>
-                <div style="color: #888; font-size: 0.75em; text-align: center; margin-top: 5px;">Mausrad zum Wechseln</div>
+                <div style="color: #888; font-size: 0.7em; text-align: center; margin-top: 6px; opacity: 0.8;">Mausrad zum Wechseln</div>
             </div>
-            <canvas id="simulatorCanvas"></canvas>
-            <div style="text-align: center; margin-top: 20px;">
-                <button id="backToMenuFromGameBtn" style="padding: 12px 24px; font-size: 16px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
+        </div>
+        
+        <!-- Mittlere Spalte: Spiel -->
+        <div class="main-content" style="position: relative; flex: 1; display: flex; flex-direction: column; min-width: 0;">
+            <h1 id="gameTitle" style="margin-top: 0; text-align: center;">Leech</h1>
+            
+            <!-- Lautstärke-Regler (oben rechts) -->
+            <div id="volumeControl" style="position: absolute; top: 10px; right: 10px; z-index: 1000; display: none; background: rgba(0, 0, 0, 0.7); backdrop-filter: blur(10px); padding: 10px 15px; border-radius: 8px; border: 2px solid rgba(255, 255, 255, 0.3); box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span id="volumeIcon" style="color: #fff; font-size: 14px; font-weight: 600; cursor: pointer; user-select: none; transition: opacity 0.2s;" title="Mute/Unmute">🔊</span>
+                    <input type="range" id="volumeSlider" min="0" max="100" value="7" style="width: 120px; cursor: pointer;">
+                    <span id="volumeValue" style="color: #fff; font-size: 14px; font-weight: 600; min-width: 35px; text-align: right;">7%</span>
+                </div>
+            </div>
+            
+            <div class="score-display" style="margin-bottom: 20px;">
+                <span id="scoreLabel">Score: <span id="scoreValue" style="color: #ffd700;">0</span></span>
+            </div>
+            <canvas id="simulatorCanvas" style="margin: 0 auto; display: block;"></canvas>
+            
+            <!-- Audio-Element für Background Music -->
+            <audio id="backgroundMusic" loop preload="auto">
+                <source src="sounds/background music/background song 1.mp3" type="audio/mpeg">
+            </audio>
+            <div style="text-align: center; margin-top: 20px; margin-bottom: 20px;">
+                <button id="backToMenuFromGameBtn" style="padding: 12px 24px; font-size: 16px; background: linear-gradient(135deg, #666 0%, #555 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);">
                     Zurück zum Menü
                 </button>
             </div>
@@ -196,10 +261,101 @@
             <button id="stopBtn">Stop</button>
             <button id="resetBtn">Zurücksetzen</button>
         </div>
+        
+        <!-- Upgrade-Auswahl Overlay -->
+        <div id="upgradeOverlay" class="upgrade-overlay" style="display: none;">
+            <div class="upgrade-container">
+                <h2 id="upgradeOverlayTitle">Upgrade auswählen!</h2>
+                <div class="upgrade-options" id="upgradeOptions">
+                    <!-- Wird dynamisch gefüllt -->
+                </div>
+            </div>
         </div>
         
-        <!-- Upgrade-Anzeige rechts -->
-        <div class="upgrade-display">
+        <!-- Mutation-Auswahl Overlay -->
+        <div id="mutationOverlay" class="upgrade-overlay" style="display: none;">
+            <div class="upgrade-container">
+                <h2 id="mutationOverlayTitle">Mutation auswählen!</h2>
+                <div style="text-align: center; color: #cccccc; margin-bottom: 15px; font-size: 0.9em;" id="currentLengthText">
+                    Aktuelle Länge: <span id="currentLengthDisplay">10</span> Segmente
+                </div>
+                <div class="upgrade-options" id="mutationOptions">
+                    <!-- Wird dynamisch gefüllt -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dev Mode Overlay -->
+        <div id="devModeOverlay" class="upgrade-overlay" style="display: none;">
+            <div class="upgrade-container" style="max-width: 1200px; max-height: 90vh; overflow-y: auto;">
+                <h2 style="color: #ffaa00;">🔧 Dev Mode - Upgrade/Mutation Tester</h2>
+                <div style="margin-bottom: 20px; display: flex; gap: 10px; justify-content: center;">
+                    <button id="devModeUpgradesTab" class="debug-btn" style="padding: 8px 16px; font-size: 14px; background: #444444;">Upgrades</button>
+                    <button id="devModeMutationsTab" class="debug-btn" style="padding: 8px 16px; font-size: 14px; background: #444444;">Mutationen</button>
+                </div>
+                <div id="devModeUpgradesContent" style="display: block;">
+                    <h3 style="color: #cccccc; margin-bottom: 15px;" id="devModeAllUpgradesTitle">Alle Upgrades</h3>
+                    <div class="upgrade-options" id="devModeUpgradesList" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); max-height: 60vh; overflow-y: auto;">
+                        <!-- Wird dynamisch gefüllt -->
+                    </div>
+                </div>
+                <div id="devModeMutationsContent" style="display: none;">
+                    <h3 style="color: #cccccc; margin-bottom: 15px;" id="devModeAllMutationsTitle">Alle Mutationen</h3>
+                    <div style="text-align: center; color: #cccccc; margin-bottom: 15px; font-size: 0.9em;" id="devModeCurrentLengthText">
+                        Aktuelle Länge: <span id="devModeCurrentLength">10</span> Segmente
+                    </div>
+                    <div class="upgrade-options" id="devModeMutationsList" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); max-height: 60vh; overflow-y: auto;">
+                        <!-- Wird dynamisch gefüllt -->
+                    </div>
+                </div>
+                <div style="margin-top: 20px; padding: 15px; background: #2a2a2a; border-radius: 8px; border: 2px solid #555;">
+                    <label id="devModeSpeedLabel" style="display: flex; align-items: center; gap: 10px; color: #cccccc; font-weight: 500; justify-content: center;">
+                        <span id="devModeSpeedText">Geschwindigkeit:</span>
+                        <input type="range" id="devModeSpeedSlider" min="0.5" max="3" step="0.1" value="1" style="width: 200px; height: 6px; border-radius: 3px; background: #444444; outline: none; -webkit-appearance: none; appearance: none;">
+                        <span id="devModeSpeedValue" style="min-width: 50px; font-weight: 600; color: #888888;">1.0x</span>
+                    </label>
+                </div>
+                <div style="text-align: center; margin-top: 20px;">
+                    <button id="devModeCloseBtn" class="debug-btn" style="padding: 10px 20px; font-size: 14px; background: #ff4444;">Schließen</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Game Over Overlay -->
+        <div id="gameOverOverlay" class="upgrade-overlay" style="display: none;">
+            <div class="upgrade-container">
+                <h2 style="color: #ff4444;" id="gameOverTitle">GAME OVER</h2>
+                <div style="text-align: center; color: #cccccc; margin: 20px 0;">
+                    <p style="font-size: 1.2em; margin-bottom: 10px;" id="finalScoreText">Finaler Score: <span id="finalScore">0</span></p>
+                    <p style="font-size: 1.2em;" id="finalLengthText">Länge erreicht: <span id="finalLength">0</span></p>
+                </div>
+                <!-- Namenseingabe für Highscore (nur wenn Top 100) -->
+                <div id="highscoreNameInput" style="display: none; text-align: center; margin: 20px 0;">
+                    <p style="color: #ffaa00; font-size: 1.1em; margin-bottom: 10px; font-weight: 600;" id="highscoreCongratsText">🎉 Du bist in den Top 100!</p>
+                    <p style="color: #cccccc; margin-bottom: 15px;" id="highscoreEnterNameText">Gib deinen Namen ein:</p>
+                    <input type="text" id="playerNameInput" maxlength="20" placeholder="Name" style="padding: 10px; font-size: 16px; border: 2px solid #666; border-radius: 5px; background: #333; color: #cccccc; text-align: center; width: 200px; margin-bottom: 10px;">
+                    <br>
+                    <button id="submitHighscoreBtn" style="padding: 10px 20px; font-size: 14px; background: #4ade80; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; margin-right: 10px;">
+                        Speichern
+                    </button>
+                    <button id="skipHighscoreBtn" style="padding: 10px 20px; font-size: 14px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                        Überspringen
+                    </button>
+                </div>
+                <div style="text-align: center;" id="gameOverButtons">
+                    <button id="restartBtn" style="padding: 12px 24px; font-size: 16px; background: #ff4444; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin-right: 10px;">
+                        Neu starten
+                    </button>
+                    <button id="backToMenuBtn" style="padding: 12px 24px; font-size: 16px; background: #666; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">
+                        Hauptmenü
+                    </button>
+                </div>
+            </div>
+        </div>
+        </div>
+        
+        <!-- Rechte Spalte: Upgrade-Anzeige -->
+        <div class="upgrade-display" style="flex: 0 0 auto; min-width: 250px;">
             <div style="display: flex; gap: 10px; margin-bottom: 15px; border-bottom: 2px solid #555555; padding-bottom: 10px;">
                 <button id="upgradesTabBtn" class="upgrade-tab-btn active" style="flex: 1; padding: 8px; background: #444444; border: 2px solid #666; border-radius: 5px; color: #cccccc; cursor: pointer; font-weight: 600;">Upgrades</button>
                 <button id="highscoreTabBtn" class="upgrade-tab-btn" style="flex: 1; padding: 8px; background: #333333; border: 2px solid #555; border-radius: 5px; color: #cccccc; cursor: pointer; font-weight: 600;">Highscore</button>

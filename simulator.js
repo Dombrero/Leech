@@ -1110,7 +1110,7 @@ const EVOLUTIONS = [
     {
         id: 'shot',
         name: 'Schuss',
-        description: 'Mit Leertaste einen Schuss abgeben (kostet 5 Stamina)',
+        description: 'Mit Rechtsklick einen Schuss abgeben. Pro Level -1 Stamina-Kosten (min 1).',
         icon: '💥',
         cost: 100, // Gold-Kosten
         rarity: RARITY.UNCOMMON
@@ -1118,7 +1118,7 @@ const EVOLUTIONS = [
     {
         id: 'shockwave',
         name: 'Shockwave',
-        description: 'Mit Leertaste eine Schockwelle abgeben (kostet 5 Stamina, schleudert alle gegrabteten Gegner weg)',
+        description: 'Mit Rechtsklick eine Schockwelle abgeben (kostet 5 Stamina). Pro Level +30px Radius.',
         icon: '🌊',
         cost: 150, // Gold-Kosten
         rarity: RARITY.RARE
@@ -1420,7 +1420,8 @@ class RainWorldTier {
     
     useStaminaForSpeedBoost() {
         // Verbrauche alle Stamina-Punkte für Speed-Boost
-        if (this.currentStamina > 0 && !this.staminaSpeedBoostAnimation) {
+        // Prüfe ob bereits ein Boost aktiv ist (Animation oder aktiv)
+        if (this.currentStamina > 0 && !this.staminaSpeedBoostAnimation && !this.staminaSpeedBoostActive) {
             const staminaUsed = this.currentStamina;
             this.currentStamina = 0;
             
@@ -1462,10 +1463,18 @@ class RainWorldTier {
         if (this.staminaSpeedBoostActive) {
             this.staminaSpeedBoostDuration--;
             if (this.staminaSpeedBoostDuration <= 0) {
-                // Speed-Boost beendet
+                // Speed-Boost beendet - sicherstellen, dass alles zurückgesetzt wird
                 this.staminaSpeedBoostActive = false;
                 this.staminaSpeedBoostMultiplier = 1.0;
+                this.staminaSpeedBoostDuration = 0; // Sicherstellen, dass Duration auf 0 ist
             }
+        }
+        
+        // Sicherheitscheck: Falls Duration negativ oder 0 ist, aber noch aktiv, zurücksetzen
+        if (this.staminaSpeedBoostActive && this.staminaSpeedBoostDuration <= 0) {
+            this.staminaSpeedBoostActive = false;
+            this.staminaSpeedBoostMultiplier = 1.0;
+            this.staminaSpeedBoostDuration = 0;
         }
         
         // Ess-Animation Timer
@@ -1546,12 +1555,24 @@ class RainWorldTier {
         while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
         
         // Winkelgeschwindigkeit basierend auf Winkelunterschied
-        const turnStrength = this.hasTarget ? 0.12 : 0.08;
+        // Verwende turnSpeed (wird durch Upgrades modifiziert) mit sanfter Skalierung
+        const baseTurnStrength = this.hasTarget ? 0.12 : 0.08;
+        // Berechne turnSpeed-Verhältnis einmal
+        const turnSpeedRatio = this.turnSpeed / this.originalTurnSpeed;
+        // Begrenze auf maximal 3x (300%) für Stabilität
+        const cappedRatio = Math.min(turnSpeedRatio, 3.0);
+        // Verwende reduzierte Skalierung für sanftere Steigerung (50% der Wirkung)
+        const smoothMultiplier = 1.0 + (cappedRatio - 1.0) * 0.5; // Reduzierte Wirkung
+        const turnStrength = baseTurnStrength * smoothMultiplier;
         const desiredAngularVelocity = angleDiff * turnStrength;
         
         // Sanfte Änderung der Winkelgeschwindigkeit (Trägheit)
-        this.angularVelocity += (desiredAngularVelocity - this.angularVelocity) * 0.3;
-        this.angularVelocity *= 0.95; // Dämpfung
+        // Anpassbare Dämpfung basierend auf turnSpeed (höhere Drehgeschwindigkeit = mehr Dämpfung)
+        const adaptiveDamping = Math.min(0.98, 0.95 + (turnSpeedRatio - 1.0) * 0.01); // Mehr Dämpfung bei höherer Drehgeschwindigkeit
+        const adaptiveLerp = Math.max(0.2, 0.3 - (turnSpeedRatio - 1.0) * 0.05); // Langsamere Interpolation bei höherer Drehgeschwindigkeit
+        
+        this.angularVelocity += (desiredAngularVelocity - this.angularVelocity) * adaptiveLerp;
+        this.angularVelocity *= adaptiveDamping; // Adaptive Dämpfung
         
         // Winkel aktualisieren
         this.angle += this.angularVelocity;
@@ -1624,7 +1645,8 @@ class RainWorldTier {
         
         // Segmente nacheinander aktualisieren (wichtig für Stabilität)
         // Performance-Optimierung: Bei langen Schlangen weniger Updates für hintere Segmente (LOD)
-        const segmentUpdateSkip = this.segments.length > 50 ? Math.floor(this.segments.length / 50) : 1;
+        // Aggressiveres LOD: Beginne früher mit Skip
+        const segmentUpdateSkip = this.segments.length > 30 ? Math.floor(this.segments.length / 30) : 1;
         
         for (let i = 1; i < this.segments.length; i++) {
             const prevSeg = this.segments[i - 1];
@@ -1633,19 +1655,30 @@ class RainWorldTier {
             // Normalisierte Position im Körper (0 = Kopf, 1 = Schwanz)
             const normalizedPos = i / this.segments.length;
             
-            // Performance: Bei langen Schlangen hintere Segmente seltener updaten
-            if (this.segments.length > 50 && i > this.segments.length * 0.7 && i % segmentUpdateSkip !== 0) {
-                // Überspringe Update für dieses Segment (nur Position anpassen)
-                const dx = prevSeg.x - currentSeg.x;
-                const dy = prevSeg.y - currentSeg.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                if (dist > dynamicDistance * 1.5) {
-                    // Nur wenn zu weit entfernt, anpassen
-                    const ratio = dynamicDistance / dist;
-                    currentSeg.x = prevSeg.x - dx * ratio;
-                    currentSeg.y = prevSeg.y - dy * ratio;
+            // Performance: Bei langen Schlangen hintere Segmente seltener updaten (aggressiver)
+            if (this.segments.length > 30) {
+                let shouldSkip = false;
+                if (i > this.segments.length * 0.6) {
+                    // Ab 60% der Länge: Skip basierend auf Position
+                    shouldSkip = (i % segmentUpdateSkip !== 0);
+                } else if (this.segments.length > 100 && i > this.segments.length * 0.5) {
+                    // Bei sehr langen Schlangen (>100): Ab 50% der Länge skip
+                    shouldSkip = (i % 2 !== 0);
                 }
-                continue;
+                
+                if (shouldSkip) {
+                    // Überspringe Update für dieses Segment (nur Position anpassen)
+                    const dx = prevSeg.x - currentSeg.x;
+                    const dy = prevSeg.y - currentSeg.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist > dynamicDistance * 1.5) {
+                        // Nur wenn zu weit entfernt, anpassen
+                        const ratio = dynamicDistance / dist;
+                        currentSeg.x = prevSeg.x - dx * ratio;
+                        currentSeg.y = prevSeg.y - dy * ratio;
+                    }
+                    continue;
+                }
             }
             
             // Geschwindigkeitsabhängige Wellenbewegung
@@ -2445,6 +2478,11 @@ class HunterCreature {
         this.turnSpeed = 0.08; // Schnellere Drehung
         this.acceleration = 0.2;
         
+        // Physik-System für Shockwave (Geschwindigkeits-Vektoren)
+        this.vx = 0; // Geschwindigkeit X
+        this.vy = 0; // Geschwindigkeit Y
+        this.friction = 0.88; // Reibung/Dämpfung (0.88 = stärkere Dämpfung, mehr Masse)
+        
         // Aufmerksamkeitsradius-System
         this.attentionRadius = 200; // Radius in Pixeln, in dem der Hunter den Spieler bemerkt
         this.isChasing = false; // Verfolgt der Hunter gerade den Spieler?
@@ -2524,14 +2562,28 @@ class HunterCreature {
     }
     
     updateColors() {
-        // Aktualisiere Farben basierend auf Elite-Status
+        // Biolumineszenz-Stil: Leuchtende Neon-Farben für Tiefsee
+        if (this.isElite) {
+            // Elite Hunter: Leuchtendes Magenta/Cyan
         this.colors = {
-            body: this.isElite ? '#9d4edd' : '#2a2a6a', // Lila für Elite, dunkelblau für normal
-            bodyDark: this.isElite ? '#7b2cbf' : '#1a1a4a', // Dunkleres Lila für Elite, dunkleres Blau für normal
-            bodyLight: '#3a3a8a',
-            eye: '#ffff00',
-            eyeGlow: '#ffff88'
-        };
+                body: '#ff00ff', // Leuchtendes Magenta
+                bodyDark: '#cc00cc', // Dunkleres Magenta
+                bodyLight: '#ff66ff', // Helles Magenta
+                eye: '#00ffff', // Cyan
+                eyeGlow: '#66ffff', // Helles Cyan
+                glow: '#ff00ff' // Glow-Farbe
+            };
+        } else {
+            // Normale Hunter: Leuchtendes Cyan/Blau
+            this.colors = {
+                body: '#00ffff', // Leuchtendes Cyan
+                bodyDark: '#0099cc', // Dunkleres Cyan
+                bodyLight: '#66ffff', // Helles Cyan
+                eye: '#00ff00', // Leuchtendes Grün
+                eyeGlow: '#66ff66', // Helles Grün
+                glow: '#00ffff' // Glow-Farbe
+            };
+        }
     }
     
     initializeSegments(x, y) {
@@ -2590,13 +2642,28 @@ class HunterCreature {
         this.targetSpeed = effectiveSpeed;
         this.currentSpeed += (this.targetSpeed - this.currentSpeed) * this.acceleration;
         
-        // Bewegung
+        // Physik-System: Geschwindigkeits-Vektoren anwenden (für Shockwave)
+        if (Math.abs(this.vx) > 0.01 || Math.abs(this.vy) > 0.01) {
+            // Wende Geschwindigkeit an
+            this.headX += this.vx;
+            this.headY += this.vy;
+            
+            // Dämpfung anwenden (langsam auslaufen)
+            this.vx *= this.friction;
+            this.vy *= this.friction;
+            
+            // Wenn Geschwindigkeit sehr klein ist, setze auf 0
+            if (Math.abs(this.vx) < 0.01) this.vx = 0;
+            if (Math.abs(this.vy) < 0.01) this.vy = 0;
+        } else {
+            // Normale Bewegung (wenn keine Shockwave-Geschwindigkeit)
         const waveOffset = Math.sin(this.wavePhase) * 1;
         const speedVariation = 1.0 + Math.sin(this.wavePhase * 2) * 0.1;
         const moveSpeed = this.currentSpeed * speedVariation;
         
         this.headX += Math.cos(this.angle) * moveSpeed;
         this.headY += Math.sin(this.angle) * moveSpeed + waveOffset * 0.2;
+        }
         
         // Welt ist jetzt unendlich - keine Grenzen mehr
         
@@ -3079,6 +3146,38 @@ class HunterCreature {
         
         // Stamina-Anzeige: Leuchtende Striche am Rücken
         this.drawStaminaIndicator();
+        
+        // Biolumineszenz-Glow-Effekt
+        this.drawBioluminescenceGlow();
+    }
+    
+    drawBioluminescenceGlow() {
+        // Kleine Biolumineszenz-Akzente statt großer Glows
+        const glowColor = this.colors.glow || this.colors.body;
+        // Konvertiere Hex zu RGB
+        const hex = glowColor.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        
+        // Nur kleine Glow-Punkte entlang des Körpers (Akzente)
+        for (let i = 0; i < this.segments.length; i += 4) {
+            const seg = this.segments[i];
+            const segmentGlow = Math.sin(Date.now() * 0.004 + i * 0.2) * 0.2 + 0.6;
+            const segmentRadius = 4; // Kleine Akzente
+            
+            const segGradient = ctx.createRadialGradient(
+                seg.x, seg.y, 0,
+                seg.x, seg.y, segmentRadius
+            );
+            segGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${segmentGlow * 0.5})`);
+            segGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+            
+            ctx.fillStyle = segGradient;
+            ctx.beginPath();
+            ctx.arc(seg.x, seg.y, segmentRadius, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
     
     drawStaminaIndicator() {
@@ -3349,6 +3448,11 @@ class FatHunterCreature {
         this.turnSpeed = 0.05; // Langsamere Drehung
         this.acceleration = 0.15; // Langsamere Beschleunigung
         
+        // Physik-System für Shockwave (Geschwindigkeits-Vektoren)
+        this.vx = 0; // Geschwindigkeit X
+        this.vy = 0; // Geschwindigkeit Y
+        this.friction = 0.88; // Reibung/Dämpfung (0.88 = stärkere Dämpfung, mehr Masse)
+        
         // Prozedurale Bewegungsvariablen
         this.wavePhase = 0;
         this.waveSpeed = 0.1; // Langsamere Wellenbewegung
@@ -3368,13 +3472,14 @@ class FatHunterCreature {
         this.reservedFoodIndex = -1; // Index des reservierten Foods
         this.reservedTokenIndex = -1; // Index des reservierten Stamina-Tokens
         
-        // Farben - grünlich/braun (fetter Look) - heller für bessere Sichtbarkeit
+        // Farben - Biolumineszenz-Stil: Leuchtendes Grün/Gelb
         this.colors = {
-            body: '#6a8a4a',
-            bodyDark: '#4a6a2a',
-            bodyLight: '#8aaa6a',
-            eye: '#ffff00',
-            eyeGlow: '#ffff88'
+            body: '#00ff00', // Leuchtendes Grün
+            bodyDark: '#00cc00', // Dunkleres Grün
+            bodyLight: '#66ff66', // Helles Grün
+            eye: '#ffff00', // Leuchtendes Gelb
+            eyeGlow: '#ffff66', // Helles Gelb
+            glow: '#00ff00' // Glow-Farbe
         };
         
         // Segment-Initialisierung
@@ -3420,13 +3525,28 @@ class FatHunterCreature {
         this.targetSpeed = this.speed;
         this.currentSpeed += (this.targetSpeed - this.currentSpeed) * this.acceleration;
         
-        // Bewegung
+        // Physik-System: Geschwindigkeits-Vektoren anwenden (für Shockwave)
+        if (Math.abs(this.vx) > 0.01 || Math.abs(this.vy) > 0.01) {
+            // Wende Geschwindigkeit an
+            this.headX += this.vx;
+            this.headY += this.vy;
+            
+            // Dämpfung anwenden (langsam auslaufen)
+            this.vx *= this.friction;
+            this.vy *= this.friction;
+            
+            // Wenn Geschwindigkeit sehr klein ist, setze auf 0
+            if (Math.abs(this.vx) < 0.01) this.vx = 0;
+            if (Math.abs(this.vy) < 0.01) this.vy = 0;
+        } else {
+            // Normale Bewegung (wenn keine Shockwave-Geschwindigkeit)
         const waveOffset = Math.sin(this.wavePhase) * 1.5;
         const speedVariation = 1.0 + Math.sin(this.wavePhase * 2) * 0.1;
         const moveSpeed = this.currentSpeed * speedVariation;
         
         this.headX += Math.cos(this.angle) * moveSpeed;
         this.headY += Math.sin(this.angle) * moveSpeed + waveOffset * 0.2;
+        }
         
         // Welt ist jetzt unendlich - keine Grenzen mehr
         
@@ -3569,6 +3689,10 @@ class FatHunterCreature {
         // Stelle sicher, dass Pixel-Art Rendering aktiv ist
         ctx.imageSmoothingEnabled = false;
         
+        // Transparenz für Fat Hunter
+        ctx.save();
+        ctx.globalAlpha = 0.4; // 40% Opazität (sehr transparent)
+        
         // Größere Körperbreite (dicker)
         const baseWidth = 10; // Größer als normaler Jäger (6)
         const headWidth = baseWidth * 1.3;
@@ -3624,6 +3748,41 @@ class FatHunterCreature {
         drawPixelCircle(rightEyeX, rightEyeY, eyeSize, this.colors.eye);
         drawPixelCircle(leftEyeX, leftEyeY, eyeSize * 0.5, this.colors.eyeGlow);
         drawPixelCircle(rightEyeX, rightEyeY, eyeSize * 0.5, this.colors.eyeGlow);
+        
+        // Transparenz wiederherstellen
+        ctx.restore();
+        
+        // Biolumineszenz-Glow-Effekt (ohne Transparenz für bessere Sichtbarkeit)
+        this.drawBioluminescenceGlow();
+    }
+    
+    drawBioluminescenceGlow() {
+        // Kleine Biolumineszenz-Akzente statt großer Glows
+        const glowColor = this.colors.glow || this.colors.body;
+        // Konvertiere Hex zu RGB
+        const hex = glowColor.replace('#', '');
+        const r = parseInt(hex.substr(0, 2), 16);
+        const g = parseInt(hex.substr(2, 2), 16);
+        const b = parseInt(hex.substr(4, 2), 16);
+        
+        // Nur kleine Glow-Punkte entlang des Körpers (Akzente)
+        for (let i = 0; i < this.segments.length; i += 4) {
+            const seg = this.segments[i];
+            const segmentGlow = Math.sin(Date.now() * 0.004 + i * 0.2) * 0.2 + 0.6;
+            const segmentRadius = 5; // Etwas größer für Fat Hunter, aber immer noch klein
+            
+            const segGradient = ctx.createRadialGradient(
+                seg.x, seg.y, 0,
+                seg.x, seg.y, segmentRadius
+            );
+            segGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${segmentGlow * 0.5})`);
+            segGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+            
+            ctx.fillStyle = segGradient;
+            ctx.beginPath();
+            ctx.arc(seg.x, seg.y, segmentRadius, 0, Math.PI * 2);
+            ctx.fill();
+        }
     }
 }
 
@@ -3823,6 +3982,506 @@ class BossCreature {
     }
 }
 
+// Tentakel-Kreatur (greift alles in der Nähe)
+class TentacleCreature {
+    constructor(x, y) {
+        this.x = x;
+        this.y = y;
+        this.baseX = x;
+        this.baseY = y;
+        this.angle = Math.random() * Math.PI * 2;
+        this.targetAngle = this.angle;
+        this.speed = 0.2; // Langsame Bewegung
+        this.angularVelocity = 0;
+        this.turnSpeed = 0.05;
+        
+        // Prozedurale Bewegungsvariablen
+        this.wavePhase = 0;
+        this.waveSpeed = 0.1;
+        this.waveAmplitude = 30; // Bewegungsradius
+        
+        // Tentakel-System
+        this.tentacleCount = 6; // Anzahl der Tentakel
+        this.tentacles = [];
+        this.tentacleLength = 80; // Länge jedes Tentakels
+        this.tentacleReach = 100; // Reichweite zum Greifen
+        
+        // Initialisiere Tentakel
+        for (let i = 0; i < this.tentacleCount; i++) {
+            const angle = (i / this.tentacleCount) * Math.PI * 2;
+            const segmentCount = 10; // Anzahl der Segmente pro Tentakel
+            const segments = [];
+            
+            // Initialisiere Segmente wie bei Hunter (Segment-Objekte)
+            // WICHTIG: Letztes Segment (Index 0) ist am Körper fixiert, erstes Segment (Index segmentCount) ist die Spitze
+            for (let j = 0; j <= segmentCount; j++) {
+                const progress = j / segmentCount;
+                const segmentLength = this.tentacleLength * (1 - progress); // Umgekehrt: 0 = Körper, 1 = Spitze
+                const segX = this.x + Math.cos(angle) * segmentLength;
+                const segY = this.y + Math.sin(angle) * segmentLength;
+                segments.push(new Segment(segX, segY));
+            }
+            
+            // Berechne initiale Spitzen-Position
+            const tipX = this.x + Math.cos(angle) * this.tentacleLength;
+            const tipY = this.y + Math.sin(angle) * this.tentacleLength;
+            
+            this.tentacles.push({
+                // Hunter-ähnliche Eigenschaften
+                segments: segments, // Segment-Objekte (wie bei Hunter)
+                numSegments: segmentCount + 1,
+                segmentDistance: 8, // Abstand zwischen Segmenten
+                headX: tipX, // Spitze des Tentakels (wie Hunter-Kopf)
+                headY: tipY,
+                targetAngle: angle, // Ziel-Winkel
+                angle: angle, // Aktueller Winkel
+                baseSpeed: 0.5, // Geschwindigkeit
+                speed: 0.5,
+                currentSpeed: 0.5,
+                targetSpeed: 0.5,
+                angularVelocity: 0,
+                turnSpeed: 0.1, // Drehgeschwindigkeit
+                acceleration: 0.15,
+                
+                // Prozedurale Bewegungsvariablen
+                wavePhase: Math.random() * Math.PI * 2,
+                waveSpeed: 0.15,
+                waveAmplitude: 2,
+                
+                // Ziel-System
+                target: null, // Ziel-Position zum Greifen
+                targetEntity: null, // Ziel-Entität
+                attentionRadius: 150, // Reichweite zum Erkennen von Zielen
+                isChasing: false,
+                patrolAngle: angle, // Patrouillen-Winkel
+                
+                // Greif-System
+                grabCooldown: 0,
+                grabDuration: 0,
+                grabbedEntity: null,
+                
+                // Verankerung am Körper
+                anchorX: this.x, // Verankerungspunkt (wird in update() aktualisiert)
+                anchorY: this.y,
+                
+                // setTarget Methode (wie bei Hunter)
+                setTarget: function(targetX, targetY) {
+                    const dx = targetX - this.headX;
+                    const dy = targetY - this.headY;
+                    this.targetAngle = Math.atan2(dy, dx);
+                }
+            });
+        }
+        
+        // Körper-Größe
+        this.bodyRadius = 20;
+        
+        // Farben - Biolumineszenz-Stil
+        this.colors = {
+            body: '#ff00ff', // Leuchtendes Magenta
+            bodyDark: '#cc00cc',
+            tentacle: '#ff66ff', // Helles Magenta
+            tentacleTip: '#ffffff' // Weiß an den Spitzen
+        };
+    }
+    
+    update() {
+        // Langsames Floaten - sehr sanfte Bewegung
+        this.wavePhase += this.waveSpeed * 0.3; // Viel langsamer
+        
+        // Sehr kleine, langsame Bewegungen (nicht im Kreis)
+        const driftX = Math.sin(this.wavePhase) * 2; // Sehr kleine Bewegungen
+        const driftY = Math.cos(this.wavePhase * 0.7) * 2;
+        
+        // Sanfte Bewegung zur neuen Position
+        this.x += (this.baseX + driftX - this.x) * 0.05;
+        this.y += (this.baseY + driftY - this.y) * 0.05;
+        
+        // Sehr langsame Rotation
+        this.targetAngle += 0.01; // Sehr langsame kontinuierliche Rotation
+        let angleDiff = this.targetAngle - this.angle;
+        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+        
+        this.angularVelocity += angleDiff * this.turnSpeed * 0.3; // Viel langsamer
+        this.angularVelocity *= 0.98; // Mehr Dämpfung
+        this.angle += this.angularVelocity;
+        
+        // Tentakel aktualisieren (jeder wie ein Hunter, aber am Körper verankert)
+        for (let i = 0; i < this.tentacles.length; i++) {
+            const tentacle = this.tentacles[i];
+            
+            // Verankerung am Körper aktualisieren
+            tentacle.anchorX = this.x;
+            tentacle.anchorY = this.y;
+            
+            // Cooldown aktualisieren
+            if (tentacle.grabCooldown > 0) {
+                tentacle.grabCooldown--;
+            }
+            
+            // Greif-Dauer aktualisieren
+            if (tentacle.grabDuration > 0) {
+                tentacle.grabDuration--;
+                if (tentacle.grabDuration <= 0) {
+                    // Loslassen
+                    tentacle.grabbedEntity = null;
+                    tentacle.target = null;
+                    tentacle.targetEntity = null;
+                    tentacle.grabCooldown = 180; // 3 Sekunden Cooldown
+                }
+            }
+            
+            // Hunter-ähnliche Bewegung: Wenn ein Ziel verfolgt wird
+            if (tentacle.target && !tentacle.grabbedEntity && tentacle.grabCooldown === 0) {
+                tentacle.isChasing = true;
+                // Setze Ziel für Bewegung
+                tentacle.setTarget(tentacle.target.x, tentacle.target.y);
+            } else if (tentacle.grabbedEntity && tentacle.grabDuration > 0) {
+                // Wenn gegriffen, folge dem Ziel
+                let targetPos;
+                if (tentacle.grabbedEntity.getHeadPosition) {
+                    targetPos = tentacle.grabbedEntity.getHeadPosition();
+                } else if (tentacle.grabbedEntity.segments && tentacle.grabbedEntity.segments.length > 0) {
+                    targetPos = { x: tentacle.grabbedEntity.segments[0].x, y: tentacle.grabbedEntity.segments[0].y };
+                } else {
+                    targetPos = { x: tentacle.grabbedEntity.x, y: tentacle.grabbedEntity.y };
+                }
+                tentacle.setTarget(targetPos.x, targetPos.y);
+                tentacle.isChasing = true;
+            } else {
+                // Kein Ziel - Patrouillen-Bewegung (langsame Rotation um den Körper)
+                tentacle.isChasing = false;
+                const baseAngle = (i / this.tentacleCount) * Math.PI * 2 + this.angle;
+                tentacle.patrolAngle = baseAngle;
+                tentacle.targetAngle = baseAngle;
+            }
+            
+            // Hunter-ähnliche Update-Logik
+            // Trägheit beim Drehen
+            let angleDiff = tentacle.targetAngle - tentacle.angle;
+            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+            
+            const desiredAngularVelocity = angleDiff * tentacle.turnSpeed;
+            tentacle.angularVelocity += (desiredAngularVelocity - tentacle.angularVelocity) * 0.3;
+            tentacle.angularVelocity *= 0.95;
+            tentacle.angle += tentacle.angularVelocity;
+            
+            // Geschwindigkeitsanpassung
+            if (tentacle.isChasing) {
+                tentacle.targetSpeed = tentacle.baseSpeed;
+            } else {
+                tentacle.targetSpeed = tentacle.baseSpeed * 0.5; // Langsamer wenn patrouillierend
+            }
+            tentacle.currentSpeed += (tentacle.targetSpeed - tentacle.currentSpeed) * tentacle.acceleration;
+            
+            // Prozedurale Wellenbewegung
+            tentacle.wavePhase += tentacle.waveSpeed;
+            const waveOffset = Math.sin(tentacle.wavePhase) * tentacle.waveAmplitude;
+            const speedVariation = 1.0 + Math.sin(tentacle.wavePhase * 2) * 0.1;
+            const moveSpeed = tentacle.currentSpeed * speedVariation;
+            
+            // Bewegung der Spitze (Kopf)
+            tentacle.headX += Math.cos(tentacle.angle) * moveSpeed;
+            tentacle.headY += Math.sin(tentacle.angle) * moveSpeed + waveOffset * 0.2;
+            
+            // Längenbegrenzung: Spitze darf nicht weiter als tentacleLength vom Körper entfernt sein
+            const dx = tentacle.headX - tentacle.anchorX;
+            const dy = tentacle.headY - tentacle.anchorY;
+            const distanceFromAnchor = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distanceFromAnchor > this.tentacleLength) {
+                // Begrenze Position auf maximale Länge
+                const angleToAnchor = Math.atan2(dy, dx);
+                tentacle.headX = tentacle.anchorX + Math.cos(angleToAnchor) * this.tentacleLength;
+                tentacle.headY = tentacle.anchorY + Math.sin(angleToAnchor) * this.tentacleLength;
+            }
+            
+            // Segment-Update (wie bei Hunter, aber umgekehrt: letztes Segment ist am Körper fixiert)
+            // Spitze (erstes Segment in der Liste, aber visuell der "Kopf")
+            const tipIndex = tentacle.segments.length - 1;
+            tentacle.segments[tipIndex].x = tentacle.headX;
+            tentacle.segments[tipIndex].y = tentacle.headY;
+            const headVx = Math.cos(tentacle.angle) * tentacle.currentSpeed;
+            const headVy = Math.sin(tentacle.angle) * tentacle.currentSpeed;
+            tentacle.segments[tipIndex].vx = headVx * 0.3;
+            tentacle.segments[tipIndex].vy = headVy * 0.3;
+            
+            // Letztes Segment (Index 0) ist am Körper fixiert
+            tentacle.segments[0].x = tentacle.anchorX;
+            tentacle.segments[0].y = tentacle.anchorY;
+            tentacle.segments[0].vx = 0;
+            tentacle.segments[0].vy = 0;
+            
+            // Segmente von Spitze zum Körper aktualisieren (rückwärts)
+            const curveFactor = Math.abs(tentacle.angularVelocity);
+            const dynamicDistance = tentacle.segmentDistance * (1.0 - curveFactor * 0.3);
+            
+            // Berechne maximale Gesamtlänge basierend auf Segment-Anzahl
+            const maxTotalLength = this.tentacleLength;
+            
+            for (let j = tentacle.segments.length - 2; j >= 1; j--) {
+                const nextSeg = tentacle.segments[j + 1]; // Nächstes Segment (näher zur Spitze)
+                const currentSeg = tentacle.segments[j];
+                const normalizedPos = j / tentacle.segments.length;
+                
+                // Wellenbewegung
+                const waveIntensity = Math.min(tentacle.currentSpeed / tentacle.baseSpeed, 1.5);
+                const maxWaveAmplitude = Math.min(tentacle.waveAmplitude, 2.0);
+                const waveReduction = 1.0 - normalizedPos * 0.5;
+                const segmentWave = Math.sin(tentacle.wavePhase - j * 0.25) * maxWaveAmplitude * 0.3 * waveIntensity * waveReduction;
+                const perpAngle = tentacle.angle + Math.PI / 2;
+                
+                const baseDamping = 0.92 - (tentacle.currentSpeed / tentacle.baseSpeed) * 0.03;
+                const damping = baseDamping + normalizedPos * 0.03;
+                
+                // Update Segment (folgt dem nächsten Segment zur Spitze)
+                currentSeg.update(nextSeg, dynamicDistance, Math.max(0.85, Math.min(damping, 0.97)), j, tentacle.segments.length);
+                
+                // Wellenbewegung anwenden
+                if (j > 1 && j < tentacle.segments.length * 0.8) {
+                    const waveStrength = Math.min(normalizedPos * 0.6, 0.5);
+                    const waveX = Math.cos(perpAngle) * segmentWave * waveStrength;
+                    const waveY = Math.sin(perpAngle) * segmentWave * waveStrength;
+                    currentSeg.x += waveX * 0.3;
+                    currentSeg.y += waveY * 0.3;
+                }
+            }
+            
+            // Zusätzliche Längenbegrenzung: Prüfe Gesamtlänge aller Segmente
+            let totalLength = 0;
+            for (let j = 0; j < tentacle.segments.length - 1; j++) {
+                const seg1 = tentacle.segments[j];
+                const seg2 = tentacle.segments[j + 1];
+                const dx = seg2.x - seg1.x;
+                const dy = seg2.y - seg1.y;
+                totalLength += Math.sqrt(dx * dx + dy * dy);
+            }
+            
+            // Wenn Gesamtlänge zu groß, skaliere alle Segmente (außer verankertem und Spitze)
+            if (totalLength > maxTotalLength && totalLength > 0) {
+                const scaleFactor = maxTotalLength / totalLength;
+                const anchorX = tentacle.segments[0].x;
+                const anchorY = tentacle.segments[0].y;
+                
+                // Skaliere alle Segmente relativ zum Ankerpunkt
+                for (let j = 1; j < tentacle.segments.length - 1; j++) {
+                    const seg = tentacle.segments[j];
+                    const dx = seg.x - anchorX;
+                    const dy = seg.y - anchorY;
+                    seg.x = anchorX + dx * scaleFactor;
+                    seg.y = anchorY + dy * scaleFactor;
+                }
+            }
+        }
+    }
+    
+    checkGrabTargets(simulator) {
+        // Sammle alle verfügbaren Ziele
+        const allTargets = [];
+        
+        // Spieler als Ziel
+        if (simulator.tier && simulator.tier.segments && simulator.tier.segments.length > 0) {
+            const playerHead = simulator.tier.getHeadPosition();
+            allTargets.push({
+                entity: simulator.tier,
+                position: playerHead,
+                entityId: 'player' // Eindeutige ID für Spieler
+            });
+        }
+        
+        // Hunter als Ziele
+        for (let j = 0; j < simulator.hunters.length; j++) {
+            const hunter = simulator.hunters[j];
+            if (!hunter || !hunter.segments || hunter.segments.length === 0) continue;
+            
+            const hunterHead = hunter.getHeadPosition();
+            allTargets.push({
+                entity: hunter,
+                position: hunterHead,
+                entityId: `hunter_${j}` // Eindeutige ID für jeden Hunter
+            });
+        }
+        
+        // Sammle alle freien Tentakel (nicht im Cooldown, nicht gegriffen)
+        const freeTentacles = [];
+        for (let i = 0; i < this.tentacles.length; i++) {
+            const tentacle = this.tentacles[i];
+            if (!tentacle.grabbedEntity && tentacle.grabCooldown === 0) {
+                const tip = tentacle.segments[tentacle.segments.length - 1];
+                freeTentacles.push({
+                    tentacle: tentacle,
+                    tentacleIndex: i,
+                    tipX: tip.x,
+                    tipY: tip.y
+                });
+            }
+        }
+        
+        // Für jedes Ziel finde das nächste freie Tentakel
+        const assignedTargets = new Set(); // Verhindert, dass mehrere Tentakel dasselbe Ziel verfolgen
+        
+        for (let t = 0; t < allTargets.length; t++) {
+            const target = allTargets[t];
+            
+            // Überspringe wenn dieses Ziel bereits von einem Tentakel verfolgt wird
+            if (assignedTargets.has(target.entityId)) continue;
+            
+            // Finde das nächste freie Tentakel für dieses Ziel
+            let nearestTentacle = null;
+            let nearestDistance = Infinity;
+            
+            for (let i = 0; i < freeTentacles.length; i++) {
+                const freeTentacle = freeTentacles[i];
+                
+                // Überspringe wenn dieses Tentakel bereits ein Ziel hat
+                if (freeTentacle.tentacle.target) continue;
+                
+                const dx = target.position.x - freeTentacle.tipX;
+                const dy = target.position.y - freeTentacle.tipY;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < freeTentacle.tentacle.attentionRadius && distance < nearestDistance) {
+                    nearestDistance = distance;
+                    nearestTentacle = freeTentacle;
+                }
+            }
+            
+            // Wenn ein Tentakel gefunden wurde, weise ihm das Ziel zu
+            if (nearestTentacle) {
+                nearestTentacle.tentacle.target = target.position;
+                nearestTentacle.tentacle.targetEntity = target.entity;
+                assignedTargets.add(target.entityId);
+                
+                // Prüfe ob Tentakel-Spitze nah genug ist zum Greifen
+                const tip = nearestTentacle.tentacle.segments[nearestTentacle.tentacle.segments.length - 1];
+                const dx = tip.x - target.position.x;
+                const dy = tip.y - target.position.y;
+                const tipDistance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (tipDistance < 15) {
+                    // Greife!
+                    nearestTentacle.tentacle.grabbedEntity = target.entity;
+                    nearestTentacle.tentacle.grabDuration = 120; // 2 Sekunden
+                    if (simulator.log) {
+                        const entityName = target.entity === simulator.tier ? 'Spieler' : 'Hunter';
+                        simulator.log(`${entityName} von Tentakel gegriffen!`, target.entity === simulator.tier ? 'error' : 'warning');
+                    }
+                }
+            }
+        }
+        
+        // Entferne Ziele von Tentakeln, die kein Ziel mehr haben sollten
+        for (let i = 0; i < this.tentacles.length; i++) {
+            const tentacle = this.tentacles[i];
+            
+            // Wenn Tentakel ein Ziel hat, aber nicht mehr in der assignedTargets Liste ist
+            if (tentacle.target && tentacle.targetEntity) {
+                let targetId = null;
+                if (tentacle.targetEntity === simulator.tier) {
+                    targetId = 'player';
+                } else {
+                    // Finde Hunter-Index
+                    for (let j = 0; j < simulator.hunters.length; j++) {
+                        if (simulator.hunters[j] === tentacle.targetEntity) {
+                            targetId = `hunter_${j}`;
+                            break;
+                        }
+                    }
+                }
+                
+                // Wenn Ziel nicht mehr zugewiesen ist, entferne es
+                if (targetId && !assignedTargets.has(targetId)) {
+                    tentacle.target = null;
+                    tentacle.targetEntity = null;
+                }
+            }
+        }
+    }
+    
+    draw() {
+        ctx.imageSmoothingEnabled = false;
+        
+        // Körper zeichnen
+        ctx.fillStyle = this.colors.body;
+        ctx.strokeStyle = this.colors.bodyDark;
+        ctx.lineWidth = 2;
+        drawPixelCircle(this.x, this.y, this.bodyRadius, this.colors.body);
+        drawPixelCircle(this.x, this.y, this.bodyRadius * 0.7, this.colors.bodyDark);
+        
+        // Augen
+        const eyeSize = 3;
+        const eyeOffset = 8;
+        const leftEyeX = this.x + Math.cos(this.angle - Math.PI / 2) * eyeOffset;
+        const leftEyeY = this.y + Math.sin(this.angle - Math.PI / 2) * eyeOffset;
+        const rightEyeX = this.x + Math.cos(this.angle + Math.PI / 2) * eyeOffset;
+        const rightEyeY = this.y + Math.sin(this.angle + Math.PI / 2) * eyeOffset;
+        
+        drawPixelCircle(leftEyeX, leftEyeY, eyeSize, '#00ffff');
+        drawPixelCircle(rightEyeX, rightEyeY, eyeSize, '#00ffff');
+        
+        // Tentakel zeichnen (wie Hunter, aber am Körper verankert)
+        for (let i = 0; i < this.tentacles.length; i++) {
+            const tentacle = this.tentacles[i];
+            
+            if (tentacle.segments.length < 2) continue;
+            
+            // Tentakel-Farbe (rot wenn greift, sonst normal)
+            const tentacleColor = tentacle.grabbedEntity ? '#ff0000' : this.colors.tentacle;
+            
+            // Zeichne Tentakel als organische Linie mit variabler Dicke (wie Hunter)
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            
+            // Segmente von Körper (Index 0) zur Spitze (Index length-1)
+            for (let j = 0; j < tentacle.segments.length - 1; j++) {
+                const seg1 = tentacle.segments[j];
+                const seg2 = tentacle.segments[j + 1];
+                const progress = j / tentacle.segments.length;
+                
+                // Linienbreite wird zur Spitze hin dünner (organisch)
+                const lineWidth = 4 * (1 - progress * 0.7);
+                
+                ctx.strokeStyle = tentacleColor;
+                ctx.lineWidth = lineWidth;
+                
+                ctx.beginPath();
+                ctx.moveTo(seg1.x, seg1.y);
+                ctx.lineTo(seg2.x, seg2.y);
+                ctx.stroke();
+            }
+            
+            // Zeichne Tentakel-Segmente als kleine Kreise (wie bei Hunter)
+            for (let j = 0; j < tentacle.segments.length; j++) {
+                const seg = tentacle.segments[j];
+                const progress = j / tentacle.segments.length;
+                const size = 2 * (1 - progress * 0.6); // Wird zur Spitze hin kleiner
+                
+                if (j === tentacle.segments.length - 1) {
+                    // Spitze (größer und heller)
+                    const tipSize = tentacle.grabbedEntity ? 5 : 4;
+                    drawPixelCircle(seg.x, seg.y, tipSize, tentacle.grabbedEntity ? '#ff6666' : this.colors.tentacleTip);
+                    
+                    // Kleiner Glow-Effekt an der Spitze
+                    if (!tentacle.grabbedEntity) {
+                        ctx.globalAlpha = 0.3;
+                        drawPixelCircle(seg.x, seg.y, tipSize + 2, this.colors.tentacleTip);
+                        ctx.globalAlpha = 1.0;
+                    }
+                } else if (j > 0) {
+                    // Mittlere Segmente
+                    drawPixelCircle(seg.x, seg.y, size, tentacleColor);
+                }
+            }
+        }
+    }
+    
+    getHeadPosition() {
+        return { x: this.x, y: this.y };
+    }
+}
+
 // Simulator-Klasse (jetzt Snake-Spiel)
 class Simulator {
     constructor() {
@@ -3839,6 +4498,9 @@ class Simulator {
         this.staminaTokens = []; // Array für Stamina-Token
         this.hunters = []; // Array für mehrere Jäger-Kreaturen
         this.fatHunters = []; // Array für fette, langsame Jäger
+        this.tentacleCreatures = []; // Array für Tentakel-Kreaturen
+        this.tentacleCreatureSpawnTimer = 0; // Timer für Tentakel-Spawning
+        this.maxTentacleCreatures = 20; // Maximale Anzahl von Tentakel-Kreaturen
         this.score = 0;
         this.foodCount = 0; // Zähler für Upgrades
         this.mutationCount = 0; // Zähler für Mutationen (alle 30 Food-Token)
@@ -3848,8 +4510,9 @@ class Simulator {
         this.activeUpgrades = {}; // { upgradeId: stacks }
         this.activeMutations = {}; // { mutationId: stacks }
         this.hungryLeechSizeBoost = 0; // Temporärer Größen-Boost für Hungry Leech (0-1)
+        this.lastHungryLeechLog = 0; // Timer für Hungry Leech Log (verhindert Spam)
         this.gold = 0; // Gold für Evolution-Shop
-        this.evolutions = []; // Array von gekauften Evolution-IDs
+        this.evolutions = {}; // Objekt: { evolutionId: level } (Level 1-5)
         this.activeEvolutionIndex = 0; // Index der aktiven Evolution (für Wechsel mit Mausrad)
         this.particles = []; // Partikel für visuelle Effekte
         this.projectiles = []; // Projektil-Array für Schüsse
@@ -3865,6 +4528,7 @@ class Simulator {
         this.length100Animation = null; // Animation für Länge 100 Meilenstein
         this.length100MilestoneReached = false; // Flag für Länge 100
         this.bosses = []; // Array von Boss-Kreaturen (3 Bosses erscheinen bei Länge 100)
+        this.bossSpawnCheckTimer = 0; // Timer für kontinuierliche Boss-Spawn-Prüfung
         this.winAnimation = null; // Win-Animation nach Boss-Besiegung
         
         // Prozedurale Unendliche Welt
@@ -3878,21 +4542,51 @@ class Simulator {
         this.cameraZoom = 1.0; // Kamera-Zoom (1.0 = normal, größer = rausgezoomt)
         this.baseZoom = 1.0; // Basis-Zoom
         
+        // Viewport-basierte Entity-Verwaltung
+        this.activeZoneRadius = Math.max(renderWidth, renderHeight) * 1.5; // 1.5x Viewport-Größe
+        this.spawnZoneRadius = Math.max(renderWidth, renderHeight) * 1.2; // Spawne knapp außerhalb des Sichtfeldes
+        this.despawnRadius = Math.max(renderWidth, renderHeight) * 2.5; // Despawn wenn zu weit weg
+        
         // FPS-Limitierung für konsistente Performance
         this.targetFPS = 60; // Ziel-FPS
         this.frameInterval = 1000 / this.targetFPS; // Millisekunden pro Frame
         this.lastFrameTime = 0; // Zeit des letzten Frames
         this.deltaTime = 0; // Delta-Zeit für framerate-unabhängige Updates
         
+        // Performance-Monitoring
+        this.performanceStats = {
+            fps: 60,
+            frameTime: 0,
+            entityCounts: {
+                foods: 0,
+                hunters: 0,
+                fatHunters: 0,
+                tentacles: 0,
+                bosses: 0,
+                projectiles: 0,
+                particles: 0,
+                playerSegments: 0
+            },
+            updateTime: 0,
+            drawTime: 0,
+            lastFPSUpdate: 0,
+            frameCount: 0,
+            slowFrames: 0 // Frames die > 20ms dauern
+        };
+        this.performanceWarningThreshold = 30; // Warnung bei < 30 FPS
+        this.showPerformanceStats = false; // Toggle mit P-Taste
+        
         // Hunter-Spawning wird jetzt vollständig durch Chunk-System gehandhabt
-        this.maxHunters = 200; // Maximale Anzahl von Hunters in der Welt (erhöht für prozedurale Welt)
-        this.maxFatHunters = 100; // Maximale Anzahl von Fat Hunters (erhöht)
+        this.maxHunters = 150; // Maximale Anzahl von Hunters in der Welt (reduziert für bessere Performance)
+        this.maxFatHunters = 75; // Maximale Anzahl von Fat Hunters (reduziert)
         
         this.setupControls();
         this.setupDebugLog();
         this.setupPlayerName();
         this.loadProgress();
+        this.setupPerformanceMonitoring();
         this.setupEvolutionsShop();
+        this.setupBackgroundMusic();
         
         // Highscore-Display initialisieren
         this.updateHighscoreDisplay();
@@ -3977,8 +4671,8 @@ class Simulator {
                 // Warnung anzeigen, aber trotzdem fortfahren
                 const useAnyway = confirm(t('nameAlreadyExists') + '\n\nMöchtest du diesen Namen trotzdem verwenden?');
                 if (!useAnyway) {
-                    return;
-                }
+            return;
+        }
             }
         } catch (e) {
             console.error('Fehler beim Prüfen der Highscore-Liste:', e);
@@ -4034,7 +4728,15 @@ class Simulator {
                 if (progress.activeMutations) this.activeMutations = progress.activeMutations;
                 if (progress.gold !== undefined) this.gold = progress.gold;
                 if (progress.evolutions) {
-                    this.evolutions = progress.evolutions;
+                    // Migration: Array zu Objekt konvertieren falls nötig
+                    if (Array.isArray(progress.evolutions)) {
+                        this.evolutions = {};
+                        progress.evolutions.forEach(id => {
+                            this.evolutions[id] = 1; // Level 1 für alte Evolutions
+                        });
+                    } else {
+                        this.evolutions = progress.evolutions;
+                    }
                     // Aktualisiere Evolution-Anzeige nach dem Laden
                     this.updateEvolutionDisplay();
                 }
@@ -4087,9 +4789,43 @@ class Simulator {
         
         listContainer.innerHTML = '';
         
+        // Initialisiere evolutions als Objekt falls noch nicht geschehen
+        if (!this.evolutions || Array.isArray(this.evolutions)) {
+            if (Array.isArray(this.evolutions)) {
+                const oldEvolutions = this.evolutions;
+                this.evolutions = {};
+                oldEvolutions.forEach(id => {
+                    this.evolutions[id] = 1;
+                });
+            } else {
+                this.evolutions = {};
+            }
+        }
+        
         EVOLUTIONS.forEach(evolution => {
-            const isOwned = this.evolutions && this.evolutions.includes(evolution.id);
-            const canAfford = (this.gold || 0) >= evolution.cost;
+            const currentLevel = this.evolutions[evolution.id] || 0;
+            const isOwned = currentLevel > 0;
+            const isMaxLevel = currentLevel >= 5;
+            const upgradeCost = this.getEvolutionUpgradeCost(evolution.id, currentLevel);
+            const canAfford = (this.gold || 0) >= upgradeCost;
+            
+            // Beschreibung mit Level-Effekten
+            let description = evolution.description;
+            if (evolution.id === 'shot') {
+                const staminaCost = Math.max(1, 5 - currentLevel);
+                if (currentLevel > 0) {
+                    description = `Mit Rechtsklick einen Schuss abgeben (kostet ${staminaCost} Stamina, Level ${currentLevel}/5)`;
+                } else {
+                    description = `Mit Rechtsklick einen Schuss abgeben (kostet ${staminaCost} Stamina)`;
+                }
+            } else if (evolution.id === 'shockwave') {
+                const radius = 150 + (currentLevel - 1) * 30;
+                if (currentLevel > 0) {
+                    description = `Mit Rechtsklick eine Schockwelle abgeben (kostet 5 Stamina, Radius: ${radius}px, Level ${currentLevel}/5)`;
+                } else {
+                    description = `Mit Rechtsklick eine Schockwelle abgeben (kostet 5 Stamina, Radius: ${radius}px)`;
+                }
+            }
             
             const evolutionDiv = document.createElement('div');
             evolutionDiv.style.cssText = `
@@ -4109,32 +4845,32 @@ class Simulator {
                     <div style="font-size: 2em;">${evolution.icon}</div>
                     <div style="flex: 1;">
                         <div style="font-size: 1.2em; font-weight: 600; color: ${evolution.rarity.color};">
-                            ${evolution.name}
+                            ${evolution.name}${isOwned ? ` (Level ${currentLevel}/5)` : ''}
                         </div>
                         <div style="font-size: 0.9em; color: #aaa; margin-top: 5px;">
-                            ${evolution.description}
+                            ${description}
                         </div>
                         <div style="font-size: 0.85em; color: ${evolution.rarity.color}; margin-top: 5px; font-weight: 600;">
                             ${evolution.rarity.name.toUpperCase()}
                         </div>
                     </div>
                     <div style="text-align: right;">
-                        ${isOwned ? 
-                            '<div style="color: #4ade80; font-weight: 600;">✓ Besessen</div>' :
-                            `<div style="color: #fbbf24; font-weight: 600;">${evolution.cost} Gold</div>
+                        ${isMaxLevel ? 
+                            '<div style="color: #4ade80; font-weight: 600;">✓ Max Level</div>' :
+                            `<div style="color: #fbbf24; font-weight: 600;">${upgradeCost} Gold</div>
                              <button class="buyEvolutionBtn" data-evolution-id="${evolution.id}" 
                                      style="margin-top: 10px; padding: 8px 20px; background: ${canAfford ? '#4ade80' : '#666'}; 
                                             color: white; border: none; border-radius: 5px; cursor: ${canAfford ? 'pointer' : 'not-allowed'}; 
                                             font-weight: 600; font-size: 14px;"
                                      ${!canAfford ? 'disabled' : ''}>
-                                Kaufen
+                                ${isOwned ? 'Upgraden' : 'Kaufen'}
                              </button>`
                         }
                     </div>
                 </div>
             `;
             
-            if (!isOwned) {
+            if (!isMaxLevel) {
                 const buyBtn = evolutionDiv.querySelector('.buyEvolutionBtn');
                 if (buyBtn) {
                     buyBtn.addEventListener('click', () => {
@@ -4151,22 +4887,40 @@ class Simulator {
         const evolution = EVOLUTIONS.find(e => e.id === evolutionId);
         if (!evolution) return;
         
-        // Prüfe ob bereits besessen
-        if (this.evolutions && this.evolutions.includes(evolutionId)) {
-            alert('Diese Evolution ist bereits gekauft!');
+        // Initialisiere evolutions als Objekt falls noch nicht geschehen
+        if (!this.evolutions || Array.isArray(this.evolutions)) {
+            // Migration: Array zu Objekt konvertieren
+            if (Array.isArray(this.evolutions)) {
+                const oldEvolutions = this.evolutions;
+                this.evolutions = {};
+                oldEvolutions.forEach(id => {
+                    this.evolutions[id] = 1; // Level 1 für alte Evolutions
+                });
+            } else {
+                this.evolutions = {};
+            }
+        }
+        
+        const currentLevel = this.evolutions[evolutionId] || 0;
+        
+        // Prüfe ob bereits auf max Level
+        if (currentLevel >= 5) {
+            alert('Diese Evolution ist bereits auf maximalem Level!');
             return;
         }
         
+        // Berechne Upgrade-Kosten
+        const upgradeCost = this.getEvolutionUpgradeCost(evolutionId, currentLevel);
+        
         // Prüfe ob genug Gold vorhanden
-        if ((this.gold || 0) < evolution.cost) {
+        if ((this.gold || 0) < upgradeCost) {
             alert('Nicht genug Gold!');
             return;
         }
         
-        // Kaufe Evolution
-        this.gold -= evolution.cost;
-        if (!this.evolutions) this.evolutions = [];
-        this.evolutions.push(evolutionId);
+        // Kaufe/Upgrade Evolution
+        this.gold -= upgradeCost;
+        this.evolutions[evolutionId] = currentLevel + 1;
         
         // Speichere Fortschritt
         this.saveProgress();
@@ -4174,7 +4928,12 @@ class Simulator {
         // Aktualisiere Shop
         this.updateEvolutionsShop();
         this.updateGoldDisplay();
-        this.log(`Evolution gekauft: ${evolution.name}`, 'success');
+        
+        if (currentLevel === 0) {
+            this.log(`Evolution gekauft: ${evolution.name} (Level 1)`, 'success');
+        } else {
+            this.log(`Evolution geupgradet: ${evolution.name} (Level ${currentLevel + 1})`, 'success');
+        }
         
         // Aktualisiere Evolution-Anzeige
         this.updateEvolutionDisplay();
@@ -4201,12 +4960,6 @@ class Simulator {
     handleSpacebar() {
         if (!this.tier) return;
         
-        // Prüfe ob genug Stamina vorhanden (5 Stamina benötigt)
-        if (this.tier.currentStamina < 5) {
-            this.log('Nicht genug Stamina! (5 benötigt)', 'warning');
-            return;
-        }
-        
         // Hole verfügbare Evolutions
         const availableEvolutions = this.getAvailableEvolutions();
         
@@ -4223,19 +4976,59 @@ class Simulator {
             return;
         }
         
+        // Berechne Stamina-Kosten basierend auf Evolution und Level
+        let requiredStamina = 5;
+        if (activeEvolution.id === 'shot') {
+            // Schuss: 5 - level (min 1)
+            requiredStamina = Math.max(1, 5 - activeEvolution.level);
+        } else if (activeEvolution.id === 'shockwave') {
+            // Shockwave: immer 5 Stamina
+            requiredStamina = 5;
+        }
+        
+        // Prüfe ob genug Stamina vorhanden
+        if (this.tier.currentStamina < requiredStamina) {
+            this.log(`Nicht genug Stamina! (${requiredStamina} benötigt)`, 'warning');
+            return;
+        }
+        
         // Aktiviere Evolution basierend auf ID
         if (activeEvolution.id === 'shot') {
-            this.useShot();
+            this.useShot(activeEvolution.level);
         } else if (activeEvolution.id === 'shockwave') {
-            this.useShockwave();
+            this.useShockwave(activeEvolution.level);
         }
     }
     
     getAvailableEvolutions() {
-        // Gibt Array von verfügbaren Evolution-Objekten zurück
-        if (!this.evolutions || this.evolutions.length === 0) return [];
+        // Gibt Array von verfügbaren Evolution-Objekten zurück (mit Level)
+        if (!this.evolutions || Object.keys(this.evolutions).length === 0) return [];
         
-        return EVOLUTIONS.filter(evolution => this.evolutions.includes(evolution.id));
+        return EVOLUTIONS
+            .filter(evolution => this.evolutions[evolution.id] && this.evolutions[evolution.id] > 0)
+            .map(evolution => ({
+                ...evolution,
+                level: this.evolutions[evolution.id] || 1
+            }));
+    }
+    
+    getEvolutionLevel(evolutionId) {
+        // Gibt das Level einer Evolution zurück (0 wenn nicht besessen)
+        return this.evolutions[evolutionId] || 0;
+    }
+    
+    getEvolutionUpgradeCost(evolutionId, currentLevel) {
+        // Berechnet Upgrade-Kosten exponentiell: baseCost * (2 ^ level)
+        const evolution = EVOLUTIONS.find(e => e.id === evolutionId);
+        if (!evolution) return Infinity;
+        
+        if (currentLevel === 0) {
+            // Erstkauf
+            return evolution.cost;
+        } else {
+            // Upgrade: exponentiell teurer
+            return evolution.cost * Math.pow(2, currentLevel);
+        }
     }
     
     switchEvolution(direction) {
@@ -4281,18 +5074,21 @@ class Simulator {
             if (evolutionInfo) {
                 evolutionInfo.innerHTML = `
                     <span style="font-size: 1.5em; margin-right: 10px;">${activeEvolution.icon}</span>
-                    <span style="font-weight: 600;">${activeEvolution.name}</span>
+                    <span style="font-weight: 600;">${activeEvolution.name} (Level ${activeEvolution.level}/5)</span>
                     ${availableEvolutions.length > 1 ? `<span style="color: #888; font-size: 0.9em; margin-left: 10px;">(${this.activeEvolutionIndex + 1}/${availableEvolutions.length})</span>` : ''}
                 `;
             }
         }
     }
     
-    useShot() {
-        if (!this.tier || this.tier.currentStamina < 5) return;
+    useShot(level = 1) {
+        // Stamina-Kosten: 5 - level (min 1)
+        const staminaCost = Math.max(1, 5 - level);
         
-        // Verbrauche 5 Stamina
-        this.tier.currentStamina -= 5;
+        if (!this.tier || this.tier.currentStamina < staminaCost) return;
+        
+        // Verbrauche Stamina
+        this.tier.currentStamina -= staminaCost;
         
         // Erstelle Projektil in Richtung der Bewegung
         const head = this.tier.segments[0];
@@ -4300,59 +5096,102 @@ class Simulator {
         const projectile = new Projectile(head.x, head.y, angle, 8);
         this.projectiles.push(projectile);
         
-        this.log('Schuss abgefeuert!', 'success');
+        this.log(`Schuss abgefeuert! (${staminaCost} Stamina)`, 'success');
     }
     
-    useShockwave() {
+    useShockwave(level = 1) {
         if (!this.tier || this.tier.currentStamina < 5) return;
         
         // Verbrauche 5 Stamina
         this.tier.currentStamina -= 5;
         
-        // Finde alle gekletterten Gegner
+        // Finde alle Gegner in der Nähe (nicht nur kletternde)
         const head = this.tier.segments[0];
         let pushedCount = 0;
-        const shockwaveRadius = 150; // Erhöhter Radius für größere Reichweite
+        // Radius: 150 + (level - 1) * 30 (linear)
+        const shockwaveRadius = 150 + (level - 1) * 30;
         const shockwaveRadiusSquared = shockwaveRadius * shockwaveRadius;
         
         // Prüfe alle Jäger (rückwärts iterieren für sichere Entfernung)
         for (let i = this.hunters.length - 1; i >= 0; i--) {
             const hunter = this.hunters[i];
+            if (!hunter || !hunter.segments || hunter.segments.length === 0) continue;
             
-            // Prüfe ob Jäger klettert
-            if (hunter.isClimbing && hunter.climbingTargetIndex >= 0) {
-                // Berechne Entfernung zum Spieler-Kopf
-                const hunterHead = hunter.getHeadPosition();
-                const dx = hunterHead.x - head.x;
-                const dy = hunterHead.y - head.y;
-                const distanceSquared = dx * dx + dy * dy;
-                
-                if (distanceSquared <= shockwaveRadiusSquared) {
-                    // Berechne Richtung weg vom Spieler
-                    const distance = Math.sqrt(distanceSquared);
+            // Berechne Entfernung zum Spieler-Kopf
+            const hunterHead = hunter.getHeadPosition();
+            const dx = hunterHead.x - head.x;
+            const dy = hunterHead.y - head.y;
+            const distanceSquared = dx * dx + dy * dy;
+            
+            if (distanceSquared <= shockwaveRadiusSquared) {
+                // Berechne Richtung weg vom Spieler
+                const distance = Math.sqrt(distanceSquared);
                     const angle = Math.atan2(dy, dx);
-                    
-                    // Schleudere Jäger weg (doppelte Kraft)
-                    const force = 40; // Doppelte Kraft (vorher 20)
-                    hunter.headX += Math.cos(angle) * force;
-                    hunter.headY += Math.sin(angle) * force;
-                    
-                    // Aktualisiere Kopf-Segment Position
-                    if (hunter.segments && hunter.segments.length > 0) {
-                        hunter.segments[0].x = hunter.headX;
-                        hunter.segments[0].y = hunter.headY;
-                    }
-                    
-                    // Lass Jäger los (Klettern beenden)
+                
+                // Berechne Kraft basierend auf Entfernung (näher = stärker)
+                const normalizedDistance = distance / shockwaveRadius; // 0-1
+                const forceMultiplier = 1.0 - normalizedDistance * 0.5; // 1.0 bei 0, 0.5 bei max Radius
+                
+                // Setze Geschwindigkeits-Vektoren (reduzierte Kraft)
+                const baseForce = 40; // Reduzierte initiale Geschwindigkeit
+                const force = baseForce * forceMultiplier;
+                
+                hunter.vx = Math.cos(angle) * force;
+                hunter.vy = Math.sin(angle) * force;
+                
+                // Aktualisiere Kopf-Segment Position sofort
+                if (hunter.segments && hunter.segments.length > 0) {
+                    hunter.segments[0].x = hunter.headX;
+                    hunter.segments[0].y = hunter.headY;
+                }
+                
+                // Wenn Jäger klettert, lass ihn los
+                if (hunter.isClimbing && hunter.climbingTargetIndex >= 0) {
                     hunter.isClimbing = false;
                     hunter.climbingTargetIndex = -1;
                     hunter.climbingProgress = 0;
                     hunter.climbCooldown = 60; // Cooldown bevor er wieder klettern kann
                     hunter.currentStamina = Math.max(0, hunter.currentStamina - 2); // Verliert auch etwas Stamina
-                    
-                    pushedCount++;
-                    this.log(`Jäger durch Shockwave weggeschleudert!`, 'success');
                 }
+                
+                    pushedCount++;
+                }
+            }
+        
+        // Prüfe auch Fat Hunters
+        for (let i = this.fatHunters.length - 1; i >= 0; i--) {
+            const fatHunter = this.fatHunters[i];
+            if (!fatHunter || !fatHunter.segments || fatHunter.segments.length === 0) continue;
+            
+            // Berechne Entfernung zum Spieler-Kopf
+            const fatHunterHead = fatHunter.getHeadPosition();
+            const dx = fatHunterHead.x - head.x;
+            const dy = fatHunterHead.y - head.y;
+            const distanceSquared = dx * dx + dy * dy;
+            
+            if (distanceSquared <= shockwaveRadiusSquared) {
+                // Berechne Richtung weg vom Spieler
+                const distance = Math.sqrt(distanceSquared);
+                const angle = Math.atan2(dy, dx);
+                
+                // Berechne Kraft basierend auf Entfernung (näher = stärker)
+                const normalizedDistance = distance / shockwaveRadius; // 0-1
+                const forceMultiplier = 1.0 - normalizedDistance * 0.5; // 1.0 bei 0, 0.5 bei max Radius
+                
+                // Setze Geschwindigkeits-Vektoren (reduzierte Kraft)
+                const baseForce = 40; // Reduzierte initiale Geschwindigkeit
+                const force = baseForce * forceMultiplier;
+                
+                fatHunter.vx = Math.cos(angle) * force;
+                fatHunter.vy = Math.sin(angle) * force;
+                
+                // Aktualisiere Kopf-Segment Position sofort
+                if (fatHunter.segments && fatHunter.segments.length > 0) {
+                    fatHunter.segments[0].x = fatHunter.headX;
+                    fatHunter.segments[0].y = fatHunter.headY;
+                }
+                
+                pushedCount++;
             }
         }
         
@@ -4445,17 +5284,18 @@ class Simulator {
             const hunterType = rng();
             if (hunterType < 0.5) {
                 // Normale Hunter
-                // Entferne alte Hunters die zu weit weg sind (mehr als 10 Chunks entfernt)
+                // Entferne alte Hunters die zu weit weg sind (aggressiveres Cleanup)
                 if (this.hunters.length >= this.maxHunters) {
-                    const maxDistance = this.chunkSize * 10; // Erhöht von 5 auf 10 Chunks
-                    for (let i = this.hunters.length - 1; i >= 0; i--) {
+                    const maxDistance = this.chunkSize * 8; // 8 Chunks entfernt
+                    let removed = 0;
+                    for (let i = this.hunters.length - 1; i >= 0 && removed < 5; i--) {
                         const oldHunter = this.hunters[i];
                         const dx = oldHunter.headX - this.cameraX;
                         const dy = oldHunter.headY - this.cameraY;
                         const distance = Math.sqrt(dx * dx + dy * dy);
                         if (distance > maxDistance) {
                             this.hunters.splice(i, 1);
-                            break; // Nur einen entfernen
+                            removed++;
                         }
                     }
                 }
@@ -4463,44 +5303,70 @@ class Simulator {
                 const hunter = new HunterCreature(hunterX, hunterY);
                 hunter.isChasing = false; // Startet nicht verfolgend
                 this.hunters.push(hunter);
-            } else if (hunterType < 0.8) {
+            } else if (hunterType < 0.9) {
                 // Fat Hunter
-                // Entferne alte Fat Hunters die zu weit weg sind
+                // Entferne alte Fat Hunters die zu weit weg sind (aggressiveres Cleanup)
                 if (this.fatHunters.length >= this.maxFatHunters) {
-                    const maxDistance = this.chunkSize * 10; // Erhöht von 5 auf 10 Chunks
-                    for (let i = this.fatHunters.length - 1; i >= 0; i--) {
+                    const maxDistance = this.chunkSize * 8; // 8 Chunks entfernt
+                    let removed = 0;
+                    for (let i = this.fatHunters.length - 1; i >= 0 && removed < 3; i--) {
                         const oldHunter = this.fatHunters[i];
                         const dx = oldHunter.headX - this.cameraX;
                         const dy = oldHunter.headY - this.cameraY;
                         const distance = Math.sqrt(dx * dx + dy * dy);
                         if (distance > maxDistance) {
                             this.fatHunters.splice(i, 1);
-                            break; // Nur einen entfernen
+                            removed++;
                         }
                     }
                 }
                 // Spawne neuen Fat Hunter
                 this.fatHunters.push(new FatHunterCreature(hunterX, hunterY));
             } else if (canSpawnElite) {
-                // Elite Hunter (nur wenn Spieler >= 50 Segmente)
-                // Entferne alte Hunters die zu weit weg sind
-                if (this.hunters.length >= this.maxHunters) {
-                    const maxDistance = this.chunkSize * 10; // Erhöht von 5 auf 10 Chunks
-                    for (let i = this.hunters.length - 1; i >= 0; i--) {
-                        const oldHunter = this.hunters[i];
-                        const dx = oldHunter.headX - this.cameraX;
-                        const dy = oldHunter.headY - this.cameraY;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        if (distance > maxDistance) {
-                            this.hunters.splice(i, 1);
-                            break; // Nur einen entfernen
+                // Elite Hunter (nur wenn Spieler >= 50 Segmente) - Limit auf 1 pro Chunk
+                // Prüfe ob bereits zu viele Elite Hunter vorhanden sind
+                const eliteCount = this.hunters.filter(h => h.isElite).length;
+                if (eliteCount >= 30) {
+                    // Zu viele Elite Hunter - spawne normalen Hunter stattdessen
+                    if (this.hunters.length >= this.maxHunters) {
+                        const maxDistance = this.chunkSize * 8;
+                        let removed = 0;
+                        for (let i = this.hunters.length - 1; i >= 0 && removed < 5; i--) {
+                            const oldHunter = this.hunters[i];
+                            const dx = oldHunter.headX - this.cameraX;
+                            const dy = oldHunter.headY - this.cameraY;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            if (distance > maxDistance) {
+                                this.hunters.splice(i, 1);
+                                removed++;
+                            }
                         }
                     }
+                    const hunter = new HunterCreature(hunterX, hunterY);
+                    hunter.isChasing = false;
+                    this.hunters.push(hunter);
+            } else {
+                    // Entferne alte Hunters die zu weit weg sind (aggressiveres Cleanup)
+                if (this.hunters.length >= this.maxHunters) {
+                        const maxDistance = this.chunkSize * 8;
+                        let removed = 0;
+                        for (let i = this.hunters.length - 1; i >= 0 && removed < 5; i--) {
+                            const oldHunter = this.hunters[i];
+                            const dx = oldHunter.headX - this.cameraX;
+                            const dy = oldHunter.headY - this.cameraY;
+                            const distance = Math.sqrt(dx * dx + dy * dy);
+                            if (distance > maxDistance) {
+                                this.hunters.splice(i, 1);
+                                removed++;
+                            }
+                        }
+                    }
+                    // Spawne neuen Elite Hunter (isElite als Parameter übergeben)
+                    const hunter = new HunterCreature(hunterX, hunterY, true);
+                    hunter.isChasing = false;
+                    this.hunters.push(hunter);
+                    this.log(`Elite Hunter gespawnt in Chunk bei (${Math.floor(hunterX)}, ${Math.floor(hunterY)})`, 'error');
                 }
-                // Spawne neuen Elite Hunter (isElite als Parameter übergeben)
-                const hunter = new HunterCreature(hunterX, hunterY, true);
-                hunter.isChasing = false;
-                this.hunters.push(hunter);
             } else {
                 // Fallback zu normalem Hunter wenn Elite nicht verfügbar
                 if (this.hunters.length >= this.maxHunters) {
@@ -4870,17 +5736,18 @@ class Simulator {
             }
         });
         
-        // Leertaste: Schuss oder Shockwave (je nach gekauften Evolutions)
-        document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && this.isRunning && this.tier) {
-                e.preventDefault();
+        // Rechtsklick: Schuss oder Shockwave (je nach gekauften Evolutions)
+        canvas.addEventListener('contextmenu', (e) => {
+            if (this.isRunning && this.tier) {
+                e.preventDefault(); // Verhindere Standard-Kontextmenü
                 this.handleSpacebar();
             }
         });
         
         // Mausrad: Wechsle zwischen Evolutionen
         canvas.addEventListener('wheel', (e) => {
-            if (this.isRunning && this.evolutions && this.evolutions.length > 1) {
+            const availableEvolutions = this.getAvailableEvolutions();
+            if (this.isRunning && availableEvolutions.length > 1) {
                 e.preventDefault();
                 const direction = e.deltaY > 0 ? 1 : -1; // Scroll nach unten = nächste, nach oben = vorherige
                 this.switchEvolution(direction);
@@ -5061,35 +5928,25 @@ class Simulator {
     }
     
     spawnRandomHunters(count) {
-        // Spawne Hunter random in der Nähe der Kamera (nicht zu nah am Spieler)
-        const minDistance = 200; // Mindestabstand zum Spieler
-        const playerHead = this.tier ? this.tier.getHeadPosition() : { x: this.cameraX, y: this.cameraY };
-        const spawnRadius = Math.max(renderWidth, renderHeight) * 2; // Spawne in größerem Radius um Kamera
+        // Spawne Hunter knapp außerhalb des Sichtfeldes (procedural)
+        if (!this.tier) return;
+        
+        const playerHead = this.tier.getHeadPosition();
+        // Spawne in einem Ring knapp außerhalb des Sichtfeldes
+        const minSpawnDistance = this.spawnZoneRadius * 0.9; // Knapp außerhalb
+        const maxSpawnDistance = this.spawnZoneRadius * 1.3; // Maximaler Spawn-Radius
         
         for (let i = 0; i < count; i++) {
-            let hunterX, hunterY;
-            let validPosition = false;
-            let attempts = 0;
-            
-            while (!validPosition && attempts < 50) {
-                // Spawne in einem Radius um die Kamera
+            // Spawne in einem Ring um den Spieler (knapp außerhalb des Sichtfeldes)
                 const angle = Math.random() * Math.PI * 2;
-                const distance = minDistance + Math.random() * spawnRadius;
-                hunterX = this.cameraX + Math.cos(angle) * distance;
-                hunterY = this.cameraY + Math.sin(angle) * distance;
-                
-                // Prüfe Abstand zum Spieler
-                const dx = hunterX - playerHead.x;
-                const dy = hunterY - playerHead.y;
-                const dist = Math.sqrt(dx * dx + dy * dy);
-                
-                if (dist >= minDistance) {
-                    validPosition = true;
+            const distance = minSpawnDistance + Math.random() * (maxSpawnDistance - minSpawnDistance);
+            const hunterX = playerHead.x + Math.cos(angle) * distance;
+            const hunterY = playerHead.y + Math.sin(angle) * distance;
                     
                     // Zufällig entscheiden welche Hunter-Klasse spawnt
-                    const playerLength = this.tier ? this.tier.numSegments : 0;
-                    const canSpawnElite = playerLength >= 50; // Elite Hunter nur ab 50 Segmenten
-                    
+            const playerLength = this.tier ? this.tier.numSegments : 0;
+            const canSpawnElite = playerLength >= 50; // Elite Hunter nur ab 50 Segmenten
+            
                     const hunterType = Math.random();
                     if (hunterType < 0.6) {
                         // 60% normale Hunter
@@ -5098,27 +5955,51 @@ class Simulator {
                             hunter.isChasing = false;
                             this.hunters.push(hunter);
                         }
-                    } else if (hunterType < 0.85 && canSpawnElite) {
-                        // 25% Elite Hunter (nur wenn Spieler >= 50 Segmente)
+            } else if (hunterType < 0.85 && canSpawnElite) {
+                // 25% Elite Hunter (nur wenn Spieler >= 50 Segmente)
                         if (this.hunters.length < this.maxHunters) {
-                            const hunter = new HunterCreature(hunterX, hunterY, true);
+                    const hunter = new HunterCreature(hunterX, hunterY, true);
                             hunter.isChasing = false;
                             this.hunters.push(hunter);
+                    this.log(`Elite Hunter gespawnt (spawnRandomHunters) bei (${Math.floor(hunterX)}, ${Math.floor(hunterY)})`, 'error');
                         }
                     } else {
-                        // 15% Fat Hunter (wenn noch Platz) oder normaler Hunter wenn Elite nicht verfügbar
+                // 15% Fat Hunter (wenn noch Platz) oder normaler Hunter wenn Elite nicht verfügbar
                         if (this.fatHunters.length < this.maxFatHunters) {
                             this.fatHunters.push(new FatHunterCreature(hunterX, hunterY));
                         } else if (this.hunters.length < this.maxHunters) {
-                            // Fallback zu normalem Hunter wenn maxFatHunters erreicht oder Elite nicht verfügbar
+                    // Fallback zu normalem Hunter wenn maxFatHunters erreicht oder Elite nicht verfügbar
                             const hunter = new HunterCreature(hunterX, hunterY);
                             hunter.isChasing = false;
                             this.hunters.push(hunter);
                         }
                     }
                 }
-                attempts++;
+    }
+    
+    spawnTentacleCreatures(count) {
+        // Spawne Tentakel-Kreaturen knapp außerhalb des Sichtfeldes (procedural)
+        if (!this.tier) return;
+        
+        const playerHead = this.tier.getHeadPosition();
+        const minSpawnDistance = this.spawnZoneRadius * 0.9;
+        const maxSpawnDistance = this.spawnZoneRadius * 1.3;
+        
+        for (let i = 0; i < count; i++) {
+            // Prüfe ob maximale Anzahl erreicht
+            if (this.tentacleCreatures.length >= this.maxTentacleCreatures) {
+                break;
             }
+            
+            // Spawne in einem Ring knapp außerhalb des Sichtfeldes
+            const angle = Math.random() * Math.PI * 2;
+            const distance = minSpawnDistance + Math.random() * (maxSpawnDistance - minSpawnDistance);
+            const tentacleX = playerHead.x + Math.cos(angle) * distance;
+            const tentacleY = playerHead.y + Math.sin(angle) * distance;
+            
+            // Spawne Tentakel-Kreatur
+            const tentacleCreature = new TentacleCreature(tentacleX, tentacleY);
+            this.tentacleCreatures.push(tentacleCreature);
         }
     }
     
@@ -5389,9 +6270,306 @@ class Simulator {
     }
     
     updateScore() {
-        document.getElementById('scoreValue').textContent = this.score;
-        if (this.tier) {
-            document.getElementById('lengthValue').textContent = this.tier.numSegments;
+        const scoreValue = document.getElementById('scoreValue');
+        if (scoreValue) {
+            scoreValue.textContent = this.score;
+        }
+        
+        // lengthValue wurde entfernt - wird jetzt nur noch in Player Stats angezeigt
+        const lengthValue = document.getElementById('lengthValue');
+        if (lengthValue && this.tier) {
+            lengthValue.textContent = this.tier.numSegments;
+        }
+        
+        // Aktualisiere auch Player Stats
+        this.updatePlayerStats();
+    }
+    
+    setupPerformanceMonitoring() {
+        // P-Taste zum Toggle der Performance-Stats
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'p' || e.key === 'P') {
+                if (this.isRunning) {
+                    this.showPerformanceStats = !this.showPerformanceStats;
+                    this.log(`Performance-Stats: ${this.showPerformanceStats ? 'AN' : 'AUS'}`, 'info');
+                }
+            }
+        });
+    }
+    
+    setupBackgroundMusic() {
+        // Audio-Element und Lautstärke-Regler einrichten
+        const backgroundMusic = document.getElementById('backgroundMusic');
+        const volumeSlider = document.getElementById('volumeSlider');
+        const volumeValue = document.getElementById('volumeValue');
+        const volumeControl = document.getElementById('volumeControl');
+        const volumeIcon = document.getElementById('volumeIcon');
+        
+        if (!backgroundMusic || !volumeSlider || !volumeValue || !volumeControl || !volumeIcon) {
+            console.warn('Background Music Elemente nicht gefunden');
+            return;
+        }
+        
+        // Standard-Lautstärke: 7%
+        const defaultVolume = 0.07;
+        backgroundMusic.volume = defaultVolume;
+        volumeSlider.value = defaultVolume * 100;
+        volumeValue.textContent = Math.round(defaultVolume * 100) + '%';
+        
+        // Mute-Status (wird in localStorage gespeichert)
+        this.isMusicMuted = false;
+        const savedMuteState = localStorage.getItem('backgroundMusicMuted');
+        if (savedMuteState === 'true') {
+            this.isMusicMuted = true;
+            backgroundMusic.volume = 0;
+            volumeIcon.textContent = '🔇';
+        }
+        
+        // Lautstärke-Regler Event
+        volumeSlider.addEventListener('input', (e) => {
+            const volume = parseInt(e.target.value) / 100;
+            
+            // Wenn Slider bewegt wird, unmute automatisch
+            if (this.isMusicMuted && volume > 0) {
+                this.isMusicMuted = false;
+                volumeIcon.textContent = '🔊';
+                localStorage.setItem('backgroundMusicMuted', 'false');
+            }
+            
+            backgroundMusic.volume = this.isMusicMuted ? 0 : volume;
+            volumeValue.textContent = e.target.value + '%';
+            
+            // Speichere Lautstärke in localStorage
+            localStorage.setItem('backgroundMusicVolume', volume.toString());
+        });
+        
+        // Mute/Unmute Toggle beim Klick auf Icon
+        volumeIcon.addEventListener('click', () => {
+            this.isMusicMuted = !this.isMusicMuted;
+            
+            if (this.isMusicMuted) {
+                backgroundMusic.volume = 0;
+                volumeIcon.textContent = '🔇';
+            } else {
+                const volume = parseInt(volumeSlider.value) / 100;
+                backgroundMusic.volume = volume;
+                volumeIcon.textContent = '🔊';
+            }
+            
+            localStorage.setItem('backgroundMusicMuted', this.isMusicMuted.toString());
+        });
+        
+        // Lade gespeicherte Lautstärke
+        const savedVolume = localStorage.getItem('backgroundMusicVolume');
+        if (savedVolume !== null) {
+            const volume = parseFloat(savedVolume);
+            volumeSlider.value = volume * 100;
+            volumeValue.textContent = Math.round(volume * 100) + '%';
+            
+            // Nur Lautstärke setzen wenn nicht gemuted
+            if (!this.isMusicMuted) {
+                backgroundMusic.volume = volume;
+            }
+        }
+        
+        // Seamless Looping: Wenn Musik endet, starte sie neu
+        backgroundMusic.addEventListener('ended', () => {
+            backgroundMusic.currentTime = 0;
+            backgroundMusic.play().catch(err => {
+                console.warn('Musik konnte nicht automatisch abgespielt werden:', err);
+            });
+        });
+        
+        // Fehlerbehandlung
+        backgroundMusic.addEventListener('error', (e) => {
+            console.error('Fehler beim Laden der Background Music:', e);
+            volumeControl.style.display = 'none'; // Verstecke Regler wenn Musik nicht geladen werden kann
+        });
+        
+        // Speichere Referenz für später
+        this.backgroundMusic = backgroundMusic;
+        this.volumeControl = volumeControl;
+        this.volumeIcon = volumeIcon;
+    }
+    
+    startBackgroundMusic() {
+        if (this.backgroundMusic) {
+            // Versuche Musik abzuspielen (benötigt User-Interaktion)
+            const playPromise = this.backgroundMusic.play();
+            
+            if (playPromise !== undefined) {
+                playPromise
+                    .then(() => {
+                        // Musik läuft
+                        if (this.volumeControl) {
+                            this.volumeControl.style.display = 'block';
+                        }
+                    })
+                    .catch(error => {
+                        // Autoplay wurde blockiert - warte auf User-Interaktion
+                        console.log('Autoplay blockiert, warte auf User-Interaktion');
+                        // Zeige Lautstärke-Regler trotzdem an
+                        if (this.volumeControl) {
+                            this.volumeControl.style.display = 'block';
+                        }
+                    });
+            }
+        }
+    }
+    
+    stopBackgroundMusic() {
+        if (this.backgroundMusic) {
+            this.backgroundMusic.pause();
+            this.backgroundMusic.currentTime = 0;
+        }
+    }
+    
+    updatePerformanceStats(frameStartTime) {
+        const frameEndTime = performance.now();
+        const totalFrameTime = frameEndTime - frameStartTime;
+        
+        // FPS-Berechnung (alle 60 Frames aktualisieren)
+        this.performanceStats.frameCount++;
+        if (this.performanceStats.frameCount >= 60) {
+            const avgFrameTime = totalFrameTime / 60;
+            this.performanceStats.fps = Math.round(1000 / avgFrameTime);
+            this.performanceStats.frameCount = 0;
+            
+            // Warnung bei niedriger FPS
+            if (this.performanceStats.fps < this.performanceWarningThreshold) {
+                const counts = this.performanceStats.entityCounts;
+                this.log(
+                    `⚠️ PERFORMANCE WARNUNG: ${this.performanceStats.fps} FPS | ` +
+                    `Update: ${this.performanceStats.updateTime.toFixed(2)}ms | ` +
+                    `Draw: ${this.performanceStats.drawTime.toFixed(2)}ms | ` +
+                    `Entities: H:${counts.hunters} F:${counts.fatHunters} T:${counts.tentacles} B:${counts.bosses} P:${counts.playerSegments} F:${counts.foods}`,
+                    'warning'
+                );
+            }
+        }
+        
+        // Zeichne Performance-Stats auf Canvas (wenn aktiviert)
+        if (this.showPerformanceStats) {
+            this.drawPerformanceStats();
+        }
+    }
+    
+    drawPerformanceStats() {
+        // Zeichne ohne Kamera-Transformation (Bildschirm-Koordinaten)
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        
+        const stats = this.performanceStats;
+        const counts = stats.entityCounts;
+        
+        // Hintergrund
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+        ctx.fillRect(10, 10, 350, 200);
+        
+        // Text
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '12px monospace';
+        ctx.textAlign = 'left';
+        ctx.textBaseline = 'top';
+        
+        let y = 20;
+        ctx.fillText(`FPS: ${stats.fps} (Frame: ${stats.frameTime.toFixed(1)}ms)`, 20, y);
+        y += 18;
+        ctx.fillText(`Update: ${stats.updateTime.toFixed(2)}ms | Draw: ${stats.drawTime.toFixed(2)}ms`, 20, y);
+        y += 18;
+        ctx.fillText(`Slow Frames: ${stats.slowFrames}`, 20, y);
+        y += 25;
+        
+        // Entity Counts
+        ctx.fillStyle = '#ffff00';
+        ctx.fillText('Entities:', 20, y);
+        y += 18;
+        ctx.fillStyle = '#ffffff';
+        ctx.fillText(`  Player Segments: ${counts.playerSegments}`, 20, y);
+        y += 16;
+        ctx.fillText(`  Hunters: ${counts.hunters} | Fat: ${counts.fatHunters}`, 20, y);
+        y += 16;
+        ctx.fillText(`  Tentacles: ${counts.tentacles} | Bosses: ${counts.bosses}`, 20, y);
+        y += 16;
+        ctx.fillText(`  Foods: ${counts.foods} | Projectiles: ${counts.projectiles}`, 20, y);
+        y += 16;
+        ctx.fillText(`  Particles: ${counts.particles}`, 20, y);
+        
+        ctx.restore();
+    }
+    
+    updatePlayerStats() {
+        // Länge
+        const statsLength = document.getElementById('statsLength');
+        if (statsLength && this.tier) {
+            statsLength.textContent = this.tier.numSegments;
+        }
+        
+        // Score
+        const statsScore = document.getElementById('statsScore');
+        if (statsScore) {
+            statsScore.textContent = this.score;
+        }
+        
+        // Geschwindigkeit
+        const statsSpeed = document.getElementById('statsSpeed');
+        if (statsSpeed && this.tier) {
+            const speedMultiplier = (this.tier.staminaSpeedBoostActive || this.tier.staminaSpeedBoostAnimation) ? this.tier.staminaSpeedBoostMultiplier : 1.0;
+            const baseSpeed = this.tier.speed || 1.0;
+            const totalSpeed = baseSpeed * speedMultiplier;
+            statsSpeed.textContent = totalSpeed.toFixed(2) + 'x';
+        }
+        
+        // Drehgeschwindigkeit
+        const statsTurnSpeed = document.getElementById('statsTurnSpeed');
+        if (statsTurnSpeed && this.tier) {
+            // Berechne relative Drehgeschwindigkeit (turnSpeed / originalTurnSpeed)
+            const originalTurnSpeed = this.tier.originalTurnSpeed || 0.05;
+            const currentTurnSpeed = this.tier.turnSpeed || 0.05;
+            const turnSpeedMultiplier = currentTurnSpeed / originalTurnSpeed;
+            statsTurnSpeed.textContent = turnSpeedMultiplier.toFixed(2) + 'x';
+        }
+        
+        // Stamina
+        const statsStamina = document.getElementById('statsStamina');
+        if (statsStamina && this.tier) {
+            statsStamina.textContent = `${this.tier.currentStamina}/${this.tier.maxStamina}`;
+        }
+        
+        // Gold
+        const statsGold = document.getElementById('statsGold');
+        if (statsGold) {
+            statsGold.textContent = this.gold || 0;
+        }
+        
+        // Upgrades (Anzahl)
+        const statsUpgrades = document.getElementById('statsUpgrades');
+        if (statsUpgrades) {
+            const upgradeCount = this.activeUpgrades ? Object.keys(this.activeUpgrades).length : 0;
+            statsUpgrades.textContent = upgradeCount;
+        }
+        
+        // Mutationen (Anzahl)
+        const statsMutations = document.getElementById('statsMutations');
+        if (statsMutations) {
+            const mutationCount = this.activeMutations ? Object.keys(this.activeMutations).length : 0;
+            statsMutations.textContent = mutationCount;
+        }
+        
+        // Evolution
+        const statsEvolution = document.getElementById('statsEvolution');
+        if (statsEvolution) {
+            const availableEvolutions = this.getAvailableEvolutions();
+            if (availableEvolutions.length > 0) {
+                const activeEvolution = availableEvolutions[this.activeEvolutionIndex];
+                if (activeEvolution) {
+                    statsEvolution.textContent = `${activeEvolution.name} Lv.${activeEvolution.level}`;
+                } else {
+                    statsEvolution.textContent = '-';
+                }
+            } else {
+                statsEvolution.textContent = '-';
+            }
         }
     }
     
@@ -5771,9 +6949,9 @@ class Simulator {
     }
     
     startLength50Animation() {
-        // Starte große Animation für Länge 50 Meilenstein
+        // Starte Animation für Länge 50 Meilenstein (kleiner)
         this.length50Animation = {
-            duration: 180, // 3 Sekunden bei 60 FPS
+            duration: 90, // 1.5 Sekunden bei 60 FPS (reduziert)
             phase: 0
         };
         
@@ -5807,28 +6985,28 @@ class Simulator {
         ctx.fillStyle = `rgba(0, 0, 0, ${0.7 * (1 - progress * 0.5)})`;
         ctx.fillRect(0, 0, renderWidth, renderHeight);
         
-        // Großer pulsierender Kreis
+        // Kleinerer pulsierender Kreis
         const pulse = Math.sin(progress * Math.PI * 4) * 0.3 + 0.7;
-        const circleRadius = 150 + pulse * 50;
+        const circleRadius = 80 + pulse * 25; // Reduziert von 150+50 auf 80+25
         const circleAlpha = 1 - progress;
         
         // Äußerer Ring
         ctx.strokeStyle = `rgba(157, 78, 221, ${circleAlpha})`; // Lila für Elite
-        ctx.lineWidth = 8;
+        ctx.lineWidth = 5; // Reduziert von 8
         ctx.beginPath();
         ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
         ctx.stroke();
         
         // Innerer Ring
         ctx.strokeStyle = `rgba(255, 215, 0, ${circleAlpha * 0.8})`; // Gold
-        ctx.lineWidth = 5;
+        ctx.lineWidth = 3; // Reduziert von 5
         ctx.beginPath();
         ctx.arc(centerX, centerY, circleRadius * 0.7, 0, Math.PI * 2);
         ctx.stroke();
         
-        // Text "LÄNGE 50 ERREICHT!"
+        // Text "LÄNGE 50 ERREICHT!" (kleiner)
         ctx.fillStyle = `rgba(255, 255, 255, ${circleAlpha})`;
-        ctx.font = 'bold 48px Arial';
+        ctx.font = 'bold 28px Arial'; // Reduziert von 48px
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
@@ -5889,9 +7067,9 @@ class Simulator {
     }
     
     startLength100Animation() {
-        // Starte große Animation für Länge 100 Meilenstein (Boss erscheint)
+        // Starte Animation für Länge 100 Meilenstein (Boss erscheint) - kleiner
         this.length100Animation = {
-            duration: 240, // 4 Sekunden bei 60 FPS
+            duration: 120, // 2 Sekunden bei 60 FPS (reduziert)
             phase: 0
         };
         
@@ -5925,28 +7103,28 @@ class Simulator {
         ctx.fillStyle = `rgba(139, 0, 0, ${0.8 * (1 - progress * 0.5)})`;
         ctx.fillRect(0, 0, renderWidth, renderHeight);
         
-        // Großer pulsierender Kreis (rot)
+        // Kleinerer pulsierender Kreis (rot)
         const pulse = Math.sin(progress * Math.PI * 4) * 0.3 + 0.7;
-        const circleRadius = 180 + pulse * 60;
+        const circleRadius = 100 + pulse * 30; // Reduziert von 180+60 auf 100+30
         const circleAlpha = 1 - progress;
         
         // Äußerer Ring (rot)
         ctx.strokeStyle = `rgba(139, 0, 0, ${circleAlpha})`; // Dunkelrot
-        ctx.lineWidth = 10;
+        ctx.lineWidth = 6; // Reduziert von 10
         ctx.beginPath();
         ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
         ctx.stroke();
         
         // Innerer Ring (gelb - für Schwanz)
         ctx.strokeStyle = `rgba(255, 255, 0, ${circleAlpha * 0.9})`; // Gelb
-        ctx.lineWidth = 6;
+        ctx.lineWidth = 4; // Reduziert von 6
         ctx.beginPath();
         ctx.arc(centerX, centerY, circleRadius * 0.7, 0, Math.PI * 2);
         ctx.stroke();
         
-        // Text "BOSS ERSCHEINT!"
+        // Text "BOSS ERSCHEINT!" (kleiner)
         ctx.fillStyle = `rgba(255, 255, 255, ${circleAlpha})`;
-        ctx.font = 'bold 56px Arial';
+        ctx.font = 'bold 32px Arial'; // Reduziert von 56px
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
         
@@ -5985,14 +7163,16 @@ class Simulator {
             try {
                 const boss = new BossCreature(bossX, bossY);
                 this.bosses.push(boss);
-                this.log(`Boss ${i + 1} gespawnt bei (${Math.floor(bossX)}, ${Math.floor(bossY)})`, 'info');
+                this.log(`Boss ${this.bosses.length} gespawnt bei (${Math.floor(bossX)}, ${Math.floor(bossY)})`, 'info');
             } catch (error) {
-                this.log(`FEHLER beim Spawnen von Boss ${i + 1}: ${error}`, 'error');
+                this.log(`FEHLER beim Spawnen von Boss: ${error}`, 'error');
                 console.error('Boss spawn error:', error);
             }
         }
         
-        this.log(`${this.bosses.length} BOSSES ERSCHEINEN! Besiege alle ${this.bosses.length}!`, 'error');
+        if (count > 0) {
+            this.log(`${count} Boss(es) gespawnt! Gesamt: ${this.bosses.length} BOSSES!`, 'error');
+        }
     }
     
     checkBossTailCollision() {
@@ -6480,12 +7660,12 @@ class Simulator {
             }
         } else {
             // Neuer Name - füge hinzu
-            highscores.push({
+        highscores.push({
                 name: playerName,
-                score: score,
-                length: length,
-                date: new Date().toISOString()
-            });
+            score: score,
+            length: length,
+            date: new Date().toISOString()
+        });
         }
         
         // Sortiere nach Score (höchster zuerst)
@@ -6534,6 +7714,7 @@ class Simulator {
         if (this.animationId) {
             cancelAnimationFrame(this.animationId);
         }
+        this.stopBackgroundMusic(); // Stoppe Background Music
         this.log('Spiel gestoppt', 'warning');
     }
     
@@ -6552,6 +7733,7 @@ class Simulator {
         this.length100Animation = null; // Länge 100 Animation zurücksetzen
         this.length100MilestoneReached = false; // Länge 100 Flag zurücksetzen
         this.bosses = []; // Bosses zurücksetzen
+        this.bossSpawnCheckTimer = 0; // Boss-Spawn-Check-Timer zurücksetzen
         this.winAnimation = null; // Win-Animation zurücksetzen
         this.activeEvolutionIndex = 0; // Evolution-Index zurücksetzen
         
@@ -6588,6 +7770,7 @@ class Simulator {
         this.activeUpgrades = {};
         this.activeMutations = {};
         this.hungryLeechSizeBoost = 0;
+        this.lastHungryLeechLog = 0;
         document.getElementById('upgradeOverlay').style.display = 'none';
         document.getElementById('mutationOverlay').style.display = 'none';
         this.updateScore();
@@ -6648,6 +7831,12 @@ class Simulator {
             // Jäger werden durch Chunk-System generiert
             this.hunters = [];
             this.fatHunters = [];
+            this.tentacleCreatures = []; // Tentakel-Kreaturen zurücksetzen
+        this.tentacleCreatureSpawnTimer = 0; // Timer zurücksetzen
+            
+            // Spawne initiale Tentakel-Kreaturen (wenige am Anfang)
+            this.spawnTentacleCreatures(1 + Math.floor(Math.random() * 2)); // 1-2 am Anfang
+            
             this.tokenPoolSpawnTimer = 0;
             
             // Initiale Chunks laden (um Startposition) - generiert auch Hunters
@@ -6678,14 +7867,21 @@ class Simulator {
             // Aktualisiere Evolution-Anzeige beim Start
             this.updateEvolutionDisplay();
             
+            // Aktualisiere Player Stats beim Start
+            this.updatePlayerStats();
+            
             this.isRunning = true;
             this.lastFrameTime = performance.now(); // Initialisiere Frame-Zeit für FPS-Limitierung
+            this.startBackgroundMusic(); // Starte Background Music
             this.animate();
         }
     }
     
     animate() {
         if (!this.isRunning || this.pendingUpgrades || this.pendingMutations) return;
+        
+        // Performance-Monitoring: Starte Frame-Zeit-Messung
+        const frameStartTime = performance.now();
         
         // FPS-Limitierung: Berechne Delta-Zeit und limitiere auf 60 FPS
         const currentTime = performance.now();
@@ -6701,6 +7897,12 @@ class Simulator {
         this.deltaTime = elapsed / this.frameInterval; // 1.0 = 60 FPS, 2.0 = 30 FPS, etc.
         this.deltaTime = Math.min(this.deltaTime, 2.0); // Cap bei 2.0 (maximal 30 FPS equivalent)
         this.lastFrameTime = currentTime - (elapsed % this.frameInterval); // Präzise Timing
+        
+        // Performance: Track Frame-Zeit
+        this.performanceStats.frameTime = elapsed;
+        if (elapsed > 20) { // > 20ms = < 50 FPS
+            this.performanceStats.slowFrames++;
+        }
         
         // Kamera folgt dem Spieler
         if (this.tier) {
@@ -6728,6 +7930,9 @@ class Simulator {
         // Prozedurale Chunk-Generierung aktualisieren (VOR dem Zeichnen)
         // Wichtig: Muss in jedem Frame aufgerufen werden, damit neue Chunks geladen werden
         this.updateChunks();
+        
+        // Performance: Track Draw-Zeit
+        const drawStartTime = performance.now();
         
         // Clear canvas VOR der Transformation (in Screen-Koordinaten)
         // Das ist wichtig, damit der gesamte Canvas gelöscht wird, nicht nur ein Teil
@@ -6793,9 +7998,11 @@ class Simulator {
                 if (hunterCount > 0 && this.tier) {
                     const playerHead = this.tier.getHeadPosition();
                     for (let i = 0; i < hunterCount; i++) {
-                        // Spawne in einem Radius um den Spieler (300-600 Pixel)
+                        // Spawne knapp außerhalb des Sichtfeldes (procedural)
+                        const minSpawnDistance = this.spawnZoneRadius * 0.9;
+                        const maxSpawnDistance = this.spawnZoneRadius * 1.3;
                         const angle = Math.random() * Math.PI * 2;
-                        const distance = 300 + Math.random() * 300;
+                        const distance = minSpawnDistance + Math.random() * (maxSpawnDistance - minSpawnDistance);
                         const hunterX = playerHead.x + Math.cos(angle) * distance;
                         const hunterY = playerHead.y + Math.sin(angle) * distance;
                         
@@ -6821,6 +8028,7 @@ class Simulator {
                                 const hunter = new HunterCreature(hunterX, hunterY, true);
                                 hunter.isChasing = false;
                                 this.hunters.push(hunter);
+                                this.log(`Elite Hunter gespawnt in der Nähe bei (${Math.floor(hunterX)}, ${Math.floor(hunterY)})`, 'error');
                             }
                         } else {
                             // Fallback zu normalem Hunter
@@ -6834,6 +8042,38 @@ class Simulator {
                     this.log(`Zusätzliche Hunters in der Nähe gespawnt: ${hunterCount} (Länge: ${playerLength})`, 'info');
                 }
                 this.nearbyHunterSpawnTimer = 0;
+            }
+        }
+        
+        // Tentakel-Kreaturen Spawning (basierend auf Spieler-Länge)
+        if (!this.tentacleCreatureSpawnTimer) {
+            this.tentacleCreatureSpawnTimer = 0;
+        }
+        this.tentacleCreatureSpawnTimer++;
+        if (this.tier) {
+            const playerLength = this.tier.numSegments;
+            // Ab Länge 100 bleibt die Spawn-Rate konstant
+            const effectiveLength = Math.min(playerLength, 100);
+            
+            // Spawn-Intervall wird kürzer je länger der Spieler wird (bis 100)
+            // Basis: 15 Sekunden (900 Frames), reduziert um 1 Sekunde pro 10 Segmente (minimal 5 Sekunden)
+            const baseInterval = 900; // 15 Sekunden
+            const intervalReduction = Math.min(600, Math.floor(effectiveLength / 10) * 60); // Maximal 10 Sekunden Reduktion
+            const spawnInterval = Math.max(300, baseInterval - intervalReduction); // Minimal 5 Sekunden
+            
+            if (this.tentacleCreatureSpawnTimer >= spawnInterval) {
+                // Anzahl der zu spawnenden Tentakel-Kreaturen basierend auf Länge (bis 100)
+                // Anfangs: 0-1, bei Länge 100: bis zu 3-4
+                const baseCount = 0; // Basis: 0-1
+                const lengthBonus = Math.floor(effectiveLength / 25); // +1 alle 25 Segmente, maximal +4 bei 100
+                const tentacleCount = baseCount + Math.floor(Math.random() * 2) + lengthBonus; // 0-5 bei 100 Segmenten
+                
+                if (tentacleCount > 0 && this.tentacleCreatures.length < this.maxTentacleCreatures) {
+                    this.spawnTentacleCreatures(tentacleCount);
+                    this.tentacleCreatureSpawnTimer = 0;
+                } else {
+                    this.tentacleCreatureSpawnTimer = 0;
+                }
             }
         }
         
@@ -6919,23 +8159,38 @@ class Simulator {
                 this.fatHunters[i].reservedTokenIndex = -1;
             }
             
-            // Dann: Jeder Fat Hunter wählt sein Ziel
+            // Dann: Jeder Fat Hunter wählt sein Ziel (nur in aktiver Zone)
+            const playerHead = this.tier.getHeadPosition();
             for (let fatHunterIndex = 0; fatHunterIndex < this.fatHunters.length; fatHunterIndex++) {
                 const fatHunter = this.fatHunters[fatHunterIndex];
                 
-                // Prüfe ob andere fette Hunter in der Nähe sind (Abstoßung)
+                // Viewport-Culling: Nur Entities in aktiver Zone updaten (squared distance für Performance)
+                const dx = playerHead.x - fatHunter.headX;
+                const dy = playerHead.y - fatHunter.headY;
+                const distanceToPlayerSquared = dx * dx + dy * dy;
+                const activeZoneRadiusSquared = this.activeZoneRadius * this.activeZoneRadius;
+                
+                // Überspringe Update wenn außerhalb der aktiven Zone (squared distance)
+                if (distanceToPlayerSquared > activeZoneRadiusSquared) {
+                    continue;
+                }
+                
+                // Prüfe ob andere fette Hunter in der Nähe sind (Abstoßung) - nur in aktiver Zone
                 let avoidDirectionX = 0;
                 let avoidDirectionY = 0;
                 const avoidRadius = 80; // Abstoßungsradius
+                const avoidRadiusSquared = avoidRadius * avoidRadius;
                 
                 for (let otherIndex = 0; otherIndex < this.fatHunters.length; otherIndex++) {
                     if (otherIndex === fatHunterIndex) continue;
                     const otherHunter = this.fatHunters[otherIndex];
                     const dx = fatHunter.headX - otherHunter.headX;
                     const dy = fatHunter.headY - otherHunter.headY;
-                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    const distanceSquared = dx * dx + dy * dy;
                     
-                    if (distance < avoidRadius && distance > 0) {
+                    // Nur prüfen wenn in Abstoßungsradius (squared distance)
+                    if (distanceSquared < avoidRadiusSquared && distanceSquared > 0) {
+                        const distance = Math.sqrt(distanceSquared); // Nur einmal sqrt wenn nötig
                         // Abstoßung: bewege dich weg vom anderen Hunter
                         const strength = (avoidRadius - distance) / avoidRadius;
                         avoidDirectionX += (dx / distance) * strength;
@@ -6943,8 +8198,9 @@ class Simulator {
                     }
                 }
                 
-                // Finde verfügbare Tokens (nicht von anderen Hunters reserviert)
+                // Finde verfügbare Tokens (nicht von anderen Hunters reserviert) - nur in aktiver Zone
                 let availableFoods = [];
+                const searchRadiusSquared = 100 * 100; // 100 Pixel Suchradius (squared)
                 for (let i = 0; i < this.foods.length; i++) {
                     const food = this.foods[i];
                     // Prüfe ob dieser Food bereits von einem anderen Hunter reserviert ist
@@ -6958,9 +8214,9 @@ class Simulator {
                     if (!isReserved) {
                         const dx = food.x - fatHunter.headX;
                         const dy = food.y - fatHunter.headY;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        if (distance < 100) { // Suchradius
-                            availableFoods.push({ food: food, index: i, distance: distance });
+                        const distanceSquared = dx * dx + dy * dy;
+                        if (distanceSquared < searchRadiusSquared) { // Suchradius (squared)
+                            availableFoods.push({ food: food, index: i, distanceSquared: distanceSquared });
                         }
                     }
                 }
@@ -6979,24 +8235,24 @@ class Simulator {
                     if (!isReserved) {
                         const dx = token.x - fatHunter.headX;
                         const dy = token.y - fatHunter.headY;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        if (distance < 100) { // Suchradius
-                            availableTokens.push({ token: token, index: i, distance: distance });
+                        const distanceSquared = dx * dx + dy * dy;
+                        if (distanceSquared < searchRadiusSquared) { // Suchradius (squared)
+                            availableTokens.push({ token: token, index: i, distanceSquared: distanceSquared });
                         }
                     }
                 }
                 
-                // Sortiere nach Entfernung (nächste zuerst)
-                availableFoods.sort((a, b) => a.distance - b.distance);
-                availableTokens.sort((a, b) => a.distance - b.distance);
+                // Sortiere nach Entfernung (nächste zuerst) - squared distance ist ausreichend für Sortierung
+                availableFoods.sort((a, b) => a.distanceSquared - b.distanceSquared);
+                availableTokens.sort((a, b) => a.distanceSquared - b.distanceSquared);
                 
                 // Wähle das nächste verfügbare Ziel
                 let target = null;
                 let targetType = null;
                 
                 if (availableFoods.length > 0 && availableTokens.length > 0) {
-                    // Wähle näheres Ziel
-                    if (availableFoods[0].distance < availableTokens[0].distance) {
+                    // Wähle näheres Ziel (squared distance Vergleich)
+                    if (availableFoods[0].distanceSquared < availableTokens[0].distanceSquared) {
                         target = availableFoods[0].food;
                         targetType = 'food';
                         fatHunter.reservedFoodIndex = availableFoods[0].index;
@@ -7135,28 +8391,123 @@ class Simulator {
             }
         }
         
-        // Alle Jäger aktualisieren und zeichnen
+        // Kontinuierliche Trigger-Prüfung für Länge 50 und 100 (VOR Viewport-Despawn, damit Trigger immer funktionieren)
+        if (this.tier) {
+            const currentLength = this.tier.numSegments;
+            
+            // Prüfe Länge 50 Trigger (nur einmal beim ersten Erreichen)
+            if (currentLength >= 50 && !this.length50MilestoneReached) {
+                this.length50MilestoneReached = true;
+                this.startLength50Animation();
+            }
+            
+            // Prüfe Länge 100 Trigger (nur einmal beim ersten Erreichen)
+            if (currentLength >= 100 && !this.length100MilestoneReached) {
+                this.length100MilestoneReached = true;
+                this.startLength100Animation();
+            }
+        }
+        
+        // Viewport-basiertes Despawnen: Entferne Entities die zu weit weg sind (außer Bossen)
+        // Optimiert: Verwende squared distance für bessere Performance
+        if (this.tier) {
+            const playerHead = this.tier.getHeadPosition();
+            const despawnRadiusSquared = this.despawnRadius * this.despawnRadius;
+            
+            // Hunters despawnen
+            for (let i = this.hunters.length - 1; i >= 0; i--) {
+                const hunter = this.hunters[i];
+                const dx = hunter.headX - playerHead.x;
+                const dy = hunter.headY - playerHead.y;
+                if ((dx * dx + dy * dy) > despawnRadiusSquared) {
+                    this.hunters.splice(i, 1);
+                }
+            }
+            
+            // Fat Hunters despawnen
+            for (let i = this.fatHunters.length - 1; i >= 0; i--) {
+                const fatHunter = this.fatHunters[i];
+                const dx = fatHunter.headX - playerHead.x;
+                const dy = fatHunter.headY - playerHead.y;
+                if ((dx * dx + dy * dy) > despawnRadiusSquared) {
+                    this.fatHunters.splice(i, 1);
+                }
+            }
+            
+            // Tentacle Creatures despawnen
+            for (let i = this.tentacleCreatures.length - 1; i >= 0; i--) {
+                const tentacleCreature = this.tentacleCreatures[i];
+                const dx = tentacleCreature.x - playerHead.x;
+                const dy = tentacleCreature.y - playerHead.y;
+                if ((dx * dx + dy * dy) > despawnRadiusSquared) {
+                    this.tentacleCreatures.splice(i, 1);
+                }
+            }
+            
+            // Foods despawnen (außerhalb der aktiven Zone)
+            for (let i = this.foods.length - 1; i >= 0; i--) {
+                const food = this.foods[i];
+                const dx = food.x - playerHead.x;
+                const dy = food.y - playerHead.y;
+                if ((dx * dx + dy * dy) > despawnRadiusSquared) {
+                    this.foods.splice(i, 1);
+                }
+            }
+            
+            // Stamina Tokens despawnen
+            for (let i = this.staminaTokens.length - 1; i >= 0; i--) {
+                const token = this.staminaTokens[i];
+                const dx = token.x - playerHead.x;
+                const dy = token.y - playerHead.y;
+                if ((dx * dx + dy * dy) > despawnRadiusSquared) {
+                    this.staminaTokens.splice(i, 1);
+                }
+            }
+        }
+        
+        // Alle Jäger aktualisieren und zeichnen (nur in aktiver Zone)
         if (this.hunters.length > 0 && this.tier) {
             const playerHead = this.tier.getHeadPosition();
             
             for (let hunterIndex = 0; hunterIndex < this.hunters.length; hunterIndex++) {
                 const hunter = this.hunters[hunterIndex];
                 
-                // Aufmerksamkeitsradius prüfen
+                // Viewport-Culling: Nur Entities in aktiver Zone updaten (squared distance für Performance)
                 const dx = playerHead.x - hunter.headX;
                 const dy = playerHead.y - hunter.headY;
                 const distanceToPlayerSquared = dx * dx + dy * dy;
-                const distanceToPlayer = Math.sqrt(distanceToPlayerSquared);
+                const activeZoneRadiusSquared = this.activeZoneRadius * this.activeZoneRadius;
                 
-                // Performance-Optimierung: Weit entfernte Hunter seltener updaten
+                // Überspringe Update wenn außerhalb der aktiven Zone (squared distance)
+                if (distanceToPlayerSquared > activeZoneRadiusSquared) {
+                    continue;
+                }
+                
+                // Performance-Optimierung: Weit entfernte Hunter seltener updaten (aggressiver)
+                // Verwende squared distance für Vergleiche (schneller)
                 if (!hunter.updateFrameCounter) hunter.updateFrameCounter = 0;
                 hunter.updateFrameCounter++;
-                const updateSkip = distanceToPlayer > 500 ? 2 : (distanceToPlayer > 300 ? 1 : 0); // Skip 1 Frame wenn > 300, 2 Frames wenn > 500
+                let updateSkip = 0;
+                const distance800Squared = 800 * 800;
+                const distance600Squared = 600 * 600;
+                const distance400Squared = 400 * 400;
+                const distance250Squared = 250 * 250;
+                
+                if (distanceToPlayerSquared > distance800Squared) {
+                    updateSkip = 4; // Skip 4 Frames wenn > 800px
+                } else if (distanceToPlayerSquared > distance600Squared) {
+                    updateSkip = 3; // Skip 3 Frames wenn > 600px
+                } else if (distanceToPlayerSquared > distance400Squared) {
+                    updateSkip = 2; // Skip 2 Frames wenn > 400px
+                } else if (distanceToPlayerSquared > distance250Squared) {
+                    updateSkip = 1; // Skip 1 Frame wenn > 250px
+                }
                 if (updateSkip > 0 && hunter.updateFrameCounter % (updateSkip + 1) !== 0) {
                     continue; // Überspringe Update für diesen Frame
                 }
                 
-                if (distanceToPlayer <= hunter.attentionRadius) {
+                const attentionRadiusSquared = hunter.attentionRadius * hunter.attentionRadius;
+                if (distanceToPlayerSquared <= attentionRadiusSquared) {
                     // Spieler im Aufmerksamkeitsradius - starte Verfolgung
                     if (!hunter.isChasing) {
                         hunter.isChasing = true;
@@ -7181,12 +8532,16 @@ class Simulator {
                         const nearestFood = hunter.findNearestFood(this.foods);
                         const nearestStaminaToken = hunter.findNearestStaminaToken(this.staminaTokens);
                         
-                        // Priorisiere näheres Ziel (Food oder Stamina-Token)
+                        // Priorisiere näheres Ziel (Food oder Stamina-Token) - squared distance für Performance
                         let target = null;
                         if (nearestFood && nearestStaminaToken) {
-                            const foodDist = Math.sqrt((nearestFood.x - hunter.headX) ** 2 + (nearestFood.y - hunter.headY) ** 2);
-                            const tokenDist = Math.sqrt((nearestStaminaToken.x - hunter.headX) ** 2 + (nearestStaminaToken.y - hunter.headY) ** 2);
-                            target = foodDist < tokenDist ? nearestFood : nearestStaminaToken;
+                            const foodDx = nearestFood.x - hunter.headX;
+                            const foodDy = nearestFood.y - hunter.headY;
+                            const foodDistSquared = foodDx * foodDx + foodDy * foodDy;
+                            const tokenDx = nearestStaminaToken.x - hunter.headX;
+                            const tokenDy = nearestStaminaToken.y - hunter.headY;
+                            const tokenDistSquared = tokenDx * tokenDx + tokenDy * tokenDy;
+                            target = foodDistSquared < tokenDistSquared ? nearestFood : nearestStaminaToken;
                         } else if (nearestFood) {
                             target = nearestFood;
                         } else if (nearestStaminaToken) {
@@ -7230,13 +8585,14 @@ class Simulator {
                 if (hunter.speedBoostActive) {
                     hunter.speedBoostDuration--;
                     if (hunter.speedBoostDuration <= 0) {
-                        // Speed-Boost beendet
+                        // Speed-Boost beendet - sicherstellen, dass alles zurückgesetzt wird
                         hunter.speedBoostActive = false;
                         hunter.speedMultiplier = hunter.originalSpeedMultiplier;
                         hunter.baseSpeed = 0.6 * hunter.speedMultiplier;
                         hunter.speed = hunter.baseSpeed;
                         hunter.targetSpeed = hunter.baseSpeed;
                         hunter.currentSpeed = hunter.baseSpeed;
+                        hunter.speedBoostDuration = 0; // Sicherstellen, dass Duration auf 0 ist
                     }
                 }
                 
@@ -7259,6 +8615,22 @@ class Simulator {
                     }
                 }
                 
+                // Sicherheitscheck: Falls Duration negativ oder 0 ist, aber noch aktiv, zurücksetzen
+                if (hunter.speedBoostActive && hunter.speedBoostDuration <= 0) {
+                    hunter.speedBoostActive = false;
+                    hunter.speedMultiplier = hunter.originalSpeedMultiplier || 1.0;
+                    hunter.baseSpeed = 0.6 * hunter.speedMultiplier;
+                    hunter.speed = hunter.baseSpeed;
+                    hunter.targetSpeed = hunter.baseSpeed;
+                    hunter.currentSpeed = hunter.baseSpeed;
+                    hunter.speedBoostDuration = 0;
+                }
+                
+                // Sicherheitscheck: Falls Delay negativ ist, zurücksetzen
+                if (hunter.speedBoostDelay < 0) {
+                    hunter.speedBoostDelay = 0;
+                }
+                
                 // Fortpflanzungs-Animation aktualisieren
                 if (hunter.reproductionAnimation) {
                     hunter.reproductionAnimation.duration--;
@@ -7269,9 +8641,9 @@ class Simulator {
                         hunter.reproductionCount++;
                         const childX = hunter.headX + (Math.random() - 0.5) * 30;
                         const childY = hunter.headY + (Math.random() - 0.5) * 30;
-                        // Stelle sicher, dass das Kind in der Welt ist (Open World)
-                        const safeX = Math.max(30, Math.min(this.worldWidth - 30, childX));
-                        const safeY = Math.max(30, Math.min(this.worldHeight - 30, childY));
+                        // Welt ist jetzt unendlich - keine Grenzen mehr
+                        const safeX = childX;
+                        const safeY = childY;
                         
                         // Wenn es die zweite Vermehrung ist, spawne Elite-Kind
                         const isEliteChild = hunter.reproductionCount >= 2;
@@ -7888,7 +9260,91 @@ class Simulator {
             }
             // Wenn die Maus außerhalb ist, behält die Kreatur das letzte Ziel bei
             
+            // Tentakel-Kreaturen aktualisieren (vor Spieler-Update)
+            for (let i = 0; i < this.tentacleCreatures.length; i++) {
+                const tentacleCreature = this.tentacleCreatures[i];
+                if (tentacleCreature && tentacleCreature.update) {
+                    tentacleCreature.update();
+                    tentacleCreature.checkGrabTargets(this);
+                }
+            }
+            
+            // Prüfe ob Spieler von Tentakel gegriffen wird - verhindere Bewegung
+            let isPlayerGrabbed = false;
+            for (let i = 0; i < this.tentacleCreatures.length; i++) {
+                const tentacleCreature = this.tentacleCreatures[i];
+                if (tentacleCreature) {
+                    for (let j = 0; j < tentacleCreature.tentacles.length; j++) {
+                        const tentacle = tentacleCreature.tentacles[j];
+                        if (tentacle.grabbedEntity === this.tier && tentacle.grabDuration > 0) {
+                            isPlayerGrabbed = true;
+                            // Verhindere Bewegung des Spielers
+                            this.tier.targetSpeed = 0;
+                            this.tier.currentSpeed = 0;
+                            break;
+                        }
+                    }
+                }
+            }
+            
+            // Prüfe ob Hunter von Tentakel gegriffen werden - verhindere Bewegung
+            for (let i = 0; i < this.hunters.length; i++) {
+                const hunter = this.hunters[i];
+                if (!hunter) continue;
+                
+                let isHunterGrabbed = false;
+                for (let j = 0; j < this.tentacleCreatures.length; j++) {
+                    const tentacleCreature = this.tentacleCreatures[j];
+                    if (tentacleCreature) {
+                        for (let k = 0; k < tentacleCreature.tentacles.length; k++) {
+                            const tentacle = tentacleCreature.tentacles[k];
+                            if (tentacle.grabbedEntity === hunter && tentacle.grabDuration > 0) {
+                                isHunterGrabbed = true;
+                                // Verhindere Bewegung des Hunters
+                                hunter.targetSpeed = 0;
+                                hunter.currentSpeed = 0;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+            
             this.tier.update();
+            
+            // Performance: Track Update-Zeit
+            const updateStartTime = performance.now();
+            
+            // Performance: Track Entity-Counts und Update-Zeit
+            this.performanceStats.entityCounts.foods = this.foods.length;
+            this.performanceStats.entityCounts.hunters = this.hunters.length;
+            this.performanceStats.entityCounts.fatHunters = this.fatHunters.length;
+            this.performanceStats.entityCounts.tentacles = this.tentacleCreatures.length;
+            this.performanceStats.entityCounts.bosses = this.bosses.length;
+            this.performanceStats.entityCounts.projectiles = this.projectiles.length;
+            this.performanceStats.entityCounts.particles = this.particles.length;
+            this.performanceStats.entityCounts.playerSegments = this.tier ? this.tier.numSegments : 0;
+            
+            const updateEndTime = performance.now();
+            this.performanceStats.updateTime = updateEndTime - updateStartTime;
+            
+            // Kontinuierliche Boss-Spawn-Prüfung ab Länge 100 (alle 3 Sekunden)
+            if (this.tier && this.tier.numSegments >= 100) {
+                if (!this.bossSpawnCheckTimer) {
+                    this.bossSpawnCheckTimer = 0;
+                }
+                this.bossSpawnCheckTimer++;
+                // Prüfe alle 3 Sekunden (180 Frames bei 60 FPS)
+                if (this.bossSpawnCheckTimer >= 180) {
+                    const minBosses = 3;
+                    if (this.bosses.length < minBosses) {
+                        // Spawne fehlende Bosse
+                        const missingBosses = minBosses - this.bosses.length;
+                        this.spawnBosses(missingBosses);
+                    }
+                    this.bossSpawnCheckTimer = 0;
+                }
+            }
             
             // Bosses aktualisieren (wenn vorhanden)
             if (this.bosses.length > 0) {
@@ -7929,6 +9385,10 @@ class Simulator {
             if (this.hunters.length > 0) {
                 for (let hunterIndex = 0; hunterIndex < this.hunters.length; hunterIndex++) {
                     const hunter = this.hunters[hunterIndex];
+                    // Viewport-Culling: Überspringe Hunter außerhalb des sichtbaren Bereichs
+                    if (!this.isInViewport(hunter.headX, hunter.headY, 50)) {
+                        continue;
+                    }
                     // Zeichne Jäger mit verschiedenen Animationen
                     if (hunter.reproductionAnimation) {
                         hunter.drawWithReproduction();
@@ -7947,7 +9407,12 @@ class Simulator {
             
             // Fette Jäger zeichnen - for Loop ist schneller
             for (let i = 0; i < this.fatHunters.length; i++) {
-                this.fatHunters[i].draw();
+                const fatHunter = this.fatHunters[i];
+                // Viewport-Culling: Überspringe Fat Hunter außerhalb des sichtbaren Bereichs
+                if (!this.isInViewport(fatHunter.headX, fatHunter.headY, 60)) {
+                    continue;
+                }
+                fatHunter.draw();
             }
             
             // Bosses zeichnen (wenn vorhanden)
@@ -7970,8 +9435,17 @@ class Simulator {
                         console.error('Fehler beim Zeichnen von Boss:', error);
                         this.bosses.splice(i, 1); // Entferne fehlerhaften Boss
                     }
-                } else {
-                    this.bosses.splice(i, 1); // Entferne ungültigen Boss
+                }
+            }
+            
+            // Tentakel-Kreaturen zeichnen (über allem)
+            for (let i = 0; i < this.tentacleCreatures.length; i++) {
+                const tentacleCreature = this.tentacleCreatures[i];
+                if (tentacleCreature && tentacleCreature.draw) {
+                    // Prüfe ob Tentakel-Kreatur im Viewport ist
+                    if (this.isInViewport(tentacleCreature.x, tentacleCreature.y, 150)) {
+                        tentacleCreature.draw();
+                    }
                 }
             }
             
@@ -8013,16 +9487,34 @@ class Simulator {
                 this.foodCount++;
                 this.updateScore();
                 
-                // Prüfe ob Länge 50 erreicht wurde
+                // Prüfe ob Länge 50 erreicht wurde (Animation nur einmal beim ersten Erreichen)
                 if (oldLength < 50 && this.tier.numSegments >= 50 && !this.length50MilestoneReached) {
                     this.length50MilestoneReached = true;
                     this.startLength50Animation();
                 }
                 
-                // Prüfe ob Länge 100 erreicht wurde (Boss erscheint)
+                // Kontinuierliche Elite Hunter Spawns ab Länge 50 (nicht nur beim ersten Erreichen)
+                if (this.tier.numSegments >= 50) {
+                    // Elite Hunter spawnen bereits kontinuierlich in generateChunk und spawnRandomHunters
+                    // Zusätzlich können wir hier spezielle "near player" Elite Hunter spawnen
+                    // (wird bereits durch nearbyHunterSpawnTimer gehandhabt)
+                }
+                
+                // Prüfe ob Länge 100 erreicht wurde (Animation nur einmal beim ersten Erreichen)
                 if (oldLength < 100 && this.tier.numSegments >= 100 && !this.length100MilestoneReached) {
                     this.length100MilestoneReached = true;
                     this.startLength100Animation();
+                }
+                
+                // Kontinuierliche Boss-Spawns ab Länge 100 (nicht nur beim ersten Erreichen)
+                if (this.tier.numSegments >= 100) {
+                    // Stelle sicher, dass mindestens 3 Bosse vorhanden sind
+                    const minBosses = 3;
+                    if (this.bosses.length < minBosses) {
+                        // Spawne fehlende Bosse
+                        const missingBosses = minBosses - this.bosses.length;
+                        this.spawnBosses(missingBosses);
+                    }
                 }
                 
                 // Fortschritt speichern
@@ -8033,7 +9525,11 @@ class Simulator {
                 if (hungryLeechMutations.length > 0) {
                     // Setze temporären Größen-Boost auf 1.0 (max)
                     this.hungryLeechSizeBoost = 1.0;
+                    // Log nur einmal pro Sekunde, um Spam zu vermeiden
+                    if (!this.lastHungryLeechLog || (Date.now() - this.lastHungryLeechLog) > 1000) {
                     this.log('Hungry Leech: Körper wird größer!', 'success');
+                        this.lastHungryLeechLog = Date.now();
+                    }
                 }
                 
                 this.log(`Food gegessen - Score: ${this.score}, Länge: ${this.tier.numSegments}`, 'info');
@@ -8115,14 +9611,14 @@ class Simulator {
                     // Treffer! Reduziere HP
                     hunter.currentHP--;
                     
-                    // Wenn Hunter beim Klettern ist, lasse ihn los
-                    if (hunter.isClimbing) {
-                        hunter.isClimbing = false;
-                        hunter.climbingTargetIndex = -1;
-                        hunter.climbingProgress = 0;
-                        hunter.climbCooldown = 60;
-                        this.log('Jäger durch Schuss getroffen - Klettern abgebrochen', 'info');
-                    }
+                        // Wenn Hunter beim Klettern ist, lasse ihn los
+                        if (hunter.isClimbing) {
+                            hunter.isClimbing = false;
+                            hunter.climbingTargetIndex = -1;
+                            hunter.climbingProgress = 0;
+                            hunter.climbCooldown = 60;
+                            this.log('Jäger durch Schuss getroffen - Klettern abgebrochen', 'info');
+                        }
                     
                     if (hunter.currentHP <= 0) {
                         // Jäger stirbt
@@ -8132,7 +9628,7 @@ class Simulator {
                         // Jäger überlebt, verliert aber ein Segment
                         if (hunter.numSegments > 1) {
                             hunter.shrink();
-                        }
+                    }
                         this.log(`Jäger getroffen! HP: ${hunter.currentHP}/${hunter.maxHP}`, 'info');
                     }
                     
@@ -8150,32 +9646,32 @@ class Simulator {
             
             // Prüfe Kollision mit Fat Hunters (nur wenn Projektil noch nicht getroffen hat)
             if (!projectileHit) {
-                for (let i = this.fatHunters.length - 1; i >= 0; i--) {
-                    const fatHunter = this.fatHunters[i];
+            for (let i = this.fatHunters.length - 1; i >= 0; i--) {
+                const fatHunter = this.fatHunters[i];
                     if (!fatHunter || !fatHunter.segments || fatHunter.segments.length === 0) {
                         // Ungültiger Fat Hunter - entferne
                         this.fatHunters.splice(i, 1);
                         continue;
                     }
                     
-                    const fatHunterHead = fatHunter.getHeadPosition();
-                    if (projectile.checkCollision(fatHunterHead.x, fatHunterHead.y, 10)) {
+                const fatHunterHead = fatHunter.getHeadPosition();
+                if (projectile.checkCollision(fatHunterHead.x, fatHunterHead.y, 10)) {
                         // Treffer! Reduziere HP
                         fatHunter.currentHP--;
                         
                         if (fatHunter.currentHP <= 0) {
-                            // Fat Hunter stirbt
-                            this.fatHunters.splice(i, 1);
-                            this.log('Fat Hunter durch Schuss eliminiert!', 'success');
+                        // Fat Hunter stirbt
+                        this.fatHunters.splice(i, 1);
+                        this.log('Fat Hunter durch Schuss eliminiert!', 'success');
                         } else {
                             // Fat Hunter überlebt, verliert aber ein Segment
                             if (fatHunter.numSegments > 1) {
                                 fatHunter.shrink();
-                            }
+                    }
                             this.log(`Fat Hunter getroffen! HP: ${fatHunter.currentHP}/${fatHunter.maxHP}`, 'info');
                         }
                         
-                        // Projektil entfernen
+                    // Projektil entfernen
                         projectileHit = true;
                         break; // Projektil kann nur einen Treffer machen
                     }
@@ -8281,6 +9777,9 @@ class Simulator {
             this.drawWinAnimation();
         }
         
+        // Dynamische Beleuchtung: Lichter erhellen ihre Umgebung
+        this.drawDynamicLighting();
+        
         // Richtungsindikatoren für Bosses außerhalb des Viewports (ohne Kamera-Transformation)
         this.drawBossDirectionIndicatorsScreen();
         
@@ -8289,7 +9788,152 @@ class Simulator {
         // Stelle sicher, dass Pixel-Art Rendering nach restore() wieder aktiv ist
         ctx.imageSmoothingEnabled = false;
         
+        // Aktualisiere Player Stats (jeden Frame)
+        this.updatePlayerStats();
+        
+        // Performance: Track Draw-Zeit
+        const drawEndTime = performance.now();
+        this.performanceStats.drawTime = drawEndTime - drawStartTime;
+        
+        // Performance-Monitoring: Update Stats
+        this.updatePerformanceStats(frameStartTime);
+        
         this.animationId = requestAnimationFrame(() => this.animate());
+    }
+    
+    drawDynamicLighting() {
+        // Dynamisches Beleuchtungssystem: Lichter erhellen ihre Umgebung
+        // Verwende "screen" Blend-Mode für additive Beleuchtung
+        ctx.save();
+        ctx.globalCompositeOperation = 'screen'; // Screen-Mode für additive Beleuchtung
+        
+        // Sammle alle Lichtquellen
+        const lightSources = [];
+        
+        // Spieler-Kopf als Lichtquelle (kleiner)
+        if (this.tier && this.tier.segments && this.tier.segments.length > 0) {
+            const playerHead = this.tier.getHeadPosition();
+            if (playerHead && isFinite(playerHead.x) && isFinite(playerHead.y)) {
+                lightSources.push({
+                    x: playerHead.x,
+                    y: playerHead.y,
+                    radius: 40,
+                    intensity: 0.25,
+                    color: '#ffffaa' // Warmes gelbes Licht vom Spieler
+                });
+            }
+        }
+        
+        // Hunter als Lichtquellen (nur kleine Akzente) - nur in aktiver Zone
+        if (this.tier) {
+            const playerHead = this.tier.getHeadPosition();
+            const activeZoneRadiusSquared = this.activeZoneRadius * this.activeZoneRadius;
+            
+            for (let i = 0; i < this.hunters.length; i++) {
+                const hunter = this.hunters[i];
+                if (!hunter || !hunter.segments || hunter.segments.length === 0) continue;
+                
+                // Viewport-Culling: Nur Hunter in aktiver Zone als Lichtquellen
+                const dx = playerHead.x - hunter.headX;
+                const dy = playerHead.y - hunter.headY;
+                if ((dx * dx + dy * dy) > activeZoneRadiusSquared) continue;
+                
+                const glowColor = hunter.colors?.glow || hunter.colors?.body || '#00ffff';
+                // Nur kleine Lichtpunkte an bestimmten Segmenten
+                for (let j = 0; j < hunter.segments.length; j += 4) {
+                    const seg = hunter.segments[j];
+                    if (seg && isFinite(seg.x) && isFinite(seg.y)) {
+                        lightSources.push({
+                            x: seg.x,
+                            y: seg.y,
+                            radius: 15,
+                            intensity: 0.15,
+                            color: glowColor
+                        });
+                    }
+                }
+            }
+            
+            // Fat Hunter als Lichtquellen (nur kleine Akzente) - nur in aktiver Zone
+            for (let i = 0; i < this.fatHunters.length; i++) {
+                const fatHunter = this.fatHunters[i];
+                if (!fatHunter || !fatHunter.segments || fatHunter.segments.length === 0) continue;
+                
+                // Viewport-Culling: Nur Fat Hunter in aktiver Zone als Lichtquellen
+                const dx = playerHead.x - fatHunter.headX;
+                const dy = playerHead.y - fatHunter.headY;
+                if ((dx * dx + dy * dy) > activeZoneRadiusSquared) continue;
+                
+                const glowColor = fatHunter.colors?.glow || fatHunter.colors?.body || '#00ff00';
+                // Nur kleine Lichtpunkte an bestimmten Segmenten
+                for (let j = 0; j < fatHunter.segments.length; j += 4) {
+                    const seg = fatHunter.segments[j];
+                    if (seg && isFinite(seg.x) && isFinite(seg.y)) {
+                        lightSources.push({
+                            x: seg.x,
+                            y: seg.y,
+                            radius: 18,
+                            intensity: 0.18,
+                            color: glowColor
+                        });
+                    }
+                }
+            }
+        }
+        
+        // Bosses als Lichtquellen (etwas größer, aber reduziert)
+        for (let i = 0; i < this.bosses.length; i++) {
+            const boss = this.bosses[i];
+            if (boss && boss.segments && boss.segments.length > 0) {
+                const bossHead = boss.getHeadPosition();
+                if (bossHead && isFinite(bossHead.x) && isFinite(bossHead.y)) {
+                    lightSources.push({
+                        x: bossHead.x,
+                        y: bossHead.y,
+                        radius: 50,
+                        intensity: 0.3,
+                        color: '#ff0000' // Rotes Licht von Bosses
+                    });
+                }
+            }
+        }
+        
+        // Zeichne Beleuchtung für jede Lichtquelle
+        for (let i = 0; i < lightSources.length; i++) {
+            const light = lightSources[i];
+            
+            // Validierung: Prüfe ob alle Werte gültig sind (nicht NaN oder Infinity)
+            if (!light || 
+                typeof light.x !== 'number' || !isFinite(light.x) ||
+                typeof light.y !== 'number' || !isFinite(light.y) ||
+                typeof light.radius !== 'number' || !isFinite(light.radius) ||
+                light.radius <= 0) {
+                continue; // Überspringe ungültige Lichtquellen
+            }
+            
+            // Radialgradient für Licht
+            const gradient = ctx.createRadialGradient(
+                light.x, light.y, 0,
+                light.x, light.y, light.radius
+            );
+            
+            // Konvertiere Hex-Farbe zu RGB
+            const hex = light.color.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            
+            gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, ${light.intensity})`);
+            gradient.addColorStop(0.5, `rgba(${r}, ${g}, ${b}, ${light.intensity * 0.5})`);
+            gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+            
+            ctx.fillStyle = gradient;
+            ctx.beginPath();
+            ctx.arc(light.x, light.y, light.radius, 0, Math.PI * 2);
+            ctx.fill();
+        }
+        
+        ctx.restore();
     }
     
     drawBackground() {
@@ -8461,7 +10105,7 @@ class Simulator {
         for (let i = 0; i < this.foods.length; i++) {
             const food = this.foods[i];
             if (this.isInViewport(food.x, food.y, food.size)) {
-                food.draw();
+            food.draw();
             }
         }
         
@@ -8469,7 +10113,7 @@ class Simulator {
         for (let i = 0; i < this.staminaTokens.length; i++) {
             const token = this.staminaTokens[i];
             if (this.isInViewport(token.x, token.y, token.size)) {
-                token.draw();
+            token.draw();
             }
         }
         
@@ -8487,7 +10131,7 @@ class Simulator {
                 // Schätze Radius basierend auf Segment-Anzahl
                 const estimatedRadius = Math.max(20, hunter.segments.length * 2);
                 if (this.isInViewport(headX, headY, estimatedRadius)) {
-                    hunter.draw();
+            hunter.draw();
                 }
             }
         }
@@ -8501,7 +10145,7 @@ class Simulator {
                 // Schätze Radius basierend auf Segment-Anzahl (fette Jäger sind größer)
                 const estimatedRadius = Math.max(30, fatHunter.segments.length * 3);
                 if (this.isInViewport(headX, headY, estimatedRadius)) {
-                    fatHunter.draw();
+            fatHunter.draw();
                 }
             }
         }
@@ -8510,7 +10154,7 @@ class Simulator {
         for (let i = 0; i < this.particles.length; i++) {
             const particle = this.particles[i];
             if (this.isInViewport(particle.x, particle.y, particle.size)) {
-                particle.draw();
+            particle.draw();
             }
         }
     }
