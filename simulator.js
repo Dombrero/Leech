@@ -52,6 +52,7 @@ const TRANSLATIONS = {
         loginError: "Name oder Hashtag falsch!",
         nameRequired: "Bitte gib einen Namen ein!",
         hashtagRequired: "Bitte gib einen Hashtag ein!",
+        nameAlreadyExists: "Dieser Name ist bereits vergeben! Bitte wähle einen anderen Namen.",
         // Upgrade-Namen und Beschreibungen werden dynamisch übersetzt
     },
     en: {
@@ -105,16 +106,15 @@ const TRANSLATIONS = {
         loginError: "Name or hashtag incorrect!",
         nameRequired: "Please enter a name!",
         hashtagRequired: "Please enter a hashtag!",
+        nameAlreadyExists: "This name is already taken! Please choose a different name.",
         highscore: "Highscore",
         top100: "Top 100",
-        rank: "Rang",
-        name: "Nom",
-        score: "Score",
-        enterName: "Entrez votre nom:",
-        congratsTop100: "🎉 Vous êtes dans le Top 100!",
-        save: "Enregistrer",
-        skip: "Passer",
-        noHighscores: "Aucun meilleur score",
+        rank: "Rank",
+        enterName: "Enter your name:",
+        congratsTop100: "🎉 You're in the Top 100!",
+        save: "Save",
+        skip: "Skip",
+        noHighscores: "No highscores yet",
     },
     fr: {
         score: "Score",
@@ -167,16 +167,15 @@ const TRANSLATIONS = {
         loginError: "Nom ou hashtag incorrect!",
         nameRequired: "Veuillez entrer un nom!",
         hashtagRequired: "Veuillez entrer un hashtag!",
+        nameAlreadyExists: "Ce nom est déjà pris! Veuillez choisir un autre nom.",
         highscore: "Meilleurs Scores",
         top100: "Top 100",
-        rank: "Posición",
-        name: "Nombre",
-        score: "Puntuación",
-        enterName: "Ingresa tu nombre:",
-        congratsTop100: "🎉 ¡Estás en el Top 100!",
-        save: "Guardar",
-        skip: "Omitir",
-        noHighscores: "Sin puntuaciones aún",
+        rank: "Rang",
+        enterName: "Entrez votre nom:",
+        congratsTop100: "🎉 Vous êtes dans le Top 100!",
+        save: "Enregistrer",
+        skip: "Passer",
+        noHighscores: "Aucun meilleur score",
     },
     es: {
         score: "Puntuación",
@@ -209,36 +208,35 @@ const TRANSLATIONS = {
         stacks: "Pilas",
         all: "Todas las",
         mutation: "MUTACIÓN",
-        mainMenu: "メインメニュー",
-        startGame: "ゲーム開始",
-        viewHighscore: "ハイスコア",
-        backToMenu: "メインメニュー",
-        login: "ログイン",
-        register: "登録",
-        loginTitle: "ログイン",
-        registerTitle: "アカウント作成",
-        name: "名前",
-        hashtag: "ハッシュタグ",
-        noAccount: "アカウントをお持ちでないですか？",
-        hasAccount: "既にアカウントをお持ちですか？",
-        welcome: "ようこそ、",
-        logout: "（ログアウト）",
-        random: "ランダム",
-        accountCreated: "アカウントが正常に作成されました！",
-        loginSuccess: "ログインに成功しました！",
-        loginError: "名前またはハッシュタグが正しくありません！",
-        nameRequired: "名前を入力してください！",
-        hashtagRequired: "ハッシュタグを入力してください！",
-        highscore: "ハイスコア",
-        top100: "トップ100",
-        rank: "ランク",
-        name: "名前",
-        score: "スコア",
-        enterName: "名前を入力してください:",
-        congratsTop100: "🎉 トップ100に入りました！",
-        save: "保存",
-        skip: "スキップ",
-        noHighscores: "ハイスコアなし",
+        mainMenu: "Menú Principal",
+        startGame: "Iniciar Juego",
+        viewHighscore: "Mejores Puntuaciones",
+        backToMenu: "Menú Principal",
+        login: "Iniciar Sesión",
+        register: "Registrarse",
+        loginTitle: "Iniciar Sesión",
+        registerTitle: "Crear Cuenta",
+        name: "Nombre",
+        hashtag: "Hashtag",
+        noAccount: "¿No tienes cuenta?",
+        hasAccount: "¿Ya tienes cuenta?",
+        welcome: "Bienvenido, ",
+        logout: "(Cerrar Sesión)",
+        random: "Aleatorio",
+        accountCreated: "¡Cuenta creada exitosamente!",
+        loginSuccess: "¡Sesión iniciada exitosamente!",
+        loginError: "¡Nombre o hashtag incorrecto!",
+        nameRequired: "¡Por favor ingresa un nombre!",
+        hashtagRequired: "¡Por favor ingresa un hashtag!",
+        nameAlreadyExists: "¡Este nombre ya está en uso! Por favor elige otro nombre.",
+        highscore: "Mejores Puntuaciones",
+        top100: "Top 100",
+        rank: "Posición",
+        enterName: "Ingresa tu nombre:",
+        congratsTop100: "🎉 ¡Estás en el Top 100!",
+        save: "Guardar",
+        skip: "Omitir",
+        noHighscores: "Sin puntuaciones aún",
     },
     ja: {
         score: "スコア",
@@ -271,6 +269,35 @@ const TRANSLATIONS = {
         stacks: "スタック",
         all: "すべての",
         mutation: "変異",
+        mainMenu: "メインメニュー",
+        startGame: "ゲーム開始",
+        viewHighscore: "ハイスコア",
+        backToMenu: "メインメニュー",
+        login: "ログイン",
+        register: "登録",
+        loginTitle: "ログイン",
+        registerTitle: "アカウント作成",
+        name: "名前",
+        hashtag: "ハッシュタグ",
+        noAccount: "アカウントをお持ちでないですか？",
+        hasAccount: "既にアカウントをお持ちですか？",
+        welcome: "ようこそ、",
+        logout: "（ログアウト）",
+        random: "ランダム",
+        accountCreated: "アカウントが正常に作成されました！",
+        loginSuccess: "ログインに成功しました！",
+        loginError: "名前またはハッシュタグが正しくありません！",
+        nameRequired: "名前を入力してください！",
+        hashtagRequired: "ハッシュタグを入力してください！",
+        nameAlreadyExists: "この名前は既に使用されています！別の名前を選択してください。",
+        highscore: "ハイスコア",
+        top100: "トップ100",
+        rank: "ランク",
+        enterName: "名前を入力してください:",
+        congratsTop100: "🎉 トップ100に入りました！",
+        save: "保存",
+        skip: "スキップ",
+        noHighscores: "ハイスコアなし",
     }
 };
 
@@ -2454,6 +2481,10 @@ class HunterCreature {
         // Elite-Status (leuchtend rot, 80% Speed-Boost permanent)
         this.isElite = isElite;
         
+        // HP-System: Normale Hunter haben 1 Leben, Elite Hunter haben 2 Leben
+        this.maxHP = this.isElite ? 2 : 1;
+        this.currentHP = this.maxHP;
+        
         // Wenn Elite, permanenten Speed-Boost anwenden
         if (this.isElite) {
             this.speedMultiplier = 1.8; // 80% Boost
@@ -2471,6 +2502,11 @@ class HunterCreature {
         this.initializeSegments(x, y);
         
         // Farben - dunkelblau für normale Hunter, lila für Elite
+        this.updateColors();
+    }
+    
+    updateColors() {
+        // Aktualisiere Farben basierend auf Elite-Status
         this.colors = {
             body: this.isElite ? '#9d4edd' : '#2a2a6a', // Lila für Elite, dunkelblau für normal
             bodyDark: this.isElite ? '#7b2cbf' : '#1a1a4a', // Dunkleres Lila für Elite, dunkleres Blau für normal
@@ -3149,6 +3185,14 @@ class HunterCreature {
         this.segments.push(new Segment(newX, newY));
     }
     
+    shrink() {
+        // Entferne ein Segment
+        if (this.numSegments > 1 && this.segments.length > 1) {
+            this.numSegments--;
+            this.segments.pop(); // Entferne letztes Segment
+        }
+    }
+    
     increaseSpeed() {
         // Erhöhe Geschwindigkeit um 3% pro Biss (weniger als Spieler mit 5%)
         this.speedMultiplier += 0.03;
@@ -3294,6 +3338,10 @@ class FatHunterCreature {
         
         // Food-Zähler
         this.foodCount = 0;
+        
+        // HP-System: Fat Hunter haben 3 Leben
+        this.maxHP = 3;
+        this.currentHP = this.maxHP;
         
         // Damage-Cooldown (individuell für jeden Fat Hunter)
         this.damageCooldown = 0; // Cooldown zwischen Schäden (2 Sekunden = 120 Frames)
@@ -3491,6 +3539,14 @@ class FatHunterCreature {
         this.segments.push(new Segment(newX, newY));
     }
     
+    shrink() {
+        // Entferne ein Segment
+        if (this.numSegments > 1 && this.segments.length > 1) {
+            this.numSegments--;
+            this.segments.pop(); // Entferne letztes Segment
+        }
+    }
+    
     draw() {
         // Stelle sicher, dass Pixel-Art Rendering aktiv ist
         ctx.imageSmoothingEnabled = false;
@@ -3553,6 +3609,202 @@ class FatHunterCreature {
     }
 }
 
+// Boss-Kreatur (großer Hunter mit leuchtendem Schwanz)
+class BossCreature {
+    constructor(x, y) {
+        this.segments = [];
+        this.numSegments = 25; // Viel größer als normaler Hunter
+        this.segmentDistance = 8;
+        this.headX = x;
+        this.headY = y;
+        this.targetAngle = Math.random() * Math.PI * 2;
+        this.angle = this.targetAngle;
+        this.baseSpeed = 0.5; // Etwas langsamer als normaler Hunter (aber größer)
+        this.speed = 0.5;
+        this.currentSpeed = 0.5;
+        this.targetSpeed = 0.5;
+        this.speedMultiplier = 1.0;
+        this.angularVelocity = 0;
+        this.turnSpeed = 0.06; // Langsamere Drehung
+        this.acceleration = 0.15;
+        
+        // Jagd-Verhalten - jagt immer den Spieler
+        this.isChasing = true;
+        this.attentionRadius = Infinity; // Immer aufmerksam
+        
+        // Prozedurale Bewegungsvariablen
+        this.wavePhase = 0;
+        this.waveSpeed = 0.1;
+        this.waveAmplitude = 3;
+        
+        // Schwanz leuchtet
+        this.tailGlowPhase = 0;
+        
+        // Schaden-System
+        this.damageCooldown = 0; // Cooldown in Frames (60 FPS = 2 Sekunden = 120 Frames)
+        this.damageAmount = 10; // Schaden pro Treffer (10 Segmente)
+        
+        // Farben - rot/dunkelrot für Boss
+        this.colors = {
+            body: '#8b0000', // Dunkelrot
+            bodyDark: '#5a0000', // Sehr dunkelrot
+            bodyLight: '#cc0000', // Hellrot
+            eye: '#ff0000', // Rot
+            eyeGlow: '#ff6666',
+            tailGlow: '#ffff00' // Gelb für leuchtenden Schwanz
+        };
+        
+        // Segment-Initialisierung
+        this.initializeSegments(x, y);
+    }
+    
+    initializeSegments(x, y) {
+        this.segments = [];
+        for (let i = 0; i < this.numSegments; i++) {
+            const segX = x - Math.cos(this.angle) * i * this.segmentDistance;
+            const segY = y - Math.sin(this.angle) * i * this.segmentDistance;
+            this.segments.push(new Segment(segX, segY));
+        }
+    }
+    
+    setTarget(targetX, targetY) {
+        // Boss jagt immer den Spieler
+        const dx = targetX - this.headX;
+        const dy = targetY - this.headY;
+        this.targetAngle = Math.atan2(dy, dx);
+    }
+    
+    update() {
+        // Cooldown aktualisieren
+        if (this.damageCooldown > 0) {
+            this.damageCooldown--;
+        }
+        
+        // Wellenphase aktualisieren
+        this.wavePhase += this.waveSpeed;
+        this.tailGlowPhase += 0.2;
+        
+        // Winkel zum Ziel interpolieren
+        let angleDiff = this.targetAngle - this.angle;
+        while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+        while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+        
+        this.angularVelocity += angleDiff * this.turnSpeed;
+        this.angularVelocity *= 0.9; // Dämpfung
+        this.angle += this.angularVelocity;
+        
+        // Geschwindigkeit aktualisieren
+        this.currentSpeed += (this.targetSpeed - this.currentSpeed) * this.acceleration;
+        
+        // Kopf bewegen
+        this.headX += Math.cos(this.angle) * this.currentSpeed * this.speedMultiplier;
+        this.headY += Math.sin(this.angle) * this.currentSpeed * this.speedMultiplier;
+        
+        // Segmente aktualisieren
+        if (this.segments.length > 0) {
+            this.segments[0].x = this.headX;
+            this.segments[0].y = this.headY;
+            
+            for (let i = 1; i < this.segments.length; i++) {
+                const prevSeg = this.segments[i - 1];
+                const currSeg = this.segments[i];
+                
+                const dx = prevSeg.x - currSeg.x;
+                const dy = prevSeg.y - currSeg.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist > this.segmentDistance) {
+                    const moveDist = dist - this.segmentDistance;
+                    currSeg.x += (dx / dist) * moveDist;
+                    currSeg.y += (dy / dist) * moveDist;
+                }
+            }
+        }
+    }
+    
+    draw() {
+        ctx.imageSmoothingEnabled = false;
+        
+        // Größere Körperbreite für Boss
+        const baseWidth = 15; // Größer als normaler Hunter
+        const headWidth = baseWidth * 1.5;
+        const tailWidth = baseWidth * 0.4;
+        
+        // Körper zeichnen
+        ctx.fillStyle = this.colors.body;
+        ctx.strokeStyle = this.colors.bodyDark;
+        ctx.lineWidth = 3;
+        
+        ctx.beginPath();
+        for (let i = 0; i < this.segments.length; i++) {
+            const seg = this.segments[i];
+            const normalizedPos = i / (this.segments.length - 1);
+            const width = headWidth * (1 - normalizedPos) + tailWidth * normalizedPos;
+            
+            if (i === 0) {
+                ctx.moveTo(seg.x, seg.y);
+            } else {
+                ctx.lineTo(seg.x, seg.y);
+            }
+        }
+        ctx.stroke();
+        
+        // Segmente zeichnen
+        for (let i = 0; i < this.segments.length; i++) {
+            const seg = this.segments[i];
+            const normalizedPos = i / (this.segments.length - 1);
+            const width = headWidth * (1 - normalizedPos) + tailWidth * normalizedPos;
+            
+            // Letzte 3 Segmente leuchten (Schwanz)
+            const isTailSegment = i >= this.segments.length - 3;
+            if (isTailSegment) {
+                // Leuchtender Schwanz
+                const glow = Math.sin(this.tailGlowPhase + i) * 0.5 + 0.5;
+                const glowSize = width * (1 + glow * 0.5);
+                ctx.fillStyle = this.colors.tailGlow;
+                ctx.globalAlpha = 0.8 + glow * 0.2;
+                drawPixelCircle(seg.x, seg.y, glowSize, this.colors.tailGlow);
+                ctx.globalAlpha = 1.0;
+            }
+            
+            drawPixelCircle(seg.x, seg.y, width, this.colors.body);
+            
+            // Dunklerer Rand
+            if (i < this.segments.length - 1) {
+                drawPixelCircle(seg.x, seg.y, width * 0.7, this.colors.bodyDark);
+            }
+        }
+        
+        // Kopf (größer)
+        const headSeg = this.segments[0];
+        drawPixelCircle(headSeg.x, headSeg.y, headWidth, this.colors.body);
+        drawPixelCircle(headSeg.x, headSeg.y, headWidth * 0.7, this.colors.bodyDark);
+        
+        // Augen (größer, rot)
+        const eyeOffset = headWidth * 0.4;
+        const eyeSize = 4;
+        const leftEyeX = headSeg.x + Math.cos(this.angle - Math.PI / 2) * eyeOffset;
+        const leftEyeY = headSeg.y + Math.sin(this.angle - Math.PI / 2) * eyeOffset;
+        const rightEyeX = headSeg.x + Math.cos(this.angle + Math.PI / 2) * eyeOffset;
+        const rightEyeY = headSeg.y + Math.sin(this.angle + Math.PI / 2) * eyeOffset;
+        
+        drawPixelCircle(leftEyeX, leftEyeY, eyeSize, this.colors.eye);
+        drawPixelCircle(rightEyeX, rightEyeY, eyeSize, this.colors.eye);
+    }
+    
+    getHeadPosition() {
+        if (this.segments.length > 0) {
+            return { x: this.segments[0].x, y: this.segments[0].y };
+        }
+        return { x: this.headX, y: this.headY };
+    }
+    
+    getTailSegments() {
+        // Letzte 3 Segmente sind der leuchtende Schwanz
+        return this.segments.slice(-3);
+    }
+}
+
 // Simulator-Klasse (jetzt Snake-Spiel)
 class Simulator {
     constructor() {
@@ -3578,6 +3830,9 @@ class Simulator {
         this.activeUpgrades = {}; // { upgradeId: stacks }
         this.activeMutations = {}; // { mutationId: stacks }
         this.hungryLeechSizeBoost = 0; // Temporärer Größen-Boost für Hungry Leech (0-1)
+        this.gold = 0; // Gold für Evolution-Shop
+        this.evolutions = []; // Array von gekauften Evolution-IDs
+        this.activeEvolutionIndex = 0; // Index der aktiven Evolution (für Wechsel mit Mausrad)
         this.particles = []; // Partikel für visuelle Effekte
         this.projectiles = []; // Projektil-Array für Schüsse
         this.biteAnimation = null; // Biss-Animation
@@ -3586,6 +3841,13 @@ class Simulator {
         this.debugLog = []; // Debug-Log Einträge
         this.maxLogEntries = 100; // Maximale Anzahl von Log-Einträgen
         this.shockwaveAnimation = null; // Shockwave-Animation { duration: number, radius: number, x: number, y: number }
+        this.bloodAnimation = null; // Blut-Animation bei Boss-Schaden { duration: number, phase: number, x: number, y: number, particles: [] }
+        this.length50Animation = null; // Animation für Länge 50 Meilenstein { duration: number, phase: number }
+        this.length50MilestoneReached = false; // Flag um sicherzustellen, dass Animation nur einmal spielt
+        this.length100Animation = null; // Animation für Länge 100 Meilenstein
+        this.length100MilestoneReached = false; // Flag für Länge 100
+        this.bosses = []; // Array von Boss-Kreaturen (3 Bosses erscheinen bei Länge 100)
+        this.winAnimation = null; // Win-Animation nach Boss-Besiegung
         
         // Prozedurale Unendliche Welt
         this.chunkSize = 500; // Größe eines Chunks in Pixeln
@@ -3604,7 +3866,8 @@ class Simulator {
         
         this.setupControls();
         this.setupDebugLog();
-        this.setupAccountSystem();
+        this.setupPlayerName();
+        this.loadProgress();
         this.setupEvolutionsShop();
         
         // Highscore-Display initialisieren
@@ -3614,143 +3877,64 @@ class Simulator {
         this.updateGoldDisplay();
     }
     
-    setupAccountSystem() {
-        // Prüfe ob bereits eingeloggt
-        const currentUser = this.getCurrentUser();
-        if (currentUser) {
-            this.showGameSection(currentUser);
+    setupPlayerName() {
+        // Prüfe ob bereits ein Name gespeichert ist
+        const savedName = this.getPlayerName();
+        if (savedName) {
+            this.showGameSection(savedName);
         } else {
-            this.showLoginSection();
+            this.showNameSection();
         }
         
-        // Login-Button
-        const loginBtn = document.getElementById('loginBtn');
-        if (loginBtn) {
-            loginBtn.addEventListener('click', () => {
-                this.handleLogin();
+        // Start Game Button
+        const startGameBtn = document.getElementById('startGameBtn');
+        if (startGameBtn) {
+            startGameBtn.addEventListener('click', () => {
+                console.log('Start Game Button clicked');
+                this.handleNameInput();
             });
+        } else {
+            console.error('startGameBtn not found in setupPlayerName!');
         }
         
-        // Register-Button
-        const registerBtn = document.getElementById('registerBtn');
-        if (registerBtn) {
-            registerBtn.addEventListener('click', () => {
-                this.handleRegister();
-            });
-        }
-        
-        // Show Register Form
-        const showRegisterBtn = document.getElementById('showRegisterBtn');
-        if (showRegisterBtn) {
-            showRegisterBtn.addEventListener('click', () => {
-                this.showRegisterForm();
-            });
-        }
-        
-        // Show Login Form
-        const showLoginBtn = document.getElementById('showLoginBtn');
-        if (showLoginBtn) {
-            showLoginBtn.addEventListener('click', () => {
-                this.showLoginForm();
-            });
-        }
-        
-        // Generate Hashtag Button
-        const generateHashtagBtn = document.getElementById('generateHashtagBtn');
-        if (generateHashtagBtn) {
-            generateHashtagBtn.addEventListener('click', () => {
-                this.generateRandomHashtag();
-            });
-        }
-        
-        // Logout Button
-        const logoutBtn = document.getElementById('logoutBtn');
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                this.handleLogout();
-            });
-        }
-        
-        // Enter-Taste für Login/Register
-        const loginNameInput = document.getElementById('loginNameInput');
-        const registerNameInput = document.getElementById('registerNameInput');
-        const registerHashtagInput = document.getElementById('registerHashtagInput');
-        
-        if (loginNameInput) {
-            loginNameInput.addEventListener('keypress', (e) => {
+        // Enter-Taste für Name-Eingabe
+        const playerNameInput = document.getElementById('playerNameInput');
+        if (playerNameInput) {
+            playerNameInput.addEventListener('keypress', (e) => {
                 if (e.key === 'Enter') {
-                    this.handleLogin();
-                }
-            });
-        }
-        if (registerNameInput) {
-            registerNameInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    registerHashtagInput?.focus();
-                }
-            });
-        }
-        if (registerHashtagInput) {
-            registerHashtagInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.handleRegister();
+                    this.handleNameInput();
                 }
             });
         }
     }
     
-    generateRandomHashtag() {
-        const hashtagInput = document.getElementById('registerHashtagInput');
-        if (hashtagInput) {
-            // Generiere 4-stellige Nummer (1000-9999)
-            const randomNum = Math.floor(1000 + Math.random() * 9000);
-            hashtagInput.value = '#' + randomNum;
-        }
-    }
-    
-    showLoginForm() {
-        const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        if (loginForm) loginForm.style.display = 'block';
-        if (registerForm) registerForm.style.display = 'none';
-    }
-    
-    showRegisterForm() {
-        const loginForm = document.getElementById('loginForm');
-        const registerForm = document.getElementById('registerForm');
-        if (loginForm) loginForm.style.display = 'none';
-        if (registerForm) registerForm.style.display = 'block';
-        // Generiere automatisch einen Hashtag
-        this.generateRandomHashtag();
-    }
-    
-    showLoginSection() {
-        const loginSection = document.getElementById('loginSection');
+    showNameSection() {
+        const nameSection = document.getElementById('nameSection');
         const gameSection = document.getElementById('gameSection');
-        if (loginSection) loginSection.style.display = 'block';
+        if (nameSection) nameSection.style.display = 'block';
         if (gameSection) gameSection.style.display = 'none';
-        this.showLoginForm();
     }
     
-    showGameSection(user) {
-        const loginSection = document.getElementById('loginSection');
+    showGameSection(playerName) {
+        const nameSection = document.getElementById('nameSection');
         const gameSection = document.getElementById('gameSection');
-        const currentUserName = document.getElementById('currentUserName');
-        const currentUserHashtag = document.getElementById('currentUserHashtag');
+        const currentPlayerName = document.getElementById('currentPlayerName');
         
-        if (loginSection) loginSection.style.display = 'none';
+        if (nameSection) nameSection.style.display = 'none';
         if (gameSection) gameSection.style.display = 'block';
-        if (currentUserName) currentUserName.textContent = user.name;
-        if (currentUserHashtag) currentUserHashtag.textContent = user.hashtag;
+        if (currentPlayerName) currentPlayerName.textContent = playerName;
         
         // Gold-Anzeige aktualisieren
         this.updateGoldDisplay();
     }
     
-    handleLogin() {
-        const nameInput = document.getElementById('loginNameInput');
+    handleNameInput() {
+        const nameInput = document.getElementById('playerNameInput');
         
-        if (!nameInput) return;
+        if (!nameInput) {
+            console.error('playerNameInput not found!');
+            return;
+        }
         
         const name = nameInput.value.trim();
         
@@ -3759,126 +3943,81 @@ class Simulator {
             return;
         }
         
-        // Prüfe ob Account mit diesem Namen existiert (case-insensitive)
-        const accounts = this.getAllAccounts();
-        const account = accounts.find(acc => acc.name.toLowerCase() === name.toLowerCase());
-        
-        if (account) {
-            // Login erfolgreich - Hashtag wird automatisch aus dem Account geladen
-            this.setCurrentUser(account);
-            this.showGameSection(account);
-            this.log(t('loginSuccess'), 'success');
-        } else {
-            // Login fehlgeschlagen - kein Account mit diesem Namen gefunden
-            alert(t('loginError'));
-            this.log(t('loginError'), 'error');
+        // Prüfe ob Name bereits in Highscore-Liste existiert (case-insensitive)
+        // Warnung anzeigen, aber trotzdem erlauben (Spieler kann seinen Namen verwenden)
+        try {
+            const highscores = this.getHighscores();
+            const nameExists = highscores.some(hs => hs.name.toLowerCase() === name.toLowerCase());
+            
+            if (nameExists) {
+                // Warnung anzeigen, aber trotzdem fortfahren
+                const useAnyway = confirm(t('nameAlreadyExists') + '\n\nMöchtest du diesen Namen trotzdem verwenden?');
+                if (!useAnyway) {
+                    return;
+                }
+            }
+        } catch (e) {
+            console.error('Fehler beim Prüfen der Highscore-Liste:', e);
+            // Bei Fehler trotzdem fortfahren
         }
+        
+        // Speichere Name
+        this.setPlayerName(name);
+        console.log('Name gespeichert:', name);
+        this.showGameSection(name);
+        console.log('Game Section angezeigt');
     }
     
-    handleRegister() {
-        const nameInput = document.getElementById('registerNameInput');
-        const hashtagInput = document.getElementById('registerHashtagInput');
-        
-        if (!nameInput || !hashtagInput) return;
-        
-        const name = nameInput.value.trim();
-        let hashtag = hashtagInput.value.trim();
-        
-        if (!name) {
-            alert(t('nameRequired'));
-            return;
-        }
-        if (!hashtag) {
-            alert(t('hashtagRequired'));
-            return;
-        }
-        
-        // Normalisiere Hashtag (entferne # falls vorhanden, füge es wieder hinzu)
-        hashtag = hashtag.startsWith('#') ? hashtag : '#' + hashtag;
-        
-        // Prüfe ob Account bereits existiert (Name+Hashtag-Kombination muss eindeutig sein)
-        const accounts = this.getAllAccounts();
-        const existingAccount = accounts.find(acc => acc.name.toLowerCase() === name.toLowerCase() && acc.hashtag === hashtag);
-        
-        if (existingAccount) {
-            alert(t('loginError')); // Account mit dieser Name+Hashtag-Kombination existiert bereits
-            return;
-        }
-        
-        // Prüfe ob Name bereits verwendet wird (ein Name kann nur einmal existieren, case-insensitive)
-        const existingName = accounts.find(acc => acc.name.toLowerCase() === name.toLowerCase());
-        if (existingName) {
-            alert('Dieser Name ist bereits vergeben! Bitte wähle einen anderen Namen.');
-            return;
-        }
-        
-        // Erstelle neuen Account
-        const newAccount = {
-            name: name,
-            hashtag: hashtag,
-            gold: 0,
-            evolutions: [], // Array von gekauften Evolution-IDs
-            createdAt: new Date().toISOString()
+    // Prüfe ob Name bereits in Highscore-Liste existiert
+    isNameTaken(name) {
+        if (!name) return false;
+        const highscores = this.getHighscores();
+        return highscores.some(hs => hs.name.toLowerCase() === name.toLowerCase());
+    }
+    
+    getPlayerName() {
+        return localStorage.getItem('leechPlayerName') || null;
+    }
+    
+    setPlayerName(name) {
+        localStorage.setItem('leechPlayerName', name);
+    }
+    
+    // Fortschritt speichern
+    saveProgress() {
+        const progress = {
+            playerName: this.getPlayerName(),
+            score: this.score || 0,
+            foodCount: this.foodCount || 0,
+            activeUpgrades: this.activeUpgrades || {},
+            activeMutations: this.activeMutations || {},
+            gold: this.gold || 0,
+            evolutions: this.evolutions || []
         };
-        
-        accounts.push(newAccount);
-        this.saveAllAccounts(accounts);
-        this.setCurrentUser(newAccount);
-        this.showGameSection(newAccount);
-        this.log(t('accountCreated'), 'success');
+        localStorage.setItem('leechProgress', JSON.stringify(progress));
     }
     
-    handleLogout() {
-        this.clearCurrentUser();
-        this.showLoginSection();
-        // Leere Input-Felder
-        const loginNameInput = document.getElementById('loginNameInput');
-        if (loginNameInput) loginNameInput.value = '';
-    }
-    
-    getCurrentUser() {
-        const stored = localStorage.getItem('leechCurrentUser');
+    // Fortschritt laden
+    loadProgress() {
+        const stored = localStorage.getItem('leechProgress');
         if (stored) {
             try {
-                const user = JSON.parse(stored);
-                // Migriere alte Accounts (füge gold und evolutions hinzu falls fehlen)
-                if (user.gold === undefined) user.gold = 0;
-                if (user.evolutions === undefined) user.evolutions = [];
-                return user;
+                const progress = JSON.parse(stored);
+                // Stelle Fortschritt wieder her
+                if (progress.score !== undefined) this.score = progress.score;
+                if (progress.foodCount !== undefined) this.foodCount = progress.foodCount;
+                if (progress.activeUpgrades) this.activeUpgrades = progress.activeUpgrades;
+                if (progress.activeMutations) this.activeMutations = progress.activeMutations;
+                if (progress.gold !== undefined) this.gold = progress.gold;
+                if (progress.evolutions) {
+                    this.evolutions = progress.evolutions;
+                    // Aktualisiere Evolution-Anzeige nach dem Laden
+                    this.updateEvolutionDisplay();
+                }
             } catch (e) {
-                return null;
+                console.error('Fehler beim Laden des Fortschritts:', e);
             }
         }
-        return null;
-    }
-    
-    setCurrentUser(user) {
-        localStorage.setItem('leechCurrentUser', JSON.stringify(user));
-    }
-    
-    clearCurrentUser() {
-        localStorage.removeItem('leechCurrentUser');
-    }
-    
-    getAllAccounts() {
-        const stored = localStorage.getItem('leechAccounts');
-        if (stored) {
-            try {
-                return JSON.parse(stored);
-            } catch (e) {
-                return [];
-            }
-        }
-        return [];
-    }
-    
-    saveAllAccounts(accounts) {
-        // Migriere alte Accounts
-        accounts.forEach(acc => {
-            if (acc.gold === undefined) acc.gold = 0;
-            if (acc.evolutions === undefined) acc.evolutions = [];
-        });
-        localStorage.setItem('leechAccounts', JSON.stringify(accounts));
     }
     
     setupEvolutionsShop() {
@@ -3914,13 +4053,10 @@ class Simulator {
     }
     
     updateEvolutionsShop() {
-        const currentUser = this.getCurrentUser();
-        if (!currentUser) return;
-        
         const goldDisplay = document.getElementById('shopGold');
         const currentGoldDisplay = document.getElementById('currentGold');
-        if (goldDisplay) goldDisplay.textContent = currentUser.gold || 0;
-        if (currentGoldDisplay) currentGoldDisplay.textContent = currentUser.gold || 0;
+        if (goldDisplay) goldDisplay.textContent = this.gold || 0;
+        if (currentGoldDisplay) currentGoldDisplay.textContent = this.gold || 0;
         
         const listContainer = document.getElementById('evolutionsList');
         if (!listContainer) return;
@@ -3928,8 +4064,8 @@ class Simulator {
         listContainer.innerHTML = '';
         
         EVOLUTIONS.forEach(evolution => {
-            const isOwned = currentUser.evolutions && currentUser.evolutions.includes(evolution.id);
-            const canAfford = (currentUser.gold || 0) >= evolution.cost;
+            const isOwned = this.evolutions && this.evolutions.includes(evolution.id);
+            const canAfford = (this.gold || 0) >= evolution.cost;
             
             const evolutionDiv = document.createElement('div');
             evolutionDiv.style.cssText = `
@@ -3988,77 +4124,58 @@ class Simulator {
     }
     
     buyEvolution(evolutionId) {
-        const currentUser = this.getCurrentUser();
-        if (!currentUser) return;
-        
         const evolution = EVOLUTIONS.find(e => e.id === evolutionId);
         if (!evolution) return;
         
         // Prüfe ob bereits besessen
-        if (currentUser.evolutions && currentUser.evolutions.includes(evolutionId)) {
+        if (this.evolutions && this.evolutions.includes(evolutionId)) {
             alert('Diese Evolution ist bereits gekauft!');
             return;
         }
         
         // Prüfe ob genug Gold vorhanden
-        if ((currentUser.gold || 0) < evolution.cost) {
+        if ((this.gold || 0) < evolution.cost) {
             alert('Nicht genug Gold!');
             return;
         }
         
         // Kaufe Evolution
-        currentUser.gold -= evolution.cost;
-        if (!currentUser.evolutions) currentUser.evolutions = [];
-        currentUser.evolutions.push(evolutionId);
+        this.gold -= evolution.cost;
+        if (!this.evolutions) this.evolutions = [];
+        this.evolutions.push(evolutionId);
         
-        // Speichere Account
-        this.setCurrentUser(currentUser);
-        const accounts = this.getAllAccounts();
-        const accountIndex = accounts.findIndex(acc => acc.name === currentUser.name && acc.hashtag === currentUser.hashtag);
-        if (accountIndex !== -1) {
-            accounts[accountIndex] = currentUser;
-            this.saveAllAccounts(accounts);
-        }
+        // Speichere Fortschritt
+        this.saveProgress();
         
         // Aktualisiere Shop
         this.updateEvolutionsShop();
         this.updateGoldDisplay();
         this.log(`Evolution gekauft: ${evolution.name}`, 'success');
+        
+        // Aktualisiere Evolution-Anzeige
+        this.updateEvolutionDisplay();
     }
     
     updateGoldDisplay() {
-        const currentUser = this.getCurrentUser();
-        if (!currentUser) return;
-        
         const currentGoldDisplay = document.getElementById('currentGold');
         const shopGoldDisplay = document.getElementById('shopGold');
-        if (currentGoldDisplay) currentGoldDisplay.textContent = currentUser.gold || 0;
-        if (shopGoldDisplay) shopGoldDisplay.textContent = currentUser.gold || 0;
+        if (currentGoldDisplay) currentGoldDisplay.textContent = this.gold || 0;
+        if (shopGoldDisplay) shopGoldDisplay.textContent = this.gold || 0;
     }
     
     addGoldFromScore(score) {
-        const currentUser = this.getCurrentUser();
-        if (!currentUser) return;
-        
         // Score wird zu Gold (1:1 Verhältnis)
-        currentUser.gold = (currentUser.gold || 0) + score;
+        this.gold = (this.gold || 0) + score;
         
-        // Speichere Account
-        this.setCurrentUser(currentUser);
-        const accounts = this.getAllAccounts();
-        const accountIndex = accounts.findIndex(acc => acc.name === currentUser.name && acc.hashtag === currentUser.hashtag);
-        if (accountIndex !== -1) {
-            accounts[accountIndex] = currentUser;
-            this.saveAllAccounts(accounts);
-        }
+        // Speichere Fortschritt
+        this.saveProgress();
         
         this.updateGoldDisplay();
         this.log(`+${score} Gold erhalten!`, 'success');
     }
     
     handleSpacebar() {
-        const currentUser = this.getCurrentUser();
-        if (!currentUser || !this.tier) return;
+        if (!this.tier) return;
         
         // Prüfe ob genug Stamina vorhanden (5 Stamina benötigt)
         if (this.tier.currentStamina < 5) {
@@ -4066,18 +4183,84 @@ class Simulator {
             return;
         }
         
-        // Prüfe welche Evolutions gekauft wurden
-        const hasShot = currentUser.evolutions && currentUser.evolutions.includes('shot');
-        const hasShockwave = currentUser.evolutions && currentUser.evolutions.includes('shockwave');
+        // Hole verfügbare Evolutions
+        const availableEvolutions = this.getAvailableEvolutions();
         
-        if (hasShockwave) {
-            // Shockwave hat Priorität
-            this.useShockwave();
-        } else if (hasShot) {
-            // Schuss
-            this.useShot();
-        } else {
+        if (availableEvolutions.length === 0) {
             this.log('Keine Evolution gekauft!', 'warning');
+            return;
+        }
+        
+        // Verwende aktive Evolution
+        const activeEvolution = availableEvolutions[this.activeEvolutionIndex];
+        if (!activeEvolution) {
+            // Fallback: erste verfügbare Evolution
+            this.activeEvolutionIndex = 0;
+            return;
+        }
+        
+        // Aktiviere Evolution basierend auf ID
+        if (activeEvolution.id === 'shot') {
+            this.useShot();
+        } else if (activeEvolution.id === 'shockwave') {
+            this.useShockwave();
+        }
+    }
+    
+    getAvailableEvolutions() {
+        // Gibt Array von verfügbaren Evolution-Objekten zurück
+        if (!this.evolutions || this.evolutions.length === 0) return [];
+        
+        return EVOLUTIONS.filter(evolution => this.evolutions.includes(evolution.id));
+    }
+    
+    switchEvolution(direction) {
+        // Wechsle zwischen Evolutionen (direction: 1 = nächste, -1 = vorherige)
+        const availableEvolutions = this.getAvailableEvolutions();
+        
+        if (availableEvolutions.length <= 1) return; // Kein Wechsel nötig
+        
+        this.activeEvolutionIndex += direction;
+        
+        // Wrap-around
+        if (this.activeEvolutionIndex < 0) {
+            this.activeEvolutionIndex = availableEvolutions.length - 1;
+        } else if (this.activeEvolutionIndex >= availableEvolutions.length) {
+            this.activeEvolutionIndex = 0;
+        }
+        
+        // Aktualisiere Anzeige
+        this.updateEvolutionDisplay();
+        
+        const activeEvolution = availableEvolutions[this.activeEvolutionIndex];
+        if (activeEvolution) {
+            this.log(`Evolution gewechselt: ${activeEvolution.name}`, 'info');
+        }
+    }
+    
+    updateEvolutionDisplay() {
+        const display = document.getElementById('activeEvolutionDisplay');
+        if (!display) return;
+        
+        const availableEvolutions = this.getAvailableEvolutions();
+        
+        if (availableEvolutions.length === 0) {
+            display.style.display = 'none';
+            return;
+        }
+        
+        display.style.display = 'block';
+        const activeEvolution = availableEvolutions[this.activeEvolutionIndex];
+        
+        if (activeEvolution) {
+            const evolutionInfo = document.getElementById('activeEvolutionInfo');
+            if (evolutionInfo) {
+                evolutionInfo.innerHTML = `
+                    <span style="font-size: 1.5em; margin-right: 10px;">${activeEvolution.icon}</span>
+                    <span style="font-weight: 600;">${activeEvolution.name}</span>
+                    ${availableEvolutions.length > 1 ? `<span style="color: #888; font-size: 0.9em; margin-left: 10px;">(${this.activeEvolutionIndex + 1}/${availableEvolutions.length})</span>` : ''}
+                `;
+            }
         }
     }
     
@@ -4102,39 +4285,58 @@ class Simulator {
         // Verbrauche 5 Stamina
         this.tier.currentStamina -= 5;
         
-        // Finde alle gegrabteten Gegner
+        // Finde alle gekletterten Gegner
         const head = this.tier.segments[0];
         let pushedCount = 0;
+        const shockwaveRadius = 150; // Erhöhter Radius für größere Reichweite
+        const shockwaveRadiusSquared = shockwaveRadius * shockwaveRadius;
         
-        // Prüfe alle Jäger
-        this.hunters.forEach(hunter => {
-            if (hunter.isClimbing && hunter.grabbedSegmentIndex !== undefined) {
-                // Berechne Richtung weg vom Spieler
-                const dx = hunter.headX - head.x;
-                const dy = hunter.headY - head.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
+        // Prüfe alle Jäger (rückwärts iterieren für sichere Entfernung)
+        for (let i = this.hunters.length - 1; i >= 0; i--) {
+            const hunter = this.hunters[i];
+            
+            // Prüfe ob Jäger klettert
+            if (hunter.isClimbing && hunter.climbingTargetIndex >= 0) {
+                // Berechne Entfernung zum Spieler-Kopf
+                const hunterHead = hunter.getHeadPosition();
+                const dx = hunterHead.x - head.x;
+                const dy = hunterHead.y - head.y;
+                const distanceSquared = dx * dx + dy * dy;
                 
-                if (distance < 100) { // Reichweite der Shockwave
-                    // Schleudere Jäger weg
-                    const force = 15; // Stärke der Schockwelle
+                if (distanceSquared <= shockwaveRadiusSquared) {
+                    // Berechne Richtung weg vom Spieler
+                    const distance = Math.sqrt(distanceSquared);
                     const angle = Math.atan2(dy, dx);
+                    
+                    // Schleudere Jäger weg (doppelte Kraft)
+                    const force = 40; // Doppelte Kraft (vorher 20)
                     hunter.headX += Math.cos(angle) * force;
                     hunter.headY += Math.sin(angle) * force;
                     
-                    // Lass Jäger los
+                    // Aktualisiere Kopf-Segment Position
+                    if (hunter.segments && hunter.segments.length > 0) {
+                        hunter.segments[0].x = hunter.headX;
+                        hunter.segments[0].y = hunter.headY;
+                    }
+                    
+                    // Lass Jäger los (Klettern beenden)
                     hunter.isClimbing = false;
-                    hunter.grabbedSegmentIndex = undefined;
+                    hunter.climbingTargetIndex = -1;
+                    hunter.climbingProgress = 0;
+                    hunter.climbCooldown = 60; // Cooldown bevor er wieder klettern kann
                     hunter.currentStamina = Math.max(0, hunter.currentStamina - 2); // Verliert auch etwas Stamina
+                    
                     pushedCount++;
+                    this.log(`Jäger durch Shockwave weggeschleudert!`, 'success');
                 }
             }
-        });
+        }
         
         // Starte Shockwave-Animation
         this.shockwaveAnimation = {
             duration: 30, // 0.5 Sekunden
             radius: 0,
-            maxRadius: 100,
+            maxRadius: shockwaveRadius,
             x: head.x,
             y: head.y
         };
@@ -4196,9 +4398,14 @@ class Simulator {
             }
         }
         
-        // Generiere Hunters für diesen Chunk (mehr Hunters pro Chunk)
-        // Jeder Chunk kann 1-3 Hunters haben
-        const huntersPerChunk = 1 + Math.floor(rng() * 3); // 1-3 Hunters pro Chunk
+        // Generiere Hunters für diesen Chunk (mehr Hunters pro Chunk basierend auf Spielerlänge)
+        const playerLength = this.tier ? this.tier.numSegments : 0;
+        // Basis: 1-3 Hunters, zusätzlich +1 pro 10 Segmente bis Länge 100 (maximal +10 bei 100 Segmenten)
+        // Ab Länge 100 (Bosse spawnen) bleibt die Anzahl konstant
+        const effectiveLength = Math.min(playerLength, 100); // Stoppt bei 100
+        const lengthBonus = Math.floor(effectiveLength / 10); // +1 pro 10 Segmente, maximal +10
+        const baseHunters = 1 + Math.floor(rng() * 3); // 1-3 Basis-Hunters
+        const huntersPerChunk = baseHunters + lengthBonus; // 1-13 Hunters pro Chunk (bei 100 Segmenten)
         
         for (let h = 0; h < huntersPerChunk; h++) {
             // Spawne Hunters immer, auch wenn Limits erreicht sind (für prozedurale Welt)
@@ -4206,7 +4413,11 @@ class Simulator {
             const hunterX = chunkWorldX + rng() * this.chunkSize;
             const hunterY = chunkWorldY + rng() * this.chunkSize;
             
-            // 50% Normal, 30% Fat, 20% Elite
+            // Prüfe ob Elite Hunter spawnt werden können (nur ab 50 Segmenten)
+            const playerLength = this.tier ? this.tier.numSegments : 0;
+            const canSpawnElite = playerLength >= 50;
+            
+            // 50% Normal, 30% Fat, 20% Elite (wenn verfügbar)
             const hunterType = rng();
             if (hunterType < 0.5) {
                 // Normale Hunter
@@ -4246,8 +4457,8 @@ class Simulator {
                 }
                 // Spawne neuen Fat Hunter
                 this.fatHunters.push(new FatHunterCreature(hunterX, hunterY));
-            } else {
-                // Elite Hunter
+            } else if (canSpawnElite) {
+                // Elite Hunter (nur wenn Spieler >= 50 Segmente)
                 // Entferne alte Hunters die zu weit weg sind
                 if (this.hunters.length >= this.maxHunters) {
                     const maxDistance = this.chunkSize * 10; // Erhöht von 5 auf 10 Chunks
@@ -4262,9 +4473,26 @@ class Simulator {
                         }
                     }
                 }
-                // Spawne neuen Elite Hunter
+                // Spawne neuen Elite Hunter (isElite als Parameter übergeben)
+                const hunter = new HunterCreature(hunterX, hunterY, true);
+                hunter.isChasing = false;
+                this.hunters.push(hunter);
+            } else {
+                // Fallback zu normalem Hunter wenn Elite nicht verfügbar
+                if (this.hunters.length >= this.maxHunters) {
+                    const maxDistance = this.chunkSize * 10;
+                    for (let i = this.hunters.length - 1; i >= 0; i--) {
+                        const oldHunter = this.hunters[i];
+                        const dx = oldHunter.headX - this.cameraX;
+                        const dy = oldHunter.headY - this.cameraY;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        if (distance > maxDistance) {
+                            this.hunters.splice(i, 1);
+                            break;
+                        }
+                    }
+                }
                 const hunter = new HunterCreature(hunterX, hunterY);
-                hunter.isElite = true;
                 hunter.isChasing = false;
                 this.hunters.push(hunter);
             }
@@ -4626,6 +4854,15 @@ class Simulator {
             }
         });
         
+        // Mausrad: Wechsle zwischen Evolutionen
+        canvas.addEventListener('wheel', (e) => {
+            if (this.isRunning && this.evolutions && this.evolutions.length > 1) {
+                e.preventDefault();
+                const direction = e.deltaY > 0 ? 1 : -1; // Scroll nach unten = nächste, nach oben = vorherige
+                this.switchEvolution(direction);
+            }
+        });
+        
         // Restart-Button für Game Over
         const restartBtn = document.getElementById('restartBtn');
         if (restartBtn) {
@@ -4641,16 +4878,24 @@ class Simulator {
         if (backToMenuBtn) {
             backToMenuBtn.addEventListener('click', () => {
                 document.getElementById('gameOverOverlay').style.display = 'none';
-                this.showMainMenu();
+                this.showMainMenu(false); // Kein Gold beim Game Over
+            });
+        }
+        
+        // Zurück zum Menü Button während des Spiels
+        const backToMenuFromGameBtn = document.getElementById('backToMenuFromGameBtn');
+        if (backToMenuFromGameBtn) {
+            backToMenuFromGameBtn.addEventListener('click', () => {
+                this.backToMenuFromGame();
             });
         }
         
         // Hauptmenü Buttons
-        const startGameBtn = document.getElementById('startGameBtn');
+        const startGameFromMenuBtn = document.getElementById('startGameFromMenuBtn');
         const viewHighscoreBtn = document.getElementById('viewHighscoreBtn');
         
-        if (startGameBtn) {
-            startGameBtn.addEventListener('click', () => {
+        if (startGameFromMenuBtn) {
+            startGameFromMenuBtn.addEventListener('click', () => {
                 this.hideMainMenu();
                 // Warte bis Container sichtbar ist und Canvas richtig initialisiert wurde
                 // Verwende requestAnimationFrame für bessere Synchronisation
@@ -4818,6 +5063,9 @@ class Simulator {
                     validPosition = true;
                     
                     // Zufällig entscheiden welche Hunter-Klasse spawnt
+                    const playerLength = this.tier ? this.tier.numSegments : 0;
+                    const canSpawnElite = playerLength >= 50; // Elite Hunter nur ab 50 Segmenten
+                    
                     const hunterType = Math.random();
                     if (hunterType < 0.6) {
                         // 60% normale Hunter
@@ -4826,20 +5074,19 @@ class Simulator {
                             hunter.isChasing = false;
                             this.hunters.push(hunter);
                         }
-                    } else if (hunterType < 0.85) {
-                        // 25% Elite Hunter
+                    } else if (hunterType < 0.85 && canSpawnElite) {
+                        // 25% Elite Hunter (nur wenn Spieler >= 50 Segmente)
                         if (this.hunters.length < this.maxHunters) {
-                            const hunter = new HunterCreature(hunterX, hunterY);
-                            hunter.isElite = true;
+                            const hunter = new HunterCreature(hunterX, hunterY, true);
                             hunter.isChasing = false;
                             this.hunters.push(hunter);
                         }
                     } else {
-                        // 15% Fat Hunter (wenn noch Platz)
+                        // 15% Fat Hunter (wenn noch Platz) oder normaler Hunter wenn Elite nicht verfügbar
                         if (this.fatHunters.length < this.maxFatHunters) {
                             this.fatHunters.push(new FatHunterCreature(hunterX, hunterY));
                         } else if (this.hunters.length < this.maxHunters) {
-                            // Fallback zu normalem Hunter wenn maxFatHunters erreicht
+                            // Fallback zu normalem Hunter wenn maxFatHunters erreicht oder Elite nicht verfügbar
                             const hunter = new HunterCreature(hunterX, hunterY);
                             hunter.isChasing = false;
                             this.hunters.push(hunter);
@@ -5201,6 +5448,9 @@ class Simulator {
         const stacks = this.activeUpgrades[upgrade.id];
         this.log(`Upgrade ausgewählt: ${upgrade.name} (${upgrade.rarity.name.toUpperCase()}) - Stack: ${stacks}`, 'success');
         
+        // Fortschritt speichern
+        this.saveProgress();
+        
         // Upgrade-Anzeige aktualisieren
         this.updateUpgradeDisplay();
         
@@ -5390,6 +5640,9 @@ class Simulator {
         this.log(`Mutation ausgewählt: ${mutation.name} (${mutation.rarity.name.toUpperCase()}) - Stack: ${stacks}, Kosten: ${mutation.cost} Segmente`, 'success');
         this.log(`Aktive Mutationen: ${JSON.stringify(this.activeMutations)}`, 'info');
         
+        // Fortschritt speichern
+        this.saveProgress();
+        
         // Mutation-Anzeige aktualisieren
         this.updateUpgradeDisplay();
         
@@ -5423,8 +5676,7 @@ class Simulator {
         // Stoppe das Spiel
         this.stop();
         
-        // Füge Gold hinzu (Score wird zu Gold)
-        this.addGoldFromScore(this.score);
+        // KEIN Gold hinzufügen beim Game Over (nur beim manuellen Zurückkehren zum Menü)
         
         // Zeige Game Over Overlay
         const overlay = document.getElementById('gameOverOverlay');
@@ -5450,9 +5702,17 @@ class Simulator {
         overlay.style.display = 'flex';
     }
     
-    showMainMenu() {
+    showMainMenu(fromGame = false) {
         // Stoppe das Spiel
         this.stop();
+        
+        // Wenn vom Spiel zurückgekehrt (nicht vom Game Over), füge Gold hinzu
+        if (fromGame && this.score > 0) {
+            this.addGoldFromScore(this.score);
+            // Score zurücksetzen nach Gold-Konvertierung
+            this.score = 0;
+            this.updateScore();
+        }
         
         // Verstecke Game Container
         const gameContainer = document.getElementById('gameContainer');
@@ -5472,21 +5732,648 @@ class Simulator {
             mainMenuOverlay.style.display = 'flex';
         }
         
-        // Prüfe ob bereits ein Benutzer eingeloggt ist und stelle Session wieder her
-        const currentUser = this.getCurrentUser();
-        if (currentUser) {
-            // Validiere dass der Account noch existiert
-            const accounts = this.getAllAccounts();
-            const account = accounts.find(acc => acc.name.toLowerCase() === currentUser.name.toLowerCase());
-            if (account) {
-                // Account existiert noch, stelle Session wieder her
-                this.setCurrentUser(account);
-                this.showGameSection(account);
-            } else {
-                // Account existiert nicht mehr, lösche Session
-                this.clearCurrentUser();
+        // Prüfe ob bereits ein Name gespeichert ist
+        const savedName = this.getPlayerName();
+        if (savedName) {
+            this.showGameSection(savedName);
+        }
+    }
+    
+    backToMenuFromGame() {
+        // Zurück zum Menü vom Spiel aus (mit Gold-Belohnung)
+        this.showMainMenu(true);
+    }
+    
+    startLength50Animation() {
+        // Starte große Animation für Länge 50 Meilenstein
+        this.length50Animation = {
+            duration: 180, // 3 Sekunden bei 60 FPS
+            phase: 0
+        };
+        
+        // Spawne 2 Elite Hunter in der Nähe des Spielers nach kurzer Verzögerung
+        setTimeout(() => {
+            this.spawnEliteHuntersNearPlayer(2);
+        }, 1500); // 1.5 Sekunden Verzögerung
+    }
+    
+    drawLength50Animation() {
+        if (!this.length50Animation) return;
+        
+        // Zeichne ohne Kamera-Transformation (Bildschirm-Koordinaten)
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset Transformation
+        
+        const progress = this.length50Animation.phase / this.length50Animation.duration;
+        this.length50Animation.phase++;
+        
+        if (this.length50Animation.phase >= this.length50Animation.duration) {
+            this.length50Animation = null;
+            ctx.restore();
+            return;
+        }
+        
+        // Große pulsierende Animation in der Mitte
+        const centerX = renderWidth / 2;
+        const centerY = renderHeight / 2;
+        
+        // Hintergrund-Overlay (dunkel, leicht transparent)
+        ctx.fillStyle = `rgba(0, 0, 0, ${0.7 * (1 - progress * 0.5)})`;
+        ctx.fillRect(0, 0, renderWidth, renderHeight);
+        
+        // Großer pulsierender Kreis
+        const pulse = Math.sin(progress * Math.PI * 4) * 0.3 + 0.7;
+        const circleRadius = 150 + pulse * 50;
+        const circleAlpha = 1 - progress;
+        
+        // Äußerer Ring
+        ctx.strokeStyle = `rgba(157, 78, 221, ${circleAlpha})`; // Lila für Elite
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Innerer Ring
+        ctx.strokeStyle = `rgba(255, 215, 0, ${circleAlpha * 0.8})`; // Gold
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, circleRadius * 0.7, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Text "LÄNGE 50 ERREICHT!"
+        ctx.fillStyle = `rgba(255, 255, 255, ${circleAlpha})`;
+        ctx.font = 'bold 48px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // Schatten
+        ctx.fillStyle = `rgba(0, 0, 0, ${circleAlpha * 0.5})`;
+        ctx.fillText('LÄNGE 50 ERREICHT!', centerX + 3, centerY - 3 + 3);
+        
+        // Haupttext
+        ctx.fillStyle = `rgba(157, 78, 221, ${circleAlpha})`; // Lila
+        ctx.fillText('LÄNGE 50 ERREICHT!', centerX, centerY - 3);
+        
+        // Untertitel
+        ctx.font = 'bold 24px Arial';
+        ctx.fillStyle = `rgba(255, 215, 0, ${circleAlpha})`; // Gold
+        ctx.fillText('Elite Hunter erscheinen!', centerX, centerY + 40);
+        
+        ctx.restore();
+    }
+    
+    spawnEliteHuntersNearPlayer(count) {
+        if (!this.tier || !this.tier.segments || this.tier.segments.length === 0) return;
+        
+        const playerHead = this.tier.segments[0];
+        const spawnDistance = 150; // Abstand vom Spieler
+        const minDistance = 100; // Mindestabstand
+        
+        for (let i = 0; i < count; i++) {
+            let attempts = 0;
+            let validPosition = false;
+            let hunterX, hunterY;
+            
+            while (!validPosition && attempts < 20) {
+                // Zufälliger Winkel um den Spieler
+                const angle = (Math.PI * 2 / count) * i + Math.random() * 0.5;
+                const distance = spawnDistance + Math.random() * 50;
+                
+                hunterX = playerHead.x + Math.cos(angle) * distance;
+                hunterY = playerHead.y + Math.sin(angle) * distance;
+                
+                // Prüfe Abstand zum Spieler
+                const dx = hunterX - playerHead.x;
+                const dy = hunterY - playerHead.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                
+                if (dist >= minDistance) {
+                    validPosition = true;
+                }
+                attempts++;
+            }
+            
+            if (validPosition && this.hunters.length < this.maxHunters) {
+                const hunter = new HunterCreature(hunterX, hunterY, true);
+                hunter.isChasing = false; // Startet nicht verfolgend
+                this.hunters.push(hunter);
+                this.log(`Elite Hunter gespawnt bei Länge 50!`, 'error');
             }
         }
+    }
+    
+    startLength100Animation() {
+        // Starte große Animation für Länge 100 Meilenstein (Boss erscheint)
+        this.length100Animation = {
+            duration: 240, // 4 Sekunden bei 60 FPS
+            phase: 0
+        };
+        
+        // Spawne 3 Bosses in der Nähe des Spielers nach kurzer Verzögerung
+        setTimeout(() => {
+            this.spawnBosses(3);
+        }, 2000); // 2 Sekunden Verzögerung
+    }
+    
+    drawLength100Animation() {
+        if (!this.length100Animation) return;
+        
+        // Zeichne ohne Kamera-Transformation (Bildschirm-Koordinaten)
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset Transformation
+        
+        const progress = this.length100Animation.phase / this.length100Animation.duration;
+        this.length100Animation.phase++;
+        
+        if (this.length100Animation.phase >= this.length100Animation.duration) {
+            this.length100Animation = null;
+            ctx.restore();
+            return;
+        }
+        
+        // Große pulsierende Animation in der Mitte
+        const centerX = renderWidth / 2;
+        const centerY = renderHeight / 2;
+        
+        // Hintergrund-Overlay (dunkelrot, leicht transparent)
+        ctx.fillStyle = `rgba(139, 0, 0, ${0.8 * (1 - progress * 0.5)})`;
+        ctx.fillRect(0, 0, renderWidth, renderHeight);
+        
+        // Großer pulsierender Kreis (rot)
+        const pulse = Math.sin(progress * Math.PI * 4) * 0.3 + 0.7;
+        const circleRadius = 180 + pulse * 60;
+        const circleAlpha = 1 - progress;
+        
+        // Äußerer Ring (rot)
+        ctx.strokeStyle = `rgba(139, 0, 0, ${circleAlpha})`; // Dunkelrot
+        ctx.lineWidth = 10;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Innerer Ring (gelb - für Schwanz)
+        ctx.strokeStyle = `rgba(255, 255, 0, ${circleAlpha * 0.9})`; // Gelb
+        ctx.lineWidth = 6;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, circleRadius * 0.7, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Text "BOSS ERSCHEINT!"
+        ctx.fillStyle = `rgba(255, 255, 255, ${circleAlpha})`;
+        ctx.font = 'bold 56px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // Schatten
+        ctx.fillStyle = `rgba(0, 0, 0, ${circleAlpha * 0.5})`;
+        ctx.fillText('BOSS ERSCHEINT!', centerX + 4, centerY - 4 + 4);
+        
+        // Haupttext
+        ctx.fillStyle = `rgba(255, 0, 0, ${circleAlpha})`; // Rot
+        ctx.fillText('BOSS ERSCHEINT!', centerX, centerY - 4);
+        
+        // Untertitel
+        ctx.font = 'bold 28px Arial';
+        ctx.fillStyle = `rgba(255, 255, 0, ${circleAlpha})`; // Gelb
+        ctx.fillText('3 Bosses erscheinen! Besiege alle!', centerX, centerY + 50);
+        
+        ctx.restore();
+    }
+    
+    spawnBosses(count) {
+        if (!this.tier || !this.tier.segments || this.tier.segments.length === 0) {
+            this.log('FEHLER: Kann Bosses nicht spawnen - Spieler nicht vorhanden!', 'error');
+            return;
+        }
+        
+        const playerHead = this.tier.segments[0];
+        const spawnDistance = 200; // Näher am Spieler für bessere Sichtbarkeit
+        
+        // Spawne mehrere Bosses um den Spieler herum
+        for (let i = 0; i < count; i++) {
+            // Verteile Bosses in einem Kreis um den Spieler
+            const angle = (Math.PI * 2 / count) * i + Math.PI; // Start gegenüber, dann gleichmäßig verteilt
+            const bossX = playerHead.x + Math.cos(angle) * spawnDistance;
+            const bossY = playerHead.y + Math.sin(angle) * spawnDistance;
+            
+            try {
+                const boss = new BossCreature(bossX, bossY);
+                this.bosses.push(boss);
+                this.log(`Boss ${i + 1} gespawnt bei (${Math.floor(bossX)}, ${Math.floor(bossY)})`, 'info');
+            } catch (error) {
+                this.log(`FEHLER beim Spawnen von Boss ${i + 1}: ${error}`, 'error');
+                console.error('Boss spawn error:', error);
+            }
+        }
+        
+        this.log(`${this.bosses.length} BOSSES ERSCHEINEN! Besiege alle ${this.bosses.length}!`, 'error');
+    }
+    
+    checkBossTailCollision() {
+        if (this.bosses.length === 0 || !this.tier || !this.tier.segments || this.tier.segments.length === 0) return;
+        
+        const playerHead = this.tier.segments[0];
+        const biteRange = 20; // Biss-Reichweite
+        const biteRangeSquared = biteRange * biteRange;
+        
+        // Prüfe Kollision mit jedem Boss
+        for (let bossIndex = this.bosses.length - 1; bossIndex >= 0; bossIndex--) {
+            const boss = this.bosses[bossIndex];
+            const tailSegments = boss.getTailSegments();
+            
+            // Prüfe Kollision mit jedem Schwanz-Segment dieses Bosses
+            for (let i = 0; i < tailSegments.length; i++) {
+                const tailSeg = tailSegments[i];
+                const dx = playerHead.x - tailSeg.x;
+                const dy = playerHead.y - tailSeg.y;
+                const distSquared = dx * dx + dy * dy;
+                
+                if (distSquared <= biteRangeSquared) {
+                    // Schwanz wurde gefressen! Boss stirbt sofort
+                    this.bosses.splice(bossIndex, 1);
+                    this.log(`Boss besiegt! Verbleibend: ${this.bosses.length}`, 'success');
+                    
+                    // Prüfe ob alle Bosses besiegt wurden
+                    if (this.bosses.length === 0) {
+                        this.defeatAllBosses();
+                    }
+                    
+                    // Cooldown (verhindert mehrfaches Fressen in einem Frame)
+                    return;
+                }
+            }
+        }
+    }
+    
+    checkBossHeadCollision() {
+        if (this.bosses.length === 0 || !this.tier || !this.tier.segments || this.tier.segments.length === 0) return;
+        
+        const playerHead = this.tier.segments[0];
+        const collisionRange = 25; // Kollisions-Reichweite für Boss-Kopf (größer wegen größerem Boss)
+        const collisionRangeSquared = collisionRange * collisionRange;
+        
+        // Prüfe Kollision mit jedem Boss-Kopf
+        for (let bossIndex = 0; bossIndex < this.bosses.length; bossIndex++) {
+            const boss = this.bosses[bossIndex];
+            
+            // Prüfe ob Cooldown aktiv ist
+            if (boss.damageCooldown > 0) continue;
+            
+            // Prüfe ob Boss Segmente hat
+            if (!boss.segments || boss.segments.length === 0) continue;
+            
+            const bossHead = boss.segments[0];
+            const dx = playerHead.x - bossHead.x;
+            const dy = playerHead.y - bossHead.y;
+            const distSquared = dx * dx + dy * dy;
+            
+            if (distSquared <= collisionRangeSquared) {
+                // Boss-Kopf berührt Spieler - 10 Schaden!
+                const damageAmount = boss.damageAmount || 10;
+                
+                // Entferne Segmente vom Spieler
+                for (let i = 0; i < damageAmount && this.tier.numSegments > 1; i++) {
+                    this.tier.shrink();
+                }
+                
+                // Cooldown setzen (2 Sekunden = 120 Frames bei 60 FPS)
+                boss.damageCooldown = 120;
+                
+                // Damage-Flash starten
+                this.damageFlash = 20;
+                
+                // Große Blut-Animation starten
+                this.startBloodAnimation(playerHead.x, playerHead.y);
+                
+                // Log
+                this.log(`Boss-Kopf berührt! -${damageAmount} Segmente!`, 'error');
+                
+                // Prüfe auf Game Over
+                if (this.checkGameOver()) {
+                    return; // Spiel beendet
+                }
+                
+                this.updateScore();
+            }
+        }
+    }
+    
+    startBloodAnimation(x, y) {
+        // Starte große Blut-Animation bei Schaden
+        const particleCount = 50; // Viele Blutpartikel für dramatischen Effekt
+        
+        const particles = [];
+        for (let i = 0; i < particleCount; i++) {
+            // Zufällige Richtung und Geschwindigkeit
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 2 + Math.random() * 6; // 2-8 Pixel pro Frame
+            const size = 3 + Math.random() * 5; // 3-8 Pixel Größe
+            
+            particles.push({
+                x: x,
+                y: y,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                size: size,
+                lifetime: 30 + Math.random() * 20, // 30-50 Frames
+                color: Math.random() > 0.3 ? '#8b0000' : '#ff0000' // Meist dunkelrot, manchmal hellrot
+            });
+        }
+        
+        this.bloodAnimation = {
+            duration: 60, // 1 Sekunde bei 60 FPS
+            phase: 0,
+            x: x,
+            y: y,
+            particles: particles
+        };
+    }
+    
+    drawBloodAnimation() {
+        if (!this.bloodAnimation) return;
+        
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        
+        // Zeichne alle Blut-Partikel
+        for (let i = 0; i < this.bloodAnimation.particles.length; i++) {
+            const particle = this.bloodAnimation.particles[i];
+            
+            // Alpha basierend auf verbleibender Lebenszeit
+            const alpha = particle.lifetime / 50;
+            
+            ctx.fillStyle = particle.color;
+            ctx.globalAlpha = alpha;
+            
+            // Zeichne Blut-Tropfen (elliptisch für realistischeren Effekt)
+            ctx.beginPath();
+            ctx.ellipse(
+                Math.floor(particle.x),
+                Math.floor(particle.y),
+                particle.size,
+                particle.size * 0.7,
+                0,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Zusätzliche kleine Tropfen für mehr Realismus
+            if (particle.size > 2) {
+                ctx.beginPath();
+                ctx.arc(
+                    Math.floor(particle.x + particle.size * 0.5),
+                    Math.floor(particle.y + particle.size * 0.5),
+                    particle.size * 0.3,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+            }
+        }
+        
+        // Großer zentraler Blutspritzer (nur am Anfang)
+        if (this.bloodAnimation.phase < 10) {
+            const progress = this.bloodAnimation.phase / 10;
+            const size = 40 * (1 - progress);
+            const alpha = 1 - progress;
+            
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = '#8b0000';
+            
+            // Großer zentraler Spritzer
+            ctx.beginPath();
+            ctx.arc(
+                Math.floor(this.bloodAnimation.x),
+                Math.floor(this.bloodAnimation.y),
+                size,
+                0,
+                Math.PI * 2
+            );
+            ctx.fill();
+            
+            // Zusätzliche Spritzer-Richtungen
+            for (let i = 0; i < 8; i++) {
+                const angle = (Math.PI * 2 / 8) * i;
+                const dist = size * 0.7;
+                const spritzX = this.bloodAnimation.x + Math.cos(angle) * dist;
+                const spritzY = this.bloodAnimation.y + Math.sin(angle) * dist;
+                
+                ctx.beginPath();
+                ctx.ellipse(
+                    Math.floor(spritzX),
+                    Math.floor(spritzY),
+                    size * 0.3,
+                    size * 0.2,
+                    angle,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+            }
+        }
+        
+        ctx.globalAlpha = 1.0;
+        ctx.restore();
+    }
+    
+    defeatAllBosses() {
+        // Alle Bosses besiegt!
+        this.log('ALLE BOSSES BESIEGT! Level geschafft!', 'success');
+        
+        // Starte Win-Animation
+        this.winAnimation = {
+            duration: 300, // 5 Sekunden bei 60 FPS
+            phase: 0
+        };
+        
+        // Nach Animation zurück zum Menü
+        setTimeout(() => {
+            this.showMainMenu(true); // Mit Gold-Belohnung
+        }, 5000);
+    }
+    
+    drawBossDirectionIndicators() {
+        // Zeichne Richtungsindikatoren für Bosses außerhalb des Viewports (mit Kamera-Transformation)
+        // Diese Funktion wird nicht verwendet, da drawBossDirectionIndicatorsScreen verwendet wird
+        // Aber sie wird aufgerufen, also leere Implementierung
+    }
+    
+    drawBossDirectionIndicatorsScreen() {
+        // Zeichne Richtungsindikatoren am Bildschirm-Rand (ohne Kamera-Transformation)
+        if (this.bosses.length === 0) return;
+        
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset Transformation
+        
+        const viewLeft = this.cameraX - renderWidth / (2 * this.cameraZoom);
+        const viewRight = this.cameraX + renderWidth / (2 * this.cameraZoom);
+        const viewTop = this.cameraY - renderHeight / (2 * this.cameraZoom);
+        const viewBottom = this.cameraY + renderHeight / (2 * this.cameraZoom);
+        
+        const margin = 30; // Abstand vom Rand
+        
+        for (let i = 0; i < this.bosses.length; i++) {
+            const boss = this.bosses[i];
+            if (!boss || !boss.segments || boss.segments.length === 0) continue;
+            
+            const bossHead = boss.segments[0];
+            
+            // Prüfe ob Boss außerhalb des Viewports ist
+            if (bossHead.x < viewLeft || bossHead.x > viewRight || 
+                bossHead.y < viewTop || bossHead.y > viewBottom) {
+                
+                // Berechne Position am Bildschirm-Rand
+                let screenX = renderWidth / 2;
+                let screenY = renderHeight / 2;
+                
+                // Berechne Winkel vom Viewport-Zentrum zum Boss
+                const centerX = this.cameraX;
+                const centerY = this.cameraY;
+                const dx = bossHead.x - centerX;
+                const dy = bossHead.y - centerY;
+                const angle = Math.atan2(dy, dx);
+                
+                // Berechne Schnittpunkt mit Bildschirm-Rand
+                const halfWidth = renderWidth / 2;
+                const halfHeight = renderHeight / 2;
+                
+                // Prüfe welche Seite des Bildschirms
+                const tanAngle = Math.tan(angle);
+                
+                if (Math.abs(dx) > Math.abs(dy)) {
+                    // Links oder rechts
+                    if (dx > 0) {
+                        // Rechts
+                        screenX = renderWidth - margin;
+                        screenY = renderHeight / 2 + tanAngle * halfWidth;
+                    } else {
+                        // Links
+                        screenX = margin;
+                        screenY = renderHeight / 2 - tanAngle * halfWidth;
+                    }
+                } else {
+                    // Oben oder unten
+                    if (dy > 0) {
+                        // Unten
+                        screenY = renderHeight - margin;
+                        screenX = renderWidth / 2 + (dx / dy) * halfHeight;
+                    } else {
+                        // Oben
+                        screenY = margin;
+                        screenX = renderWidth / 2 - (dx / dy) * halfHeight;
+                    }
+                }
+                
+                // Begrenze auf Bildschirm
+                screenX = Math.max(margin, Math.min(renderWidth - margin, screenX));
+                screenY = Math.max(margin, Math.min(renderHeight - margin, screenY));
+                
+                // Zeichne roten Richtungspfeil
+                ctx.strokeStyle = '#ff0000';
+                ctx.fillStyle = '#ff0000';
+                ctx.lineWidth = 4;
+                
+                const arrowSize = 20;
+                ctx.beginPath();
+                ctx.moveTo(screenX, screenY);
+                ctx.lineTo(
+                    screenX + Math.cos(angle) * arrowSize,
+                    screenY + Math.sin(angle) * arrowSize
+                );
+                ctx.stroke();
+                
+                // Pfeilspitze
+                ctx.beginPath();
+                ctx.moveTo(
+                    screenX + Math.cos(angle) * arrowSize,
+                    screenY + Math.sin(angle) * arrowSize
+                );
+                ctx.lineTo(
+                    screenX + Math.cos(angle) * arrowSize - Math.cos(angle - Math.PI / 6) * 10,
+                    screenY + Math.sin(angle) * arrowSize - Math.sin(angle - Math.PI / 6) * 10
+                );
+                ctx.lineTo(
+                    screenX + Math.cos(angle) * arrowSize - Math.cos(angle + Math.PI / 6) * 10,
+                    screenY + Math.sin(angle) * arrowSize - Math.sin(angle + Math.PI / 6) * 10
+                );
+                ctx.closePath();
+                ctx.fill();
+                
+                // Kleiner roter Kreis als Marker
+                ctx.fillStyle = '#ff0000';
+                ctx.beginPath();
+                ctx.arc(screenX, screenY, 5, 0, Math.PI * 2);
+                ctx.fill();
+            }
+        }
+        
+        ctx.restore();
+    }
+    
+    drawWinAnimation() {
+        if (!this.winAnimation) return;
+        
+        // Zeichne ohne Kamera-Transformation (Bildschirm-Koordinaten)
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset Transformation
+        
+        const progress = this.winAnimation.phase / this.winAnimation.duration;
+        this.winAnimation.phase++;
+        
+        if (this.winAnimation.phase >= this.winAnimation.duration) {
+            this.winAnimation = null;
+            ctx.restore();
+            return;
+        }
+        
+        // Große Win-Animation in der Mitte
+        const centerX = renderWidth / 2;
+        const centerY = renderHeight / 2;
+        
+        // Hintergrund-Overlay (gold, leicht transparent)
+        ctx.fillStyle = `rgba(255, 215, 0, ${0.6 * (1 - progress * 0.3)})`;
+        ctx.fillRect(0, 0, renderWidth, renderHeight);
+        
+        // Großer pulsierender Kreis (gold)
+        const pulse = Math.sin(progress * Math.PI * 6) * 0.3 + 0.7;
+        const circleRadius = 200 + pulse * 80;
+        const circleAlpha = 1 - progress * 0.5;
+        
+        // Äußerer Ring (gold)
+        ctx.strokeStyle = `rgba(255, 215, 0, ${circleAlpha})`; // Gold
+        ctx.lineWidth = 12;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, circleRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Innerer Ring (weiß)
+        ctx.strokeStyle = `rgba(255, 255, 255, ${circleAlpha * 0.9})`; // Weiß
+        ctx.lineWidth = 8;
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, circleRadius * 0.7, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Text "LEVEL GESCHAFFT!"
+        ctx.fillStyle = `rgba(255, 255, 255, ${circleAlpha})`;
+        ctx.font = 'bold 64px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        
+        // Schatten
+        ctx.fillStyle = `rgba(0, 0, 0, ${circleAlpha * 0.5})`;
+        ctx.fillText('LEVEL GESCHAFFT!', centerX + 5, centerY - 5 + 5);
+        
+        // Haupttext
+        ctx.fillStyle = `rgba(255, 215, 0, ${circleAlpha})`; // Gold
+        ctx.fillText('LEVEL GESCHAFFT!', centerX, centerY - 5);
+        
+        // Untertitel
+        ctx.font = 'bold 32px Arial';
+        ctx.fillStyle = `rgba(255, 255, 255, ${circleAlpha})`; // Weiß
+        ctx.fillText('Boss besiegt!', centerX, centerY + 60);
+        
+        ctx.restore();
     }
     
     hideMainMenu() {
@@ -5545,12 +6432,35 @@ class Simulator {
     
     saveHighscore(name, score, length) {
         const highscores = this.getHighscores();
-        highscores.push({
-            name: name || 'Anonymous',
-            score: score,
-            length: length,
-            date: new Date().toISOString()
-        });
+        const playerName = name || 'Anonymous';
+        
+        // Prüfe ob Name bereits existiert (case-insensitive)
+        const existingIndex = highscores.findIndex(hs => hs.name.toLowerCase() === playerName.toLowerCase());
+        
+        if (existingIndex !== -1) {
+            // Name existiert bereits - aktualisiere nur wenn neuer Score höher ist
+            const existingScore = highscores[existingIndex].score;
+            if (score > existingScore) {
+                highscores[existingIndex] = {
+                    name: playerName,
+                    score: score,
+                    length: length,
+                    date: new Date().toISOString()
+                };
+            } else {
+                // Neuer Score ist nicht höher - nichts tun
+                this.updateHighscoreDisplay();
+                return;
+            }
+        } else {
+            // Neuer Name - füge hinzu
+            highscores.push({
+                name: playerName,
+                score: score,
+                length: length,
+                date: new Date().toISOString()
+            });
+        }
         
         // Sortiere nach Score (höchster zuerst)
         highscores.sort((a, b) => b.score - a.score);
@@ -5610,6 +6520,14 @@ class Simulator {
         this.staminaTokens = [];
         this.projectiles = []; // Projektil-Array leeren
         this.shockwaveAnimation = null; // Shockwave-Animation zurücksetzen
+        this.bloodAnimation = null; // Blut-Animation zurücksetzen
+        this.length50Animation = null; // Länge 50 Animation zurücksetzen
+        this.length50MilestoneReached = false; // Meilenstein-Flag zurücksetzen
+        this.length100Animation = null; // Länge 100 Animation zurücksetzen
+        this.length100MilestoneReached = false; // Länge 100 Flag zurücksetzen
+        this.bosses = []; // Bosses zurücksetzen
+        this.winAnimation = null; // Win-Animation zurücksetzen
+        this.activeEvolutionIndex = 0; // Evolution-Index zurücksetzen
         
         // Spieler bei (0, 0)
         const startX = 0;
@@ -5627,6 +6545,7 @@ class Simulator {
         this.hunters = [];
         this.fatHunters = [];
         this.tokenPoolSpawnTimer = 0;
+        this.nearbyHunterSpawnTimer = 0;
         
         // Initiale Chunks laden (um Startposition) - generiert auch Hunters
         this.loadedChunks.clear();
@@ -5728,6 +6647,10 @@ class Simulator {
                 this.spawnFood();
             }
             this.log(`Spiel gestartet - Foods: ${this.foods.length}, Hunters: ${this.hunters.length}, Fat: ${this.fatHunters.length}`, 'info');
+            
+            // Aktualisiere Evolution-Anzeige beim Start
+            this.updateEvolutionDisplay();
+            
             this.isRunning = true;
             this.animate();
         }
@@ -5800,6 +6723,75 @@ class Simulator {
             }
             this.tokenPoolSpawnTimer = 0;
             this.log(`Token-Pool gespawnt - Foods: ${this.foods.length}, Tokens: ${this.staminaTokens.length}`, 'info');
+        }
+        
+        // Zusätzliche Hunter-Spawning in der Nähe des Spielers (basierend auf Länge)
+        if (!this.nearbyHunterSpawnTimer) {
+            this.nearbyHunterSpawnTimer = 0;
+        }
+        this.nearbyHunterSpawnTimer++;
+        if (this.tier) {
+            const playerLength = this.tier.numSegments;
+            // Ab Länge 100 (Bosse spawnen) bleibt die Spawn-Rate konstant
+            const effectiveLength = Math.min(playerLength, 100); // Stoppt bei 100
+            
+            // Spawn-Intervall wird kürzer je länger der Spieler wird (bis 100)
+            // Basis: 10 Sekunden (600 Frames), reduziert um 0.5 Sekunden pro 10 Segmente (minimal 1 Sekunde)
+            const baseInterval = 600; // 10 Sekunden
+            const intervalReduction = Math.min(540, Math.floor(effectiveLength / 10) * 30); // Maximal 9 Sekunden Reduktion
+            const spawnInterval = Math.max(60, baseInterval - intervalReduction); // Minimal 1 Sekunde
+            
+            if (this.nearbyHunterSpawnTimer >= spawnInterval) {
+                // Anzahl der zu spawnenden Hunters basierend auf Länge (bis 100)
+                // Basis: 0-1, zusätzlich +1 pro 10 Segmente (maximal +10 bei 100 Segmenten)
+                const lengthBonus = Math.floor(effectiveLength / 10); // +1 pro 10 Segmente, maximal +10
+                const hunterCount = Math.floor(Math.random() * 2) + lengthBonus; // 0-11 Hunters (bei 100 Segmenten)
+                
+                if (hunterCount > 0 && this.tier) {
+                    const playerHead = this.tier.getHeadPosition();
+                    for (let i = 0; i < hunterCount; i++) {
+                        // Spawne in einem Radius um den Spieler (300-600 Pixel)
+                        const angle = Math.random() * Math.PI * 2;
+                        const distance = 300 + Math.random() * 300;
+                        const hunterX = playerHead.x + Math.cos(angle) * distance;
+                        const hunterY = playerHead.y + Math.sin(angle) * distance;
+                        
+                        // Prüfe ob Elite Hunter spawnt werden können
+                        const canSpawnElite = playerLength >= 50;
+                        const hunterType = Math.random();
+                        
+                        if (hunterType < 0.5) {
+                            // Normale Hunter
+                            if (this.hunters.length < this.maxHunters) {
+                                const hunter = new HunterCreature(hunterX, hunterY);
+                                hunter.isChasing = false;
+                                this.hunters.push(hunter);
+                            }
+                        } else if (hunterType < 0.8) {
+                            // Fat Hunter
+                            if (this.fatHunters.length < this.maxFatHunters) {
+                                this.fatHunters.push(new FatHunterCreature(hunterX, hunterY));
+                            }
+                        } else if (canSpawnElite) {
+                            // Elite Hunter
+                            if (this.hunters.length < this.maxHunters) {
+                                const hunter = new HunterCreature(hunterX, hunterY, true);
+                                hunter.isChasing = false;
+                                this.hunters.push(hunter);
+                            }
+                        } else {
+                            // Fallback zu normalem Hunter
+                            if (this.hunters.length < this.maxHunters) {
+                                const hunter = new HunterCreature(hunterX, hunterY);
+                                hunter.isChasing = false;
+                                this.hunters.push(hunter);
+                            }
+                        }
+                    }
+                    this.log(`Zusätzliche Hunters in der Nähe gespawnt: ${hunterCount} (Länge: ${playerLength})`, 'info');
+                }
+                this.nearbyHunterSpawnTimer = 0;
+            }
         }
         
         // Cooldowns werden jetzt individuell pro Jäger verwaltet
@@ -6846,6 +7838,28 @@ class Simulator {
             
             this.tier.update();
             
+            // Bosses aktualisieren (wenn vorhanden)
+            if (this.bosses.length > 0) {
+                const playerHead = this.tier.getHeadPosition();
+                for (let i = this.bosses.length - 1; i >= 0; i--) {
+                    const boss = this.bosses[i];
+                    if (boss && boss.setTarget && boss.update) {
+                        boss.setTarget(playerHead.x, playerHead.y);
+                        boss.update();
+                    } else {
+                        // Boss ist ungültig - entferne ihn
+                        this.bosses.splice(i, 1);
+                        this.log('Ungültiger Boss entfernt', 'warning');
+                    }
+                }
+                
+                // Prüfe Kollision mit Boss-Schwänzen und Boss-Köpfen
+                if (this.bosses.length > 0) {
+                    this.checkBossTailCollision();
+                    this.checkBossHeadCollision();
+                }
+            }
+            
             // Foods und Tokens ZUERST zeichnen (unter allem) - for Loop ist schneller als forEach
             for (let i = 0; i < this.foods.length; i++) {
                 this.foods[i].draw();
@@ -6884,6 +7898,34 @@ class Simulator {
                 this.fatHunters[i].draw();
             }
             
+            // Bosses zeichnen (wenn vorhanden)
+            for (let i = this.bosses.length - 1; i >= 0; i--) {
+                const boss = this.bosses[i];
+                if (boss && boss.draw) {
+                    try {
+                        // Prüfe ob Boss im Viewport ist
+                        if (boss.segments && boss.segments.length > 0) {
+                            const bossHead = boss.segments[0];
+                            if (this.isInViewport(bossHead.x, bossHead.y, 50)) {
+                                // Boss ist sichtbar - zeichne normal
+                                boss.draw();
+                            }
+                            // Wenn Boss außerhalb ist, wird er später mit Richtungsindikator gezeichnet
+                        } else {
+                            boss.draw(); // Fallback
+                        }
+                    } catch (error) {
+                        console.error('Fehler beim Zeichnen von Boss:', error);
+                        this.bosses.splice(i, 1); // Entferne fehlerhaften Boss
+                    }
+                } else {
+                    this.bosses.splice(i, 1); // Entferne ungültigen Boss
+                }
+            }
+            
+            // Richtungsindikatoren für Bosses außerhalb des Viewports zeichnen (mit Kamera-Transformation)
+            this.drawBossDirectionIndicators();
+            
             // Futter-Kollision prüfen
             const eatenFoodIndex = this.checkFoodCollision();
             if (eatenFoodIndex !== null) {
@@ -6912,11 +7954,27 @@ class Simulator {
                     this.tier.mouthOpen = 0.8;
                 }
                 
+                const oldLength = this.tier.numSegments;
                 this.tier.grow();
                 this.tier.increaseSpeed(); // Geschwindigkeit erhöhen
                 this.score += 10;
                 this.foodCount++;
                 this.updateScore();
+                
+                // Prüfe ob Länge 50 erreicht wurde
+                if (oldLength < 50 && this.tier.numSegments >= 50 && !this.length50MilestoneReached) {
+                    this.length50MilestoneReached = true;
+                    this.startLength50Animation();
+                }
+                
+                // Prüfe ob Länge 100 erreicht wurde (Boss erscheint)
+                if (oldLength < 100 && this.tier.numSegments >= 100 && !this.length100MilestoneReached) {
+                    this.length100MilestoneReached = true;
+                    this.startLength100Animation();
+                }
+                
+                // Fortschritt speichern
+                this.saveProgress();
                 
                 // Hungry Leech Mutation: Körper wird größer beim Essen
                 const hungryLeechMutations = Object.keys(this.activeMutations).filter(id => id.includes('hungry_leech'));
@@ -6978,62 +8036,105 @@ class Simulator {
             }
         }
         
-        // Projektil-Update und -Kollision
-        this.projectiles = this.projectiles.filter(projectile => {
+        // Projektil-Update und -Kollision (rückwärts iterieren für sichere Entfernung)
+        for (let projIndex = this.projectiles.length - 1; projIndex >= 0; projIndex--) {
+            const projectile = this.projectiles[projIndex];
             projectile.update();
             
-            // Prüfe Kollision mit Jägern
+            // Prüfe ob Projektil noch lebt
+            if (projectile.lifetime <= 0) {
+                this.projectiles.splice(projIndex, 1);
+                continue;
+            }
+            
+            let projectileHit = false;
+            
+            // Prüfe Kollision mit Jägern (rückwärts iterieren)
             for (let i = this.hunters.length - 1; i >= 0; i--) {
                 const hunter = this.hunters[i];
+                if (!hunter || !hunter.segments || hunter.segments.length === 0) {
+                    // Ungültiger Hunter - entferne
+                    this.hunters.splice(i, 1);
+                    continue;
+                }
+                
                 const hunterHead = hunter.getHeadPosition();
                 if (projectile.checkCollision(hunterHead.x, hunterHead.y, 8)) {
-                    // Treffer! Jäger verliert ein Segment
-                    if (hunter.numSegments > 1) {
-                        // Wenn Hunter beim Klettern ist, lasse ihn los
-                        if (hunter.isClimbing) {
-                            hunter.isClimbing = false;
-                            hunter.climbingTargetIndex = -1;
-                            hunter.climbingProgress = 0;
-                            hunter.climbCooldown = 60;
-                            this.log('Jäger durch Schuss getroffen - Klettern abgebrochen', 'info');
-                        }
-                        hunter.shrink();
-                    } else {
-                        // Wenn Hunter beim Klettern ist, lasse ihn los bevor er stirbt
-                        if (hunter.isClimbing) {
-                            hunter.isClimbing = false;
-                            hunter.climbingTargetIndex = -1;
-                            hunter.climbingProgress = 0;
-                        }
+                    // Treffer! Reduziere HP
+                    hunter.currentHP--;
+                    
+                    // Wenn Hunter beim Klettern ist, lasse ihn los
+                    if (hunter.isClimbing) {
+                        hunter.isClimbing = false;
+                        hunter.climbingTargetIndex = -1;
+                        hunter.climbingProgress = 0;
+                        hunter.climbCooldown = 60;
+                        this.log('Jäger durch Schuss getroffen - Klettern abgebrochen', 'info');
+                    }
+                    
+                    if (hunter.currentHP <= 0) {
                         // Jäger stirbt
                         this.hunters.splice(i, 1);
                         this.log('Jäger durch Schuss eliminiert!', 'success');
-                    }
-                    // Projektil entfernen
-                    return false;
-                }
-            }
-            
-            // Prüfe Kollision mit Fat Hunters
-            for (let i = this.fatHunters.length - 1; i >= 0; i--) {
-                const fatHunter = this.fatHunters[i];
-                const fatHunterHead = fatHunter.getHeadPosition();
-                if (projectile.checkCollision(fatHunterHead.x, fatHunterHead.y, 10)) {
-                    // Treffer! Fat Hunter verliert ein Segment
-                    if (fatHunter.numSegments > 1) {
-                        fatHunter.shrink();
                     } else {
-                        // Fat Hunter stirbt
-                        this.fatHunters.splice(i, 1);
-                        this.log('Fat Hunter durch Schuss eliminiert!', 'success');
+                        // Jäger überlebt, verliert aber ein Segment
+                        if (hunter.numSegments > 1) {
+                            hunter.shrink();
+                        }
+                        this.log(`Jäger getroffen! HP: ${hunter.currentHP}/${hunter.maxHP}`, 'info');
                     }
+                    
                     // Projektil entfernen
-                    return false;
+                    projectileHit = true;
+                    break; // Projektil kann nur einen Treffer machen
                 }
             }
             
-            return projectile.lifetime > 0;
-        });
+            // Wenn Projektil getroffen hat, entferne es
+            if (projectileHit) {
+                this.projectiles.splice(projIndex, 1);
+                continue;
+            }
+            
+            // Prüfe Kollision mit Fat Hunters (nur wenn Projektil noch nicht getroffen hat)
+            if (!projectileHit) {
+                for (let i = this.fatHunters.length - 1; i >= 0; i--) {
+                    const fatHunter = this.fatHunters[i];
+                    if (!fatHunter || !fatHunter.segments || fatHunter.segments.length === 0) {
+                        // Ungültiger Fat Hunter - entferne
+                        this.fatHunters.splice(i, 1);
+                        continue;
+                    }
+                    
+                    const fatHunterHead = fatHunter.getHeadPosition();
+                    if (projectile.checkCollision(fatHunterHead.x, fatHunterHead.y, 10)) {
+                        // Treffer! Reduziere HP
+                        fatHunter.currentHP--;
+                        
+                        if (fatHunter.currentHP <= 0) {
+                            // Fat Hunter stirbt
+                            this.fatHunters.splice(i, 1);
+                            this.log('Fat Hunter durch Schuss eliminiert!', 'success');
+                        } else {
+                            // Fat Hunter überlebt, verliert aber ein Segment
+                            if (fatHunter.numSegments > 1) {
+                                fatHunter.shrink();
+                            }
+                            this.log(`Fat Hunter getroffen! HP: ${fatHunter.currentHP}/${fatHunter.maxHP}`, 'info');
+                        }
+                        
+                        // Projektil entfernen
+                        projectileHit = true;
+                        break; // Projektil kann nur einen Treffer machen
+                    }
+                }
+            }
+            
+            // Wenn Projektil getroffen hat oder abgelaufen ist, entferne es
+            if (projectileHit || projectile.lifetime <= 0) {
+                this.projectiles.splice(projIndex, 1);
+            }
+        }
         
         // Projektil zeichnen - for Loop ist schneller
         for (let i = 0; i < this.projectiles.length; i++) {
@@ -7082,10 +8183,54 @@ class Simulator {
             }
         }
         
+        // Blut-Animation aktualisieren und zeichnen
+        if (this.bloodAnimation) {
+            this.bloodAnimation.duration--;
+            this.bloodAnimation.phase++;
+            
+            // Aktualisiere Blut-Partikel
+            for (let i = this.bloodAnimation.particles.length - 1; i >= 0; i--) {
+                const particle = this.bloodAnimation.particles[i];
+                particle.x += particle.vx;
+                particle.y += particle.vy;
+                particle.vy += 0.3; // Schwerkraft
+                particle.lifetime--;
+                particle.size *= 0.98; // Wird kleiner
+                
+                if (particle.lifetime <= 0 || particle.size < 0.5) {
+                    this.bloodAnimation.particles.splice(i, 1);
+                }
+            }
+            
+            if (this.bloodAnimation.duration > 0) {
+                this.drawBloodAnimation();
+            } else {
+                this.bloodAnimation = null;
+            }
+        }
+        
         // Partikel zeichnen (über allem) - for Loop ist schneller
         for (let i = 0; i < this.particles.length; i++) {
             this.particles[i].draw();
         }
+        
+        // Länge 50 Meilenstein-Animation zeichnen (über allem, ohne Kamera-Transformation)
+        if (this.length50Animation) {
+            this.drawLength50Animation();
+        }
+        
+        // Länge 100 Meilenstein-Animation zeichnen
+        if (this.length100Animation) {
+            this.drawLength100Animation();
+        }
+        
+        // Win-Animation zeichnen (über allem)
+        if (this.winAnimation) {
+            this.drawWinAnimation();
+        }
+        
+        // Richtungsindikatoren für Bosses außerhalb des Viewports (ohne Kamera-Transformation)
+        this.drawBossDirectionIndicatorsScreen();
         
         // Kamera-Transformation wiederherstellen
         ctx.restore();
@@ -7109,14 +8254,47 @@ class Simulator {
         const drawTop = Math.floor(viewTop - padding);
         const drawBottom = Math.ceil(viewBottom + padding);
         
-        // Rain World Stil Hintergrund - zeichne für den gesamten sichtbaren Bereich
-        const bgColor = '#1a1a1a';
-        ctx.fillStyle = bgColor;
+        // Prüfe ob Werte endlich sind (verhindert NaN/Infinity Fehler)
+        if (!isFinite(drawTop) || !isFinite(drawBottom) || !isFinite(drawLeft) || !isFinite(drawRight)) {
+            // Fallback: einfacher Hintergrund
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(0, 0, renderWidth, renderHeight);
+            return;
+        }
+        
+        // Tiefsee-Hintergrund: Gradient von dunkelblau oben zu fast schwarz unten
+        const gradient = ctx.createLinearGradient(0, drawTop, 0, drawBottom);
+        gradient.addColorStop(0, '#0a0a1a'); // Sehr dunkles Blau oben
+        gradient.addColorStop(0.3, '#050510'); // Noch dunkler
+        gradient.addColorStop(0.6, '#020208'); // Fast schwarz
+        gradient.addColorStop(1, '#000000'); // Komplett schwarz unten
+        
+        ctx.fillStyle = gradient;
         ctx.fillRect(drawLeft, drawTop, drawRight - drawLeft, drawBottom - drawTop);
         
-        // Zeichne Welt-Grenzen nur wenn sie im sichtbaren Bereich sind
+        // Subtile Lichtpartikel von oben (wie Lichtstrahlen in der Tiefsee)
+        ctx.save();
+        ctx.globalAlpha = 0.15;
+        const particleCount = 20;
+        for (let i = 0; i < particleCount; i++) {
+            const x = drawLeft + (i * (drawRight - drawLeft) / particleCount) + Math.sin(Date.now() * 0.0001 + i) * 50;
+            const y = drawTop + Math.sin(Date.now() * 0.0002 + i * 0.5) * 100;
+            const size = 2 + Math.sin(Date.now() * 0.0003 + i) * 1;
+            
+            // Lichtstrahl-Effekt (vertikal von oben)
+            const lightGradient = ctx.createLinearGradient(x, drawTop, x, drawTop + 200);
+            lightGradient.addColorStop(0, 'rgba(0, 50, 100, 0.3)');
+            lightGradient.addColorStop(0.5, 'rgba(0, 30, 60, 0.15)');
+            lightGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            ctx.fillStyle = lightGradient;
+            ctx.fillRect(x - size, drawTop, size * 2, 200);
+        }
+        ctx.restore();
+        
+        // Zeichne Welt-Grenzen nur wenn sie im sichtbaren Bereich sind (Tiefsee-Stil)
         const wallThickness = 3;
-        const wallColor = '#0a0a0a'; // Sehr dunkel, fast schwarz
+        const wallColor = '#000000'; // Komplett schwarz für Tiefsee-Wände
         ctx.fillStyle = wallColor;
         
         // Obere Wand (nur wenn sichtbar)
@@ -7136,9 +8314,9 @@ class Simulator {
             ctx.fillRect(this.worldWidth - wallThickness, Math.max(drawTop, 0), wallThickness, Math.min(drawBottom, this.worldHeight) - Math.max(drawTop, 0));
         }
         
-        // Zusätzliche visuelle Marker an den Ecken (nur wenn sichtbar)
+        // Zusätzliche visuelle Marker an den Ecken (nur wenn sichtbar) - Tiefsee-Stil
         const cornerSize = 15;
-        ctx.fillStyle = '#ff0000'; // Rot für bessere Sichtbarkeit
+        ctx.fillStyle = '#001122'; // Sehr dunkles Blau für Tiefsee-Atmosphäre
         
         // Obere linke Ecke
         if (viewLeft <= cornerSize && viewTop <= cornerSize && viewRight >= 0 && viewBottom >= 0) {
@@ -7332,12 +8510,12 @@ function updateUITexts() {
     const highscoreEnterNameText = document.getElementById('highscoreEnterNameText');
     const submitHighscoreBtn = document.getElementById('submitHighscoreBtn');
     const skipHighscoreBtn = document.getElementById('skipHighscoreBtn');
-    const playerNameInput = document.getElementById('playerNameInput');
+    const highscorePlayerNameInput = document.getElementById('playerNameInput'); // Für Highscore-Eingabe
     if (highscoreCongratsText) highscoreCongratsText.textContent = t('congratsTop100');
     if (highscoreEnterNameText) highscoreEnterNameText.textContent = t('enterName');
     if (submitHighscoreBtn) submitHighscoreBtn.textContent = t('save');
     if (skipHighscoreBtn) skipHighscoreBtn.textContent = t('skip');
-    if (playerNameInput) playerNameInput.placeholder = t('name');
+    if (highscorePlayerNameInput) highscorePlayerNameInput.placeholder = t('name');
     
     // Login/Register UI
     const loginTitle = document.getElementById('loginTitle');
@@ -7369,6 +8547,18 @@ function updateUITexts() {
     if (loginNameInput) loginNameInput.placeholder = t('name');
     if (registerNameInput) registerNameInput.placeholder = t('name');
     if (registerHashtagInput) registerHashtagInput.placeholder = t('hashtag');
+    
+    // Name-Eingabe Bereich
+    const nameTitle = document.getElementById('nameTitle');
+    const playerNameInput = document.getElementById('playerNameInput');
+    const startGameBtn = document.getElementById('startGameBtn');
+    if (nameTitle) nameTitle.textContent = t('enterName').replace(':', ''); // "Enter your name" ohne Doppelpunkt
+    if (playerNameInput) playerNameInput.placeholder = t('name');
+    if (startGameBtn) startGameBtn.textContent = t('startGame');
+    
+    // Zurück zum Menü Button während des Spiels
+    const backToMenuFromGameBtn = document.getElementById('backToMenuFromGameBtn');
+    if (backToMenuFromGameBtn) backToMenuFromGameBtn.textContent = t('backToMenu');
     
     // Upgrade Overlay
     const upgradeOverlayTitle = document.getElementById('upgradeOverlayTitle');
@@ -7537,4 +8727,6 @@ if (document.readyState === 'loading') {
     // DOM ist bereits geladen, initialisiere sofort
     initializeGame();
 }
+
+
 

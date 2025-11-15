@@ -26,62 +26,28 @@
         <div class="upgrade-container" style="max-width: 500px;">
             <h1 id="mainMenuTitle" style="color: #ff4444; text-align: center; margin-bottom: 30px; font-size: 3em; text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);">Leech</h1>
             
-            <!-- Login/Registrierung Bereich -->
-            <div id="loginSection" style="margin-bottom: 30px;">
-                <div id="loginForm" style="display: block;">
-                    <h3 id="loginTitle" style="color: #cccccc; text-align: center; margin-bottom: 20px; font-size: 1.3em;">Anmelden</h3>
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
-                        <input type="text" id="loginNameInput" placeholder="Name" maxlength="20" style="padding: 12px; font-size: 16px; border: 2px solid #666; border-radius: 5px; background: #333; color: #cccccc; text-align: center;">
-                        <button id="loginBtn" style="padding: 12px 24px; font-size: 16px; background: #4ade80; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
-                            Anmelden
-                        </button>
-                        <div style="text-align: center; color: #888; font-size: 0.9em; margin-top: 10px;">
-                            <span id="noAccountText">Noch kein Account?</span>
-                            <button id="showRegisterBtn" style="background: none; border: none; color: #60a5fa; cursor: pointer; text-decoration: underline; font-size: 0.9em; padding: 0; margin-left: 5px;">
-                                Registrieren
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                
-                <div id="registerForm" style="display: none;">
-                    <h3 id="registerTitle" style="color: #cccccc; text-align: center; margin-bottom: 20px; font-size: 1.3em;">Account erstellen</h3>
-                    <div style="display: flex; flex-direction: column; gap: 15px;">
-                        <input type="text" id="registerNameInput" placeholder="Name" maxlength="20" style="padding: 12px; font-size: 16px; border: 2px solid #666; border-radius: 5px; background: #333; color: #cccccc; text-align: center;">
-                        <div style="display: flex; gap: 10px; align-items: center;">
-                            <input type="text" id="registerHashtagInput" placeholder="#1234" maxlength="5" style="flex: 1; padding: 12px; font-size: 16px; border: 2px solid #666; border-radius: 5px; background: #333; color: #cccccc; text-align: center;">
-                            <button id="generateHashtagBtn" style="padding: 12px 20px; font-size: 14px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600; white-space: nowrap;">
-                                🎲 Random
-                            </button>
-                        </div>
-                        <button id="registerBtn" style="padding: 12px 24px; font-size: 16px; background: #60a5fa; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
-                            Account erstellen
-                        </button>
-                        <div style="text-align: center; color: #888; font-size: 0.9em; margin-top: 10px;">
-                            <span id="hasAccountText">Bereits ein Account?</span>
-                            <button id="showLoginBtn" style="background: none; border: none; color: #60a5fa; cursor: pointer; text-decoration: underline; font-size: 0.9em; padding: 0; margin-left: 5px;">
-                                Anmelden
-                            </button>
-                        </div>
-                    </div>
+            <!-- Name-Eingabe Bereich -->
+            <div id="nameSection" style="margin-bottom: 30px;">
+                <h3 id="nameTitle" style="color: #cccccc; text-align: center; margin-bottom: 20px; font-size: 1.3em;">Name eingeben</h3>
+                <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <input type="text" id="playerNameInput" placeholder="Name" maxlength="20" style="padding: 12px; font-size: 16px; border: 2px solid #666; border-radius: 5px; background: #333; color: #cccccc; text-align: center;">
+                    <button id="startGameBtn" style="padding: 12px 24px; font-size: 16px; background: #4ade80; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                        Spiel starten
+                    </button>
                 </div>
             </div>
             
-            <!-- Spiel-Bereich (nur sichtbar wenn eingeloggt) -->
+            <!-- Spiel-Bereich -->
             <div id="gameSection" style="display: none;">
                 <div style="text-align: center; color: #cccccc; margin-bottom: 20px; padding: 10px; background: #2a2a2a; border-radius: 5px;">
                     <span id="welcomeText">Willkommen, </span>
-                    <span id="currentUserName" style="color: #4ade80; font-weight: 600;"></span>
-                    <span id="currentUserHashtag" style="color: #888;"></span>
-                    <button id="logoutBtn" style="background: none; border: none; color: #ff6666; cursor: pointer; text-decoration: underline; font-size: 0.85em; margin-left: 10px; padding: 0;">
-                        (Abmelden)
-                    </button>
+                    <span id="currentPlayerName" style="color: #4ade80; font-weight: 600;"></span>
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 20px;">
                     <div style="text-align: center; color: #fbbf24; margin-bottom: 10px; font-size: 1.1em; font-weight: 600;">
                         <span id="goldLabel">Gold: </span><span id="currentGold" style="color: #ffd700;">0</span>
                     </div>
-                    <button id="startGameBtn" style="padding: 20px 40px; font-size: 20px; background: #4ade80; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);">
+                    <button id="startGameFromMenuBtn" style="padding: 20px 40px; font-size: 20px; background: #4ade80; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);">
                         Spiel starten
                     </button>
                     <button id="evolutionsBtn" style="padding: 20px 40px; font-size: 20px; background: #a78bfa; color: white; border: none; border-radius: 10px; cursor: pointer; font-weight: 700; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(167, 139, 250, 0.3);">
@@ -120,7 +86,19 @@
                 <span id="scoreLabel">Score: <span id="scoreValue">0</span></span>
                 <span id="lengthLabel">Länge: <span id="lengthValue">10</span></span>
             </div>
+            <div id="activeEvolutionDisplay" style="display: none; position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); background: rgba(0, 0, 0, 0.8); padding: 10px 20px; border-radius: 10px; border: 2px solid #a78bfa; z-index: 1000; pointer-events: none;">
+                <div style="color: #a78bfa; font-size: 0.9em; margin-bottom: 5px; text-align: center;">Aktive Evolution:</div>
+                <div id="activeEvolutionInfo" style="color: #fff; text-align: center; display: flex; align-items: center; justify-content: center;">
+                    <!-- Wird dynamisch gefüllt -->
+                </div>
+                <div style="color: #888; font-size: 0.75em; text-align: center; margin-top: 5px;">Mausrad zum Wechseln</div>
+            </div>
             <canvas id="simulatorCanvas"></canvas>
+            <div style="text-align: center; margin-top: 20px;">
+                <button id="backToMenuFromGameBtn" style="padding: 12px 24px; font-size: 16px; background: #666; color: white; border: none; border-radius: 5px; cursor: pointer; font-weight: 600;">
+                    Zurück zum Menü
+                </button>
+            </div>
         
         <!-- Upgrade-Auswahl Overlay -->
         <div id="upgradeOverlay" class="upgrade-overlay" style="display: none;">
